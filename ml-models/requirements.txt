@@ -1,0 +1,6 @@
+eventlet==0.33.3
+gunicorn
+Flask==3.1.0
+Flask_Cors==5.0.0
+Flask_SocketIO==5.5.1
+opencv-python-headless
