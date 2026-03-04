@@ -1,15 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { Leaf, ChevronDown, MessageSquare, Users } from 'lucide-react';
-import Logo from './Logo.png'
-import axios from 'axios';
-export default function ModernNavbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+import React, { useState, useEffect, useContext } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { MessageSquare, Users, ChevronDown, User, LogOut, Settings } from 'lucide-react';
+import { Button } from "../ui/button";
+import { AuthContext } from '../Auth/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "../ui/navigation-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+
+export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [isInteractionOpen, setIsInteractionOpen] = useState(false);
-  const isAuthenticated = true;
+  const { logout, user } = useContext(AuthContext);
+  const isAuthenticated = !!localStorage.getItem('accessToken') || !!user;
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,230 +36,131 @@ export default function ModernNavbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const logout = async() => {
-    localStorage.removeItem('accessToken');
-    const res=await axios.post(`${import.meta.env.VITE_BACKEND_BASE_URL}auth/logout`);
-    if(res){
-      navigate('/login');
-    }
-    // logout logic here
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
-  const handleInteractionClick = (e) => {
-    e.preventDefault();
-    setIsInteractionOpen(!isInteractionOpen);
-  };
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Jobs', path: '/jobs' },
+    { name: 'Mentors', path: '/mentors' },
+  ];
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.interaction-dropdown')) {
-        setIsInteractionOpen(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
-
-  const InteractionDropdown = () => (
-    <div className="interaction-dropdown relative group">
-      <button
-        onClick={handleInteractionClick}
-        className="flex items-center space-x-1 px-3 py-2 group"
-      >
-        <span className="text-gray-300 group-hover:text-white transition-colors duration-300 text-sm font-medium">
-          Interaction
-        </span>
-        <ChevronDown className={`w-3 h-4 pt-1 text-gray-300 group-hover:text-white transition-all duration-300 ${isInteractionOpen ? 'rotate-180 ' : ''
-          }`} />
-        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-      </button>
-
-      {isInteractionOpen && (
-        <div className="absolute top-full left-[-42px] mt-1 w-48 py-2 bg-gray-900/95 backdrop-blur-xl rounded-xl border border-emerald-500/20 shadow-xl">
-          <Link
-            to="/chat"
-            className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span className="text-sm">Chat</span>
-          </Link>
-          <Link
-            to="/forum"
-            className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300"
-          >
-            <Users className="w-4 h-4" />
-            <span className="text-sm">Anonymous Forum</span>
-          </Link>
-        </div>
-      )}
-    </div>
-  );
+  const isActive = (path) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/'));
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black/20 ${scrolled ? 'backdrop-blur-md' : 'backdrop-blur-md'
-      }`}>
-      <div className={`absolute inset-0 bg-black/20 backdrop-blur-md transition-all duration-500 
-        ${scrolled ? 'bg-black/40' : ''}`} />
-
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/15 to-transparent" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${scrolled ? 'bg-zinc-950/80 backdrop-blur-md border-zinc-800 shadow-sm' : 'bg-zinc-950 border-transparent'}`}>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="group relative">
-              <div className="flex items-center space-x-2">
-                <div className="w-12 h-12  flex items-center justify-center transform group-hover:scale-105 transition-all duration-300">
-                  <img src={Logo} alt="logo" className='w-12 h-12' />
-                </div>
-                <span className="text-2xl font-bold bg-clip-text text-transparent  bg-clip-text bg-gradient-to-r from-white to-emerald-300 tracking-tight group-hover:from-white group-hover:to-emerald-200 transition-all duration-300">
-                  Proxima
-                </span>
-              </div>
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 origin-left transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+          <div className="flex items-center gap-8">
+            <Link to="/" className="flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight text-zinc-50">
+                Proxima.
+              </span>
             </Link>
+
+            <div className="hidden md:flex items-center gap-1">
+              <NavigationMenu>
+                <NavigationMenuList>
+                  {navLinks.map((link) => (
+                    <NavigationMenuItem key={link.name}>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to={link.path}
+                          className={`group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-800/50 hover:text-zinc-50 focus:bg-zinc-800/50 focus:text-zinc-50 outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-zinc-800 data-[state=open]:bg-zinc-800/50 ${isActive(link.path) ? 'bg-zinc-800 text-zinc-50' : 'text-zinc-400 bg-transparent'
+                            }`}
+                        >
+                          {link.name}
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  ))}
+
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50 focus:bg-zinc-800/50 focus:text-zinc-50 data-[state=open]:bg-zinc-800/50 data-[state=open]:text-zinc-50 bg-transparent h-9 px-4">
+                      Engage
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[200px] gap-2 p-3 bg-zinc-950 border-zinc-800">
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to="/chat"
+                              className="flex items-center select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-zinc-800 hover:text-zinc-50 focus:bg-zinc-800 focus:text-zinc-50"
+                            >
+                              <MessageSquare className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-zinc-50" />
+                              <div className="text-sm font-medium leading-none text-zinc-300">Direct Messages</div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to="/forum"
+                              className="flex items-center select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-zinc-800 hover:text-zinc-50 focus:bg-zinc-800 focus:text-zinc-50"
+                            >
+                              <Users className="w-5 h-5 mr-3 text-zinc-400 group-hover:text-zinc-50" />
+                              <div className="text-sm font-medium leading-none text-zinc-300">Community Forum</div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
           </div>
 
-          <div className="sm:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
-            >
-              <div className={`w-5 h-5 relative transform transition-all duration-300 ${isMenuOpen ? 'rotate-180' : ''
-                }`}>
-                <span className={`absolute w-5 h-0.5 bg-white transform transition-all duration-300 
-                  ${isMenuOpen ? 'rotate-45 translate-y-0' : '-translate-y-1.5'}`} />
-                <span className={`absolute w-5 h-0.5 bg-white transform transition-all duration-300 
-                  ${isMenuOpen ? '-rotate-45' : 'translate-y-1.5'}`} />
-              </div>
-            </button>
-          </div>
-
-          <div className="hidden sm:flex items-center space-x-6">
-            <Link to="/" className="relative group px-3 py-2">
-              <span className="text-gray-300 group-hover:text-white transition-colors duration-300 text-sm font-medium">
-                Home
-              </span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-            </Link>
-            <Link to="/jobs" className="relative group px-3 py-2">
-              <span className="text-gray-300 group-hover:text-white transition-colors duration-300 text-sm font-medium">
-                Jobs
-              </span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-            </Link>
-            <InteractionDropdown />
-            <Link to="/mentors" className="relative group px-1 py-2">
-              <span className="text-gray-300 group-hover:text-white transition-colors duration-300 text-sm font-medium">
-                Find a Mentor
-              </span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-            </Link>
-            
-          </div>
-
-          <div className="hidden sm:flex items-center space-x-4">
+          <div className="flex flex-1 justify-end items-center">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <div className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-sm font-medium transition-all duration-300 cursor-pointer"
-                  onClick={logout}
-                >
-                  Logout
-                </div>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center cursor-pointer transform hover:scale-105 transition-all duration-300"
-                  onClick={() => navigate(`/profile/`)}>
-                  <span className="text-white font-medium">A</span>
-                </div>
+              <div className="flex items-center gap-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-transform active:scale-95">
+                      <Avatar className="h-8 w-8 border border-zinc-800 bg-zinc-900 transition-opacity hover:opacity-80">
+                        <AvatarImage src="" alt="User" />
+                        <AvatarFallback className="bg-zinc-800 text-zinc-300 text-xs font-semibold">A</AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-zinc-950 border-zinc-800 text-zinc-300 shadow-xl" align="end">
+                    <div className="flex items-center justify-start gap-2 p-3">
+                      <div className="flex flex-col space-y-0.5 leading-none">
+                        <p className="font-semibold text-zinc-50 text-sm">Alex Profile</p>
+                        <p className="w-[200px] truncate text-xs text-zinc-500 font-medium">
+                          alex@proxima.test
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuItem className="focus:bg-zinc-800 focus:text-zinc-50 cursor-pointer rounded-md my-0.5" onSelect={() => navigate('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile Dashboard</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-zinc-800 focus:text-zinc-50 cursor-pointer rounded-md my-0.5" onSelect={() => navigate('/settings')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuItem className="text-red-400 focus:bg-red-950/50 focus:text-red-300 cursor-pointer rounded-md my-0.5" onSelect={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-sm font-medium transition-all duration-300"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/signup"
-                  className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white text-sm font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-emerald-500/25"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-
-          <div className={`sm:hidden absolute top-full left-0 right-0 overflow-hidden transition-all duration-300 ${isMenuOpen ? 'max-h-screen' : 'max-h-0'
-            }`}>
-            <div className="relative backdrop-blur-3xl bg-black/40 border-t border-white/10">
-              <div className="px-4 py-3 space-y-2">
-                <Link
-                  to="/"
-                  className="block px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm font-medium"
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/jobs"
-                  className="block px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm font-medium"
-                >
-                  Jobs
-                </Link>
-                <div className="block px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm font-medium">
-                  <div className="flex items-center justify-between" onClick={handleInteractionClick}>
-                    <span>Interaction</span>
-                    <ChevronDown className={` transform transition-transform ${isInteractionOpen ? 'rotate-360' : ''}`} />
-                  </div>
-                  {isInteractionOpen && (
-                    <div className="mt-2 ml-4 space-y-2">
-                      <Link
-                        to="/chat"
-                        className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        <span>Chat</span>
-                      </Link>
-                      <Link
-                        to="/forum"
-                        className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300"
-                      >
-                        <Users className="w-4 h-4" />
-                        <span>Anonymous Forum</span>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-                <Link
-                  to="/mentors"
-                  className="block px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm font-medium"
-                >
-                  Find a Mentor
-                </Link>
-                {/* <Link
-                  to="/startups"
-                  className="block px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm font-medium"
-                >
-                  Startups
-                </Link> */}
-                {!isAuthenticated && (
-                  <div className="pt-2 space-y-2">
-                    <Link
-                      to="/login"
-                      className="block px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm font-medium"
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="block px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-medium text-center transition-all duration-300 hover:from-emerald-600 hover:to-green-600"
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                )}
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" className="text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50 h-9 font-medium" onClick={() => navigate('/login')}>
+                  Log in
+                </Button>
+                <Button className="bg-zinc-50 text-zinc-950 hover:bg-zinc-200 h-9 font-medium" onClick={() => navigate('/signup')}>
+                  Sign up
+                </Button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

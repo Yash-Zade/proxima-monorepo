@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../Auth/ApiClient';
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Badge } from "../ui/badge";
+
 const JobPostingForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -17,14 +23,9 @@ const JobPostingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/employers/jobs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      if (response.status>=200 && response.status<300) {
+      const response = await apiClient.post('/employers/jobs', formData);
+      // apiClient throws on error, so if we're here, it's a success (within 2xx or GlobalResponseHandler logic)
+      if (response.status >= 200 && response.status < 300) {
         alert('Job posted successfully!');
         setFormData({
           title: '',
@@ -38,6 +39,8 @@ const JobPostingForm = () => {
       }
     } catch (error) {
       console.error('Error posting job:', error);
+      const errorMsg = error.response?.data?.error?.message || "Failed to post job";
+      alert(errorMsg);
     }
   };
 
@@ -59,163 +62,126 @@ const JobPostingForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 relative overflow-hidden p-20">
-      {/* Gradient Orbs */}
-      <motion.div
-        className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-20"
-        animate={{
-          scale: [1, 1.2, 1],
-          x: [0, 50, 0],
-          y: [0, 30, 0],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-20"
-        animate={{
-          scale: [1.2, 1, 1.2],
-          x: [0, -50, 0],
-          y: [0, -30, 0],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+    <div className="min-h-screen bg-zinc-950 pt-32 pb-20 px-6 sm:px-12 selection:bg-zinc-800 selection:text-white font-sans flex justify-center">
 
       {/* Form Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto backdrop-blur-lg bg-white/10 p-8 rounded-2xl shadow-2xl border border-white/20"
-      >
-        <h2 className="text-3xl font-bold text-white mb-6">Post a New Job</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <label className="block text-white text-sm font-medium mb-2">Job Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                placeholder="Senior Software Engineer"
-                required
-              />
-            </motion.div>
+      <Card className="w-full max-w-3xl bg-zinc-950/50 border-zinc-800/80 backdrop-blur-sm shadow-xl p-2 h-fit">
+        <CardHeader className="pb-8 border-b border-zinc-800/50">
+          <CardTitle className="text-3xl font-bold text-white tracking-tight flex items-center">
+            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mr-4">
+              <Briefcase className="w-5 h-5 text-zinc-400" />
+            </div>
+            Provision New Node (Job)
+          </CardTitle>
+          <p className="text-zinc-500 text-sm mt-3 border-l-2 border-zinc-800 pl-3 ml-2">Define parameters to generate a new requirement listing.</p>
+        </CardHeader>
 
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <label className="block text-white text-sm font-medium mb-2">Company</label>
-              <input
-                type="text"
-                value={formData.company}
-                onChange={(e) => setFormData({...formData, company: e.target.value})}
-                className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                placeholder="Company Name"
-                required
-              />
-            </motion.div>
+        <CardContent className="pt-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <label className="block text-white text-sm font-medium mb-2">Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({...formData, location: e.target.value})}
-                className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                placeholder="New York, NY"
-                required
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <label className="block text-white text-sm font-medium mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 h-32"
-                placeholder="Job description..."
-                required
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="space-y-2"
-            >
-              <label className="block text-white text-sm font-medium mb-2">Skills Required</label>
-              <div className="flex gap-2">
-                <input
+              <div className="space-y-3">
+                <Label className="text-zinc-300 font-medium tracking-wide">Job Identifier</Label>
+                <Input
                   type="text"
-                  value={currentSkill}
-                  onChange={(e) => setCurrentSkill(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                  placeholder="Add a skill"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-50 h-11 rounded-lg"
+                  placeholder="e.g. Senior Architecture Engineer"
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                >
-                  <Plus className="w-6 h-6 text-white" />
-                </button>
               </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.skillsRequired.map((skill, index) => (
-                  <motion.span
-                    key={skill}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                  >
-                    {skill}
-                    <button
-                      type="button"
-                      onClick={() => removeSkill(skill)}
-                      className="ml-2 text-blue-300 hover:text-blue-100"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </motion.span>
-                ))}
-              </div>
-            </motion.div>
-          </div>
 
-          <motion.button
-            type="submit"
-            className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Post Job
-          </motion.button>
-        </form>
-      </motion.div>
+              <div className="space-y-3">
+                <Label className="text-zinc-300 font-medium tracking-wide">Origin Network (Company)</Label>
+                <Input
+                  type="text"
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-50 h-11 rounded-lg"
+                  placeholder="e.g. Proxima Corp"
+                  required
+                />
+              </div>
+
+              <div className="space-y-3 md:col-span-2">
+                <Label className="text-zinc-300 font-medium tracking-wide">Location Coordinate</Label>
+                <Input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="bg-zinc-900 border-zinc-800 text-zinc-50 h-11 rounded-lg"
+                  placeholder="e.g. Bangalore, Earth"
+                  required
+                />
+              </div>
+
+              <div className="space-y-3 md:col-span-2">
+                <Label className="text-zinc-300 font-medium tracking-wide">Context Instructions</Label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 h-32 rounded-lg p-3 resize-none focus-visible:outline-none focus:ring-1 focus:ring-zinc-600 outline-none"
+                  placeholder="Provide details about the required context operations..."
+                  required
+                />
+              </div>
+
+              <div className="space-y-3 md:col-span-2">
+                <Label className="text-zinc-300 font-medium tracking-wide">Req Capabilities (Skills)</Label>
+                <div className="flex gap-3">
+                  <Input
+                    type="text"
+                    value={currentSkill}
+                    onChange={(e) => setCurrentSkill(e.target.value)}
+                    className="bg-zinc-900 border-zinc-800 text-zinc-50 h-11 rounded-lg"
+                    placeholder="Add capability flag..."
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                  />
+                  <Button
+                    type="button"
+                    onClick={addSkill}
+                    variant="secondary"
+                    className="h-11 px-6 bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {formData.skillsRequired.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3 p-3 border border-zinc-800/50 rounded-lg bg-zinc-950/50 min-h-[50px]">
+                    {formData.skillsRequired.map((skill) => (
+                      <Badge
+                        key={skill}
+                        variant="secondary"
+                        className="bg-zinc-800 text-zinc-300 font-medium border border-zinc-700 hover:bg-zinc-700 pl-3 pr-2 py-1 gap-1 flex items-center"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="hover:text-zinc-50 transition-colors bg-zinc-900/50 rounded-full p-0.5 ml-1 flex items-center justify-center"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-6">
+              <Button
+                type="submit"
+                className="w-full h-12 bg-zinc-50 hover:bg-zinc-200 text-zinc-950 font-bold uppercase tracking-wider text-sm rounded-lg"
+              >
+                Deploy Node
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

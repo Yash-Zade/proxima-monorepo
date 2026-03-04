@@ -1,23 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-
-const GradientOrb = ({ className, delay = 0 }) => (
-  <motion.div 
-    className={`absolute rounded-full blur-3xl opacity-0 ${className}`}
-    animate={{ 
-      opacity: [0, 0.25],
-      scale: [0.9, 1.1],
-    }}
-    transition={{ 
-      duration: 2,
-      delay,
-      ease: "easeInOut",
-      repeat: Infinity,
-      repeatType: "reverse"
-    }}
-  />
-);
+import { Building, MapPin, Briefcase, Calendar, Clock, Network } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
+import apiClient from '../Auth/ApiClient';
 
 const JobDetails = () => {
   const params = useParams();
@@ -26,244 +14,149 @@ const JobDetails = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Dummy data (replace with API call in production)
-  const DUMMY_JOBS = [
-    {
-      jobId: 1001,
-      jobTitle: "Software Engineer",
-      description: "Develop and maintain software applications for various platforms.",
-      skillsRequired: ["Java", "Python", "C++", "Problem Solving"],
-      company: "Tech Bharat Innovations",
-      status: "Open"
-    },
-    {
-      jobId: 1002,
-      jobTitle: "Data Analyst",
-      description: "Analyze large datasets to extract actionable insights for decision making.",
-      skillsRequired: ["SQL", "Excel", "Python", "Data Visualization"],
-      company: "DataPrabhu Solutions",
-      status: "Closed"
-    },
-    {
-      jobId: 1003,
-      jobTitle: "Marketing Manager",
-      description: "Create and implement marketing strategies to promote products and services.",
-      skillsRequired: ["SEO", "Content Marketing", "Google Analytics"],
-      company: "Global Bharat Marketing",
-      status: "Open"
-    },
-    {
-      jobId: 1004,
-      jobTitle: "Product Manager",
-      description: "Oversee the development of new products from concept to launch.",
-      skillsRequired: ["Project Management", "Agile", "Communication"],
-      company: "Niti Innovate Co.",
-      status: "Open"
-    },
-    {
-      jobId: 1005,
-      jobTitle: "UX/UI Designer",
-      description: "Design user-friendly interfaces for websites and mobile apps.",
-      skillsRequired: ["Adobe XD", "Figma", "HTML/CSS", "User Research"],
-      company: "DesignSutra Pro",
-      status: "Interview"
-    },
-    {
-      jobId: 1006,
-      jobTitle: "HR Specialist",
-      description: "Manage recruitment, employee relations, and benefits administration.",
-      skillsRequired: ["HR Software", "Communication", "Conflict Resolution"],
-      company: "JanSeva Inc.",
-      status: "Closed"
-    },
-    {
-      jobId: 1007,
-      jobTitle: "Financial Analyst",
-      description: "Analyze financial data, prepare reports, and advise on investment decisions.",
-      skillsRequired: ["Excel", "Financial Modeling", "Accounting"],
-      company: "Artha Solutions Pvt. Ltd.",
-      status: "Open"
-    },
-    {
-      jobId: 1008,
-      jobTitle: "Customer Support Lead",
-      description: "Oversee customer service team and ensure customer satisfaction.",
-      skillsRequired: ["Communication", "Problem Solving", "CRM Tools"],
-      company: "SevaPlus Ltd.",
-      status: "Open"
-    },
-    {
-      jobId: 1009,
-      jobTitle: "Network Administrator",
-      description: "Manage and maintain network systems and infrastructure.",
-      skillsRequired: ["Networking", "VPNs", "Troubleshooting"],
-      company: "NetSuraksha Inc.",
-      status: "Open"
-    },
-    {
-      jobId: 1010,
-      jobTitle: "Sales Executive",
-      description: "Drive sales strategies, manage client relationships, and close deals.",
-      skillsRequired: ["Negotiation", "CRM", "Presentation Skills"],
-      company: "Vikray Bharat Global",
-      status: "Closed"
-    }
-    // Add other dummy jobs here...
-  ];
-
   useEffect(() => {
-    setTimeout(() => {
-      const foundJob = DUMMY_JOBS.find(j => j.jobId === parseInt(jobId));
-      setJob(foundJob || null);
-      setLoading(false);
-    }, 500);
+    const fetchJobDetails = async () => {
+      try {
+        const response = await apiClient.get(`/public/jobs/${jobId}`);
+        setJob(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch job details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobDetails();
   }, [jobId]);
 
-  const handleApply = (jobId) => {
-    navigate(`/apply/${jobId}`);
+  const handleApply = (jId) => {
+    navigate(`/apply/${jId}`);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-white text-lg font-semibold"
-        >
-          Loading...
-        </motion.div>
+      <div className="min-h-screen bg-zinc-950 text-zinc-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 border-2 border-zinc-800 border-t-zinc-400 rounded-full animate-spin mb-4"></div>
+          <p className="text-sm font-medium text-zinc-500">Retrieving node data...</p>
+        </div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-white text-lg font-semibold"
-        >
-          Job not found
-        </motion.div>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-500 text-lg font-medium">Job context not found.</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4">
-      <div className="pt-24 relative max-w-3xl mx-auto">
-        {/* Gradient Orbs for Background Effect */}
-        <GradientOrb className="w-72 h-72 bg-cyan-500/20 -top-20 -left-32" delay={0.2} />
-        <GradientOrb className="w-96 h-96 bg-purple-500/20 -bottom-32 -right-40" delay={0.4} />
-        <GradientOrb className="w-60 h-60 bg-pink-400/20 top-1/3 left-1/4" delay={0.6} />
-
-        {/* Job Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-gray-700/50"
+    <div className="min-h-screen bg-zinc-950 pt-32 pb-20 px-6 sm:px-12 selection:bg-zinc-800 selection:text-white font-sans flex justify-center">
+      <div className="w-full max-w-4xl">
+        <Button
+          variant="ghost"
+          className="mb-6 text-zinc-400 hover:text-white hover:bg-zinc-900 -ml-4"
+          onClick={() => navigate('/jobs')}
         >
-          {/* Header */}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="text-3xl font-bold text-white bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
+          ← Directory Return
+        </Button>
+
+        <Card className="bg-zinc-950/50 border-zinc-800/80 backdrop-blur-sm shadow-xl p-2 w-full">
+          <CardHeader className="pb-8 border-b border-zinc-800/50">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+              <div>
+                <CardTitle className="text-3xl font-extrabold text-white tracking-tight mb-3">
+                  {job.title}
+                </CardTitle>
+                <p className="text-zinc-400 text-lg font-medium flex items-center">
+                  <Building className="w-5 h-5 mr-2 text-zinc-500" />
+                  {job.company || "Unknown"}
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className={`px-3 py-1 font-semibold uppercase tracking-wider text-xs border ${job.jobStatus === "OPEN" ? "bg-emerald-900/20 text-emerald-400 border-emerald-900/50"
+                  : job.jobStatus === "INTERVIEW" ? "bg-blue-900/20 text-blue-400 border-blue-900/50"
+                    : "bg-red-900/20 text-red-400 border-red-900/50"
+                  }`}
               >
-                {job.jobTitle}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-gray-400 text-sm mt-1"
-              >
-                {job.company} • {job.status}
-              </motion.p>
+                {job.jobStatus || "OPEN"} NODE
+              </Badge>
             </div>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                job.status === "Open" ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"
-              }`}
-            >
-              {job.status}
-            </span>
-          </div>
 
-          {/* Description */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="mb-6"
-          >
-            <h2 className="text-lg font-semibold text-gray-200 mb-2">Description</h2>
-            <p className="text-gray-300 leading-relaxed">{job.description}</p>
-          </motion.div>
-
-          {/* Skills */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="mb-6"
-          >
-            <h2 className="text-lg font-semibold text-gray-200 mb-2">Required Skills</h2>
-            <div className="flex flex-wrap gap-2">
-              {job.skillsRequired.map((skill, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1, duration: 0.3 }}
-                  className="px-3 py-1 bg-gray-800 text-cyan-300 rounded-full text-sm border border-cyan-500/30 hover:bg-gray-700 transition-colors"
-                >
-                  {skill}
-                </motion.span>
-              ))}
+            <div className="flex flex-wrap items-center gap-4 md:gap-8 mt-6 text-zinc-400 text-sm">
+              <div className="flex items-center">
+                <MapPin className="w-4 h-4 mr-2 text-zinc-500" />
+                {job.location || "Remote Optional"}
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-zinc-500" />
+                {job.type || "Full-Time"}
+              </div>
+              <div className="flex items-center text-zinc-300 font-medium">
+                <Briefcase className="w-4 h-4 mr-2 text-zinc-500" />
+                {job.stipend || "Compensation Pending"}
+              </div>
             </div>
-          </motion.div>
+          </CardHeader>
 
-          {/* Additional Info */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="grid grid-cols-2 gap-4 mb-6"
-          >
+          <CardContent className="pt-8 space-y-10">
+
+            {/* Description Area */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-200">Posted By</h2>
-              <p className="text-gray-400">{job.postedBy}</p>
+              <h2 className="text-lg font-semibold text-zinc-200 mb-4 tracking-tight flex items-center">
+                <Network className="w-5 h-5 mr-2 text-zinc-500" /> Role Overview
+              </h2>
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-5 leading-relaxed text-zinc-300 whitespace-pre-line">
+                {job.description}
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-200">Experience</h2>
-              <p className="text-gray-400">{job.experienceRequired}</p>
-            </div>
-          </motion.div>
 
-          {/* Apply Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            {/* Skills Requirement Area */}
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-200 mb-4 tracking-tight flex items-center">
+                <Calendar className="w-5 h-5 mr-2 text-zinc-500" /> Required Parameters
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {job.skillsRequired && job.skillsRequired.length > 0 ? job.skillsRequired.map((skill, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="px-3 py-1.5 bg-zinc-900 border-zinc-800 text-zinc-400 font-medium hover:text-zinc-200 transition-colors"
+                  >
+                    {skill}
+                  </Badge>
+                )) : <span className="text-zinc-500">None Specified</span>}
+              </div>
+            </div>
+
+            <Separator className="bg-zinc-800/60" />
+
+            <div className="grid grid-cols-2 gap-8 pt-2">
+              <div>
+                <h3 className="text-sm uppercase tracking-wider font-semibold text-zinc-500 mb-1">Origin Node</h3>
+                <p className="text-zinc-200 font-medium">{job.postedBy || "Automated Terminal"}</p>
+              </div>
+              <div>
+                <h3 className="text-sm uppercase tracking-wider font-semibold text-zinc-500 mb-1">Time Elapsed</h3>
+                <p className="text-zinc-200 font-medium">{job.experienceRequired || "N/A"}</p>
+              </div>
+            </div>
+
+          </CardContent>
+
+          <CardFooter className="pt-4 pb-8 border-t border-zinc-800/50 mt-6 px-6">
+            <Button
               onClick={() => handleApply(job.jobId)}
-              className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
+              className="w-full md:w-auto mt-4 px-10 h-12 bg-zinc-50 hover:bg-zinc-200 text-zinc-950 font-bold tracking-wide"
+              disabled={job.jobStatus === "CLOSED"}
             >
-              Apply Now
-            </motion.button>
-          </motion.div>
-        </motion.div>
+              {job.jobStatus === "CLOSED" ? 'Path Terminated' : 'Initialize Connection'}
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

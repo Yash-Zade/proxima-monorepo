@@ -2,148 +2,117 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
-import { AuthContext } from './context/AuthContext'; // Import AuthContext
-
+import { AuthContext } from './context/AuthContext';
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 const Signup = () => {
-  const { 
-    register, 
+  const {
+    register,
     handleSubmit,
     formState: { errors }
   } = useForm();
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signup } = useContext(AuthContext);
-  // console.log(import.meta.env.VITE_BACKEND_BASE_URL);
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
+    setError('');
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_BASE_URL}auth/signup`, data)
-      console.log(response.data);
-      
-      if (response?.data) {
-        navigate('/login'); // Redirect on successful login
-      }
-
+      await signup(data);
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create account. Please try again.");
+      // Backend errors are wrapped: { timeStamp, data: null, error: { status, message, subErrors } }
+      const message =
+        err?.response?.data?.error?.message ||
+        err?.message ||
+        'Failed to create account. Please try again.';
+      setError(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Updated gradient orbs to green */}
-      <div className="absolute -left-4 w-96 h-96 bg-green-500/30 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob" />
-      <div className="absolute -right-4 w-96 h-96 bg-emerald-500/30 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000" />
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-5xl relative"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md relative"
       >
-        <div className="backdrop-blur-xl bg-white/[0.02] rounded-3xl shadow-2xl border border-white/[0.05] overflow-hidden">
-          <div className="flex flex-col lg:flex-row">
-            {/* Left Side - Welcome Message */}
-            <div className="lg:w-5/12 p-8 lg:p-12 bg-gradient-to-br from-black/50 to-transparent flex flex-col justify-center">
-              <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                className="text-center lg:text-left"
-              >
-                <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-400 mb-4">
-                  Proxima
-                </h1>
-                <h2 className="text-2xl lg:text-3xl font-semibold text-white mb-4">Create Account</h2>
-                <p className="text-gray-400 text-lg mb-6">
-                  Join our community of professionals.
-                </p>
-                <p className="text-gray-300">
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-green-400 hover:text-green-300 transition-colors font-medium">
-                    Sign In
-                  </Link>
-                </p>
-              </motion.div>
-            </div>
-
-            {/* Right Side - Form */}
-            <div className="lg:w-7/12 p-8 lg:p-12 bg-black/20">
-              {error && (
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-red-400 text-center mb-6"
-                >
-                  {error}
-                </motion.p>
-              )}
-
-              <form onSubmit={()=>navigate('/login')} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-gray-300 text-sm font-medium">Full Name</label>
-                  <input
-                    {...register("name", { 
-                      required: "Name is required"
-                    })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500 focus:ring-1 focus:bg-white/[0.05] transition-all duration-200"
-                    placeholder="Enter your full name"
-                  />
-                  {errors.name && (
-                    <p className="text-red-400 text-sm">{errors.name.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-gray-300 text-sm font-medium">Email</label>
-                  <input
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-                        message: "Please enter a valid email address"
-                      }
-                    })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500 focus:ring-1 focus:bg-white/[0.05] transition-all duration-200"
-                    type="email"
-                    placeholder="Enter your email"
-                  />
-                  {errors.email && (
-                    <p className="text-red-400 text-sm">{errors.email.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-gray-300 text-sm font-medium">Password</label>
-                  <input
-                    {...register("password", { 
-                      required: "Password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters"
-                      }
-                    })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500 focus:ring-1 focus:bg-white/[0.05] transition-all duration-200"
-                    type="password"
-                    placeholder="Enter your password"
-                  />
-                  {errors.password && (
-                    <p className="text-red-400 text-sm">{errors.password.message}</p>
-                  )}
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  type="submit"
-                  className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg shadow-green-600/20"
-                >
-                  Create Account
-                </motion.button>
-              </form>
-            </div>
+        <div className="bg-zinc-950 rounded-2xl border border-zinc-800 p-8 shadow-2xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Create Account</h1>
+            <p className="text-zinc-400 mt-2 text-sm">Join the Proxima community.</p>
           </div>
+
+          {error && (
+            <div className="p-3 mb-6 bg-red-950/50 border border-red-900 rounded-lg text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-sm font-medium">Full Name</Label>
+              <Input
+                {...register("name", { required: "Name is required" })}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                placeholder="John Doe"
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-sm font-medium">Email Address</Label>
+              <Input
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                    message: "Valid email required"
+                  }
+                })}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                type="email"
+                placeholder="you@example.com"
+              />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-sm font-medium">Password</Label>
+              <Input
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: { value: 8, message: "Min 8 characters" }
+                })}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                type="password"
+                placeholder="••••••••"
+              />
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-2.5 px-4 bg-zinc-50 text-zinc-950 hover:bg-zinc-200 rounded-lg font-medium transition-colors disabled:opacity-50 mt-4 h-auto"
+            >
+              {isLoading ? "Creating..." : "Sign Up"}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-zinc-400">
+            Already have an account?{' '}
+            <Link to="/login" className="text-zinc-50 hover:underline">
+              Log in
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>

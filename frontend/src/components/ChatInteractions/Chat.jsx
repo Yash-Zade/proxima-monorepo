@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, X, User, Phone, Video, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const Chat = ({ contact, onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -39,117 +40,86 @@ const Chat = ({ contact, onClose }) => {
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase();
+    return name ? name.split(' ').map(word => word[0]).join('').toUpperCase() : 'U';
   };
 
   return (
-    <motion.div 
-      className="  w-full flex flex-col h-[545px] bg-gray-900/40 backdrop-blur-xl rounded-lg border border-emerald-700/30"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
+    <motion.div
+      className="w-full flex flex-col h-[545px] bg-zinc-950/90 backdrop-blur-xl rounded-lg border border-zinc-800 shadow-2xl overflow-hidden font-sans"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
     >
       {/* Chat Header */}
-      <motion.div 
-        className="p-4 bg-gray-800/30 backdrop-blur-sm border-b border-emerald-700/30 rounded-t-lg"
-        initial={{ y: -20 }}
-        animate={{ y: 0 }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <motion.div 
-              className="relative"
-              whileHover={{ scale: 1.1 }}
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
-                {contact ? getInitials(contact.name) : <User className="w-6 h-6" />}
-              </div>
-              {contact?.online && (
-                <motion.div 
-                  className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-gray-800"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                />
-              )}
-            </motion.div>
-            <div>
-              <h3 className="font-semibold text-gray-100">{contact?.name || 'Select Contact'}</h3>
-              <span className="text-sm text-gray-400">{contact?.online ? 'Online' : 'Offline'}</span>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            {contact && (
-              <>
-                <motion.button 
-                  className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Phone className="w-5 h-5" />
-                </motion.button>
-                <motion.button 
-                  className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Video className="w-5 h-5" />
-                </motion.button>
-                <motion.button 
-                  className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </motion.button>
-              </>
+      <div className="p-4 bg-zinc-900/80 border-b border-zinc-800 flex justify-between items-center z-10">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Avatar className="w-10 h-10 border border-zinc-700">
+              <AvatarFallback className="bg-zinc-800 text-zinc-300 font-semibold">
+                {contact ? getInitials(contact.name) : <User className="w-5 h-5 mx-auto" />}
+              </AvatarFallback>
+            </Avatar>
+            {contact?.online && (
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-zinc-900" />
             )}
-            <motion.button 
-              className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300"
-              onClick={onClose}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <X className="w-5 h-5" />
-            </motion.button>
+          </div>
+          <div>
+            <h3 className="font-semibold text-zinc-100 text-sm tracking-wide">{contact?.name || 'Network Terminal'}</h3>
+            <span className="text-xs text-zinc-500">{contact?.online ? 'Connected' : 'Offline'}</span>
           </div>
         </div>
-      </motion.div>
+        <div className="flex items-center space-x-1">
+          {contact && (
+            <>
+              <button className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-200 transition-colors">
+                <Phone className="w-4 h-4" />
+              </button>
+              <button className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-200 transition-colors">
+                <Video className="w-4 h-4" />
+              </button>
+              <button className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-200 transition-colors">
+                <MoreVertical className="w-4 h-4" />
+              </button>
+            </>
+          )}
+          <button
+            className="p-2 hover:bg-zinc-800 hover:text-red-400 rounded-lg text-zinc-400 transition-colors ml-2"
+            onClick={onClose}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-950/50">
         <AnimatePresence>
           {messages.map((msg) => (
             <motion.div
               key={msg.messageId}
               className={`flex ${msg.sender === currentUser.id ? 'justify-end' : 'justify-start'}`}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
             >
-              <motion.div
-                className={`max-w-[70%] p-3 rounded-2xl ${
-                  msg.sender === currentUser.id
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
-                    : 'bg-gray-700/50 backdrop-blur-sm text-gray-100'
-                }`}
-                whileHover={{ scale: 1.02 }}
+              <div
+                className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.sender === currentUser.id
+                    ? 'bg-zinc-100 text-zinc-900 rounded-br-sm'
+                    : 'bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-bl-sm'
+                  }`}
               >
                 <p>{msg.messageContent}</p>
-                <span className="text-xs mt-1 opacity-70 block">
+                <span className={`text-[10px] mt-1.5 block ${msg.sender === currentUser.id ? 'text-zinc-500' : 'text-zinc-400'}`}>
                   {formatTime(msg.timestamp)}
                 </span>
-              </motion.div>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -157,34 +127,27 @@ const Chat = ({ contact, onClose }) => {
 
       {/* Message Input */}
       {contact && (
-        <motion.div 
-          className="p-4 bg-gray-800/30 backdrop-blur-sm border-t border-emerald-700/30"
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
-        >
+        <div className="p-3 bg-zinc-900/80 border-t border-zinc-800 z-10">
           <div className="flex items-center gap-2">
             <input
               type="text"
-              placeholder="Type a message..."
-              className="flex-1 p-3 bg-gray-900/50 text-gray-100 rounded-xl border border-emerald-700/30 focus:outline-none focus:border-emerald-500/50 placeholder-gray-500"
+              placeholder="Transmit message..."
+              className="flex-1 px-4 py-2.5 bg-zinc-950 text-zinc-100 text-sm rounded-xl border border-zinc-800 focus:outline-none focus:border-zinc-600 placeholder-zinc-500"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendMessage();
-                }
+                if (e.key === 'Enter') handleSendMessage();
               }}
             />
-            <motion.button 
-              className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl transition-colors"
+            <button
+              className="p-2.5 bg-zinc-100 hover:bg-zinc-300 text-zinc-900 rounded-xl transition-colors disabled:opacity-50"
               onClick={handleSendMessage}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              disabled={!messageInput.trim()}
             >
-              <Send className="w-5 h-5" />
-            </motion.button>
+              <Send className="w-4 h-4 ml-0.5" />
+            </button>
           </div>
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );

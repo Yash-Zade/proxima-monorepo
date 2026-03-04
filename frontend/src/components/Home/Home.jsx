@@ -1,166 +1,142 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Users, MessageCircle, BarChart3, Rocket, FileText, UserCheck, MessagesSquare, Building2 } from 'lucide-react';
+import { Briefcase, Users, MessageCircle, BarChart3, Rocket, FileText, UserCheck, ArrowRight, Activity, Terminal } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 const Home = () => {
-  const [scrollY, setScrollY] = useState(0);
-  const [isHovered, setIsHovered] = useState(null);
   const navigate = useNavigate();
 
   const handleNavigate = (path) => {
     navigate(path);
   };
 
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const features = [
     {
-      icon: <FileText className="w-6 h-6" />,
-      title: "AI Resume Tailoring",
-      description: "Get personalized resume optimization using advanced AI to match your profile with dream opportunities",
-      gradient: "from-emerald-600 to-green-500"
+      icon: <Terminal className="w-4 h-4 text-zinc-400" />,
+      title: "Intelligent Matching",
+      description: "Proprietary algorithms that parse your experience and map it directly to high-impact engineering roles."
     },
     {
-      icon: <UserCheck className="w-6 h-6" />,
-      title: "Mentor Connect",
-      description: "Connect with industry experts who can guide your career journey and provide valuable insights",
-      gradient: "from-green-500 to-emerald-400"
+      icon: <UserCheck className="w-4 h-4 text-zinc-400" />,
+      title: "Elite Mentorship",
+      description: "Direct 1-on-1 access to distinguished industry experts, founders, and senior architects."
     },
     {
-      icon: <MessagesSquare className="w-6 h-6" />,
-      title: "1:1 Mentoring Sessions",
-      description: "Schedule private mentoring sessions to discuss your career goals and challenges",
-      gradient: "from-emerald-500 to-green-400"
+      icon: <Activity className="w-4 h-4 text-zinc-400" />,
+      title: "Real-time Telemetry",
+      description: "Comprehensive analytics dashboard tracking application conversions and interview progression."
     },
     {
-      icon: <Users className="w-6 h-6" />,
+      icon: <Users className="w-4 h-4 text-zinc-400" />,
       title: "Anonymous Forums",
-      description: "Engage in open discussions about career challenges and opportunities with privacy",
-      gradient: "from-green-600 to-emerald-500"
+      description: "Secure, encrypted discussion boards for transparent salary sharing and unfiltered company insights."
     },
     {
-      icon: <BarChart3 className="w-6 h-6" />,
-      title: "Smart Dashboards",
-      description: "Specialized dashboards for mentors, employers, admins, and investors to manage their experience",
-      gradient: "from-emerald-400 to-green-500"
+      icon: <Rocket className="w-4 h-4 text-zinc-400" />,
+      title: "Startup Sandbox",
+      description: "A dedicated portal to discover stealth startups, seed-stage ventures, and potential co-founders."
     },
     {
-      icon: <MessageCircle className="w-6 h-6" />,
-      title: "Mentor Chat",
-      description: "Real-time messaging system to stay connected with your mentors",
-      gradient: "from-green-500 to-emerald-600"
-    },
-    {
-      icon: <Building2 className="w-6 h-6" />,
-      title: "Startup Showcase",
-      description: "Platform for startups to present their ideas and connect with potential investors",
-      gradient: "from-emerald-500 to-green-400"
-    },
-    {
-      icon: <Rocket className="w-6 h-6" />,
-      title: "Startup Investment",
-      description: "Investment opportunities for backing promising startups and innovations",
-      gradient: "from-green-400 to-emerald-500"
-    },
-    {
-      icon: <Briefcase className="w-6 h-6" />,
-      title: "Team Building",
-      description: "Find the perfect teammates for your startup through our matching system",
-      gradient: "from-emerald-600 to-green-500"
+      icon: <FileText className="w-4 h-4 text-zinc-400" />,
+      title: "Dynamic Resumes",
+      description: "AI-generated tailored profiles that highlight relevant skills based on active job requirements algorithmically."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 overflow-hidden">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 bg-gradient-to-b from-gray-950 to-black opacity-90" />
-      
-      {/* Animated Gradient Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-green-500/20 rounded-full mix-blend-screen filter blur-3xl animate-float" />
-        <div className="absolute top-1/4 -right-20 w-96 h-96 bg-emerald-500/20 rounded-full mix-blend-screen filter blur-3xl animate-float-delay" />
-        {/* <div className="absolute bottom-0 left-1/3 w-88 h-88 bg-lime-500/20 rounded-full mix-blend-screen filter blur-3xl animate-float-long" /> */}
-      </div>
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-zinc-800 selection:text-white pb-20">
 
-      {/* Main Content */}
-      <div className="relative">
-        {/* Hero Section */}
-        <div className="relative min-h-screen flex items-center justify-center px-4">
-          <div className="max-w-5xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl xl:text-8xl font-bold tracking-tight mb-8 bg-gradient-to-b from-white to-emerald-400 bg-clip-text text-transparent">
-              Elevate Your Career Path
-            </h1>
-            <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Connect with mentors, find opportunities, and build your future with AI-powered career guidance
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <button 
-                className="w-full sm:w-auto px-8 py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all duration-300 hover:scale-105"
-                onClick={() => handleNavigate('/jobs')}
-              >
-                Get Started
-              </button>
-              <button 
-                className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-lg border border-emerald-500/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 hover:scale-105"
-                onClick={() => handleNavigate('/mentors')}
-              >
-                Find a Mentor
-              </button>
-            </div>
+      {/* Hero Section */}
+      <section className="relative px-6 py-32 md:py-48 max-w-7xl mx-auto flex flex-col items-center text-center">
+        {/* Subtle background glow effect */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-zinc-900/50 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center">
+          <Badge variant="outline" className="px-4 py-1.5 mb-8 rounded-full border-zinc-800 bg-zinc-950/50 text-zinc-300 gap-2 backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-zinc-400 animate-pulse" />
+            System Status: Operational
+          </Badge>
+
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6 max-w-4xl leading-[1.1]">
+            The unified infrastructure for <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-300 to-zinc-600">elite tech talent.</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl leading-relaxed">
+            Accelerate your professional trajectory. Discover highly curated roles, engage with senior mentors, and leverage deep career analytics — all in one unified ecosystem.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <Button
+              size="lg"
+              className="px-8 h-14 bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-semibold text-base transition-all "
+              onClick={() => handleNavigate('/signup')}
+            >
+              Initialize Profile
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 h-14 border-zinc-800 bg-zinc-950/50 hover:bg-zinc-900 text-zinc-300 font-semibold text-base flex items-center group transition-all backdrop-blur-sm"
+              onClick={() => handleNavigate('/jobs')}
+            >
+              Explore the Matrix
+              <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Button>
           </div>
         </div>
+      </section>
 
-        {/* Features Grid */}
-        <div className="py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-4xl font-bold text-center text-white mb-12">Our Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {features.map((feature, index) => (
-                <div 
-                  key={index}
-                  className="group relative overflow-hidden rounded-xl hover:scale-105 transition-all duration-300"
-                >
-                  <div className="absolute inset-0 bg-white/5 backdrop-blur-xl transition-all duration-500 group-hover:bg-white/10" />
-                  <div className="relative p-8">
-                    <div className={`w-12 h-12 rounded-lg mb-6 bg-gradient-to-r ${feature.gradient} flex items-center justify-center text-white`}>
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-xl font-semibold mb-4 text-white">{feature.title}</h3>
-                    <p className="text-gray-300">{feature.description}</p>
-                  </div>
+      {/* Features Grid */}
+      <section className="px-6 py-24 max-w-7xl mx-auto border-t border-zinc-900/80">
+        <div className="mb-16 flex flex-col items-start max-w-3xl">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-100 mb-4">Core Capabilities</h2>
+          <p className="text-zinc-400 text-lg leading-relaxed">
+            Engineered exclusively for developers, designers, and originators. We abstract away the friction of career advancement, allowing you to focus purely on shipping.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => (
+            <Card key={index} className="bg-zinc-950/50 border-zinc-800/80 hover:bg-zinc-900/50 transition-colors backdrop-blur-sm group">
+              <CardHeader>
+                <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 group-hover:border-zinc-700 transition-colors">
+                  {feature.icon}
                 </div>
-              ))}
-            </div>
-          </div>
+                <CardTitle className="text-zinc-100 text-xl">{feature.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-zinc-400 text-base leading-relaxed">
+                  {feature.description}
+                </CardDescription>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+      </section>
 
-        {/* CTA Section */}
-        <div className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="relative overflow-hidden rounded-xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 to-green-900/30 backdrop-blur-3xl" />
-              <div className="relative p-12 md:p-16 text-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  Ready to Transform Your Career?
-                </h2>
-                <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                  Join our community of mentors, startups, and professionals shaping the future
-                </p>
-                <button 
-                  className="px-8 py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 hover:scale-105 transition-all duration-300"
-                  onClick={() => handleNavigate('/signup')}
-                >
-                  Join Now
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Call to Action Matrix */}
+      <section className="px-6 py-24 max-w-7xl mx-auto mt-12 bg-zinc-900/20 border border-zinc-800/60 rounded-3xl relative overflow-hidden backdrop-blur-sm">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center text-center px-4">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white mb-6">
+            Ready to deploy your career?
+          </h2>
+          <p className="text-zinc-400 text-lg md:text-xl max-w-xl mx-auto mb-10">
+            Secure early access to our platform. Join a network of individuals building the next generation of software.
+          </p>
+          <Button
+            size="lg"
+            className="h-14 px-10 bg-zinc-100 text-zinc-950 hover:bg-zinc-300 font-bold text-base shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all"
+            onClick={() => handleNavigate('/signup')}
+          >
+            Create Developer Account
+          </Button>
         </div>
-      </div>
+      </section>
+
     </div>
   );
 };

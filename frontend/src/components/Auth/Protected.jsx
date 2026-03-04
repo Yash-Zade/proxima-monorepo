@@ -4,71 +4,71 @@ import apiClient from './ApiClient';
 import { jwtDecode } from 'jwt-decode';
 
 const Protected = ({ children, authentication }) => {
-    const navigate = useNavigate();
-    const [loader, setLoader] = useState(true);
-    const refreshAccessToken = async () => {
-      try {
-        console.log("refreshAccessToken");
-       
-        const response = await apiClient.post(`${import.meta.env.BASE_URL}/auth/refresh`, { token: refreshToken });
-        const { accessToken } = response.data;
-        localStorage.setItem('accessToken', accessToken);
-        return true;
-      } catch (error) {
-        console.error('Failed to refresh token:', error);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        return false;
-      }
-    };
-  
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem('accessToken');
-    //   const refreshToken = localStorage.getItem('refreshToken');
+  const navigate = useNavigate();
+  const [loader, setLoader] = useState(true);
+
+  const refreshAccessToken = async () => {
+    try {
+      console.log("refreshAccessToken");
+      // apiClient already has the correct baseURL; cookies sent automatically via withCredentials
+      const response = await apiClient.post('/auth/refresh');
+      // GlobalResponseHandler wraps all responses: { timeStamp, data: <payload>, error }
+      const { accessToken } = response.data?.data; // LoginResponseDTO inside ApiResponse.data
+      localStorage.setItem('accessToken', accessToken);
+      return true;
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      localStorage.removeItem('accessToken');
+      return false;
+    }
+  };
+
+  const checkAuthStatus = async () => {
+    const token = localStorage.getItem('accessToken');
+
     if (!token) {
       setLoader(false);
-      navigate('/login');
-    }
-  
-      else if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          const currentTime = Date.now() / 1000;
-  
-          // If the token is expired, try to refresh it
-          if (decoded.exp < currentTime) {
-            const refreshed = await refreshAccessToken();
-            if (!refreshed) {
-              setUser(null);
-              navigate('/login');
-              return;
-            }
-          }
-  
-          // If the token is valid and authentication is not required, redirect to home
-          if (!authentication && token) {
-            navigate('/');
-          }
-          setUser(decoded);
-          console.log("decoder",decoded);
-        } catch (error) {
-          console.error('Error decoding token:', error);
-          if (authentication) {
-            navigate('/login');
-          }
-        }
-      } else if ( !token) {
-        // If no token is found, redirect to login page
+      if (authentication) {
         navigate('/login');
       }
-  
-      setLoader(false); // Once auth check is complete, render the children (private route)
-    };
-  
-    useEffect(() => {
-      checkAuthStatus();
-    }, [navigate, authentication]);
-  
-    return loader ? <h1>Loading...</h1> : <>{children}</>;
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        // Token expired — try to refresh via HttpOnly cookie
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) {
+          navigate('/login');
+          setLoader(false);
+          return;
+        }
+      }
+
+      // Token is valid (or refreshed). If this is a guest-only route (login/signup), redirect home.
+      if (!authentication) {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      localStorage.removeItem('accessToken');
+      if (authentication) {
+        navigate('/login');
+      }
+    }
+
+    setLoader(false);
   };
-  export default Protected;
+
+  useEffect(() => {
+    checkAuthStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, authentication]);
+
+  return loader ? <h1>Loading...</h1> : <>{children}</>;
+};
+
+export default Protected;

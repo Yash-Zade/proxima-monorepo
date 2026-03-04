@@ -1,188 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../Auth/ApiClient';
-import { Search, Plus, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const GradientOrb = ({ className }) => (
-  <div className={`absolute rounded-full blur-3xl opacity-20 ${className}`} />
-);
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card";
+import apiClient from '../Auth/ApiClient';
 
 const JobCard = ({ job, onClick }) => (
-  <button
+  <Card
+    className="bg-zinc-950/50 border-zinc-800/80 hover:bg-zinc-900/50 transition-colors cursor-pointer group backdrop-blur-sm shadow-sm hover:shadow-md"
     onClick={onClick}
-    className="w-full backdrop-blur-xl bg-emerald-900/30 rounded-xl p-6 border border-white/10 
-    hover:border-white/20 transition-all shadow-lg mb-4 text-left group"
   >
-    <div className="flex justify-between items-start">
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-2">{job.jobTitle}</h3>
-        <p className="text-gray-400 text-sm mb-3 line-clamp-2">{job.description}</p>
+    <CardHeader className="pb-3">
+      <div className="flex justify-between items-start">
+        <div>
+          <CardTitle className="text-xl font-semibold text-zinc-100 mb-2">{job.title}</CardTitle>
+          <CardDescription className="text-zinc-400 text-sm line-clamp-2 leading-relaxed max-w-2xl">
+            {job.description}
+          </CardDescription>
+        </div>
+        <div className="p-2 rounded-full bg-zinc-900 border border-zinc-800 group-hover:bg-zinc-800 transition-colors hidden sm:block">
+          <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
+        </div>
       </div>
-      <ChevronRight className="text-white/50 group-hover:text-white/80 transition-colors" />
-    </div>
+    </CardHeader>
 
-    <div className="flex flex-wrap gap-2 mb-3">
-      {job.skillsRequired && job.skillsRequired.length > 0 ? (
-        job.skillsRequired.map((skill, index) => (
-          <span
-            key={index}
-            className="px-3 py-1 rounded-full bg-emerald-800/30 text-xs text-emerald-100/70"
-          >
-            {skill}
-          </span>
-        ))
-      ) : (
-        <span className="text-sm text-white/50">No skills specified</span>
-      )}
-    </div>
+    <CardContent>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {job.skillsRequired && job.skillsRequired.length > 0 ? (
+          job.skillsRequired.map((skill, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 font-medium px-3 py-1 text-xs"
+            >
+              {skill}
+            </Badge>
+          ))
+        ) : (
+          <span className="text-sm text-zinc-500">No skills specified</span>
+        )}
+      </div>
 
-    <div className="flex justify-between items-center text-sm text-white/60">
-      <span>Posted by: {job.company || 'Unknown'}</span>
-      {/* <span>{job.location || 'No location specified'}</span> */}
-      <span
-        className={`px-2 py-1 rounded-full ${job.jobStatus === 'Active'
-            ? 'bg-emerald-500/20 text-emerald-300'
-            : 'bg-blue-800 text-white'
-          }`}
-      >
-        {job.jobStatus || 'OPEN'}
-      </span>
-    </div>
-  </button>
+      <div className="flex justify-between items-center text-sm pt-4 border-t border-zinc-800/50">
+        <div className="flex items-center text-zinc-400 font-medium">
+          <Briefcase className="w-4 h-4 mr-2 text-zinc-500" />
+          {job.company || 'Unknown'}
+        </div>
+        <Badge
+          variant="outline"
+          className={`font-semibold tracking-wider uppercase text-[10px] px-2.5 py-0.5 rounded-full border-zinc-800 bg-transparent ${job.jobStatus === 'OPEN' ? 'text-emerald-400 border-emerald-900/30 bg-emerald-900/10' : 'text-zinc-500'
+            }`}
+        >
+          {job.jobStatus === 'OPEN' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>}
+          {job.jobStatus || 'OPEN'}
+        </Badge>
+      </div>
+    </CardContent>
+  </Card>
 );
 
 const JobBoard = () => {
-  const [jobs, setJobs] = useState([null]);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
 
-  const dummyJobs = [
-    {
-      jobId: 1001,
-      jobTitle: "Software Engineer",
-      description: "Develop and maintain software applications for various platforms.",
-      skillsRequired: ["Java", "Python", "C++", "Problem Solving"],
-      company: "Tech Bharat Innovations",
-      status: "Open"
-    },
-    {
-      jobId: 1002,
-      jobTitle: "Data Analyst",
-      description: "Analyze large datasets to extract actionable insights for decision making.",
-      skillsRequired: ["SQL", "Excel", "Python", "Data Visualization"],
-      company: "DataPrabhu Solutions",
-      status: "Closed"
-    },
-    {
-      jobId: 1003,
-      jobTitle: "Marketing Manager",
-      description: "Create and implement marketing strategies to promote products and services.",
-      skillsRequired: ["SEO", "Content Marketing", "Google Analytics"],
-      company: "Global Bharat Marketing",
-      status: "Open"
-    },
-    {
-      jobId: 1004,
-      jobTitle: "Product Manager",
-      description: "Oversee the development of new products from concept to launch.",
-      skillsRequired: ["Project Management", "Agile", "Communication"],
-      company: "Niti Innovate Co.",
-      status: "Open"
-    },
-    {
-      jobId: 1005,
-      jobTitle: "UX/UI Designer",
-      description: "Design user-friendly interfaces for websites and mobile apps.",
-      skillsRequired: ["Adobe XD", "Figma", "HTML/CSS", "User Research"],
-      company: "DesignSutra Pro",
-      status: "Interview"
-    },
-    {
-      jobId: 1006,
-      jobTitle: "HR Specialist",
-      description: "Manage recruitment, employee relations, and benefits administration.",
-      skillsRequired: ["HR Software", "Communication", "Conflict Resolution"],
-      company: "JanSeva Inc.",
-      status: "Closed"
-    },
-    {
-      jobId: 1007,
-      jobTitle: "Financial Analyst",
-      description: "Analyze financial data, prepare reports, and advise on investment decisions.",
-      skillsRequired: ["Excel", "Financial Modeling", "Accounting"],
-      company: "Artha Solutions Pvt. Ltd.",
-      status: "Open"
-    },
-    {
-      jobId: 1008,
-      jobTitle: "Customer Support Lead",
-      description: "Oversee customer service team and ensure customer satisfaction.",
-      skillsRequired: ["Communication", "Problem Solving", "CRM Tools"],
-      company: "SevaPlus Ltd.",
-      status: "Open"
-    },
-    {
-      jobId: 1009,
-      jobTitle: "Network Administrator",
-      description: "Manage and maintain network systems and infrastructure.",
-      skillsRequired: ["Networking", "VPNs", "Troubleshooting"],
-      company: "NetSuraksha Inc.",
-      status: "Open"
-    },
-    {
-      jobId: 1010,
-      jobTitle: "Sales Executive",
-      description: "Drive sales strategies, manage client relationships, and close deals.",
-      skillsRequired: ["Negotiation", "CRM", "Presentation Skills"],
-      company: "Vikray Bharat Global",
-      status: "Closed"
-    }
-  ];
-
-  const date = new Date();
-
-    useEffect(() => {
-      // const fetchJobs = async () => {
-      //   setLoading(true);
-      //   setError(null);
-      //   try {
-      //     const response = await apiClient.get(`http://localhost:8080/public/jobs`,);
-
-      //     console.log("response",response);
-      //     if (response.data?.data) {
-      //       const { content, totalPages } = response.data.data;
-      //       setJobs( dummyJobs);
-      //       setTotalPages(totalPages || 0);
-      //     }
-      //   } catch (error) {
-      //     console.error('Error fetching jobs:', error);
-      //     setError('Failed to fetch jobs. Please try again later.');
-      //   } finally {
-      //     setLoading(false);
-      //   }
-      // };
-
-      // fetchJobs();
-      const fetchJobs=async()=>{
-          setJobs( dummyJobs);
-          setTotalPages(totalPages);
-          setLoading(false);
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await apiClient.get('/public/jobs');
+        // GlobalResponseHandler wraps all responses: { timeStamp, data: <payload>, error }
+        // Page<JobDTO> is inside response.data.data
+        setJobs(response.data.data?.content || []);
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error)
+      } finally {
+        setLoading(false);
       }
-      fetchJobs();
-  }, [page, searchQuery]);
-
-  // useEffect(() => {
-  //   async function GetJobs() {
-  //     const JobDetails = await apiClient.get(`${import.meta.env.VITE_BASE_URL}/public/jobs`);
-  //     setJobs(JobDetails.data);
-  //   }
-  //   GetJobs();
-  // }, [page, searchQuery])
-
+    };
+    fetchJobs();
+  }, []);
 
   const handleJobClick = (job) => {
     navigate(`/jobs/${job.jobId}`);
@@ -190,70 +88,60 @@ const JobBoard = () => {
 
   const filteredJobs = searchQuery
     ? jobs.filter((job) =>
-      job.jobTitle?.toLowerCase().includes(searchQuery.toLowerCase())
+      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.company?.toLowerCase().includes(searchQuery.toLowerCase())
     )
     : jobs;
 
-
-
   return (
-    <div className="min-h-screen bg-black text-white p-20 relative overflow-hidden">
-      <GradientOrb className="w-96 h-96 bg-emerald-500 left-0 top-0" />
-      <GradientOrb className="w-96 h-96 bg-green-500 right-0 bottom-0" />
-      <GradientOrb className="w-64 h-64 bg-teal-500 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+    <div className="min-h-screen bg-zinc-950 font-sans selection:bg-zinc-800 selection:text-white pt-32 pb-20">
+      <div className="max-w-4xl mx-auto px-6 lg:px-8">
 
-      <div className="max-w-5xl mx-auto relative">
-        <div className="backdrop-blur-xl bg-emerald-900/30 rounded-2xl p-6 mb-6 border border-white/10">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
-              Job Board
-            </h1>
+        <div className="mb-12">
+          <Badge variant="outline" className="px-3 py-1 mb-6 rounded-full border-zinc-800 bg-zinc-950/50 text-zinc-400 gap-2 font-normal">
+            <Search className="w-3 h-3" />
+            Opportunity Matrix
+          </Badge>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tighter mb-4">Job Listing</h1>
+          <p className="text-zinc-400 text-lg max-w-2xl leading-relaxed">
+            Discover your next professional engagement. Explore highly curated roles parsed specifically for your expertise.
+          </p>
+        </div>
 
-          </div>
-
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search jobs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-emerald-800/20 border border-emerald-700/30 rounded-xl px-4 py-3 pl-11
-              focus:outline-none focus:border-emerald-600/40 transition-colors text-white placeholder-white/50"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" size={20} />
-          </div>
+        <div className="relative mb-10 group">
+          <Input
+            type="text"
+            placeholder="Search by role or company..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-zinc-950/50 border-zinc-800 rounded-2xl px-5 py-7 pl-14 h-14
+            focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:border-zinc-700 transition-all text-zinc-50 placeholder-zinc-500 text-base shadow-sm"
+          />
+          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-zinc-500 group-focus-within:text-zinc-300 transition-colors pointer-events-none" size={20} />
         </div>
 
         <div className="space-y-4">
           {loading ? (
-            <div className="text-center text-white/70">Loading...</div>
-          ) : error ? (
-            <div className="text-center text-red-400">{error}</div>
+            <div className="text-center py-24 text-zinc-500 flex flex-col items-center">
+              <div className="w-8 h-8 border-2 border-zinc-800 border-t-zinc-400 rounded-full animate-spin mb-4"></div>
+              <p className="text-sm font-medium">Connecting to nodes...</p>
+            </div>
           ) : filteredJobs.length === 0 ? (
-            <div className="text-center text-white/70">No jobs found</div>
+            <Card className="bg-zinc-950/30 border-dashed border-zinc-800 text-center py-20">
+              <CardContent className="pt-6 flex flex-col items-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 mb-4">
+                  <Search className="w-6 h-6 text-zinc-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-zinc-200 mb-2">No active missions</h3>
+                <p className="text-zinc-500">Adjust your search parameters to discover new opportunities.</p>
+              </CardContent>
+            </Card>
           ) : (
             filteredJobs.map((job) => (
               <JobCard key={job.jobId} job={job} onClick={() => handleJobClick(job)} />
             ))
           )}
         </div>
-
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-6">
-            {[...Array(totalPages)].map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setPage(index)}
-                className={`px-4 py-2 rounded-lg transition-colors ${page === index
-                    ? 'bg-emerald-700/40 text-white'
-                    : 'bg-emerald-800/20 text-white/70 hover:bg-emerald-700/30'
-                  }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
