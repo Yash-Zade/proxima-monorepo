@@ -1,5 +1,6 @@
 package com.teamarc.proxima.services;
 
+import com.teamarc.proxima.dto.CollegeDTO;
 import com.teamarc.proxima.dto.StudentDTO;
 import com.teamarc.proxima.entity.College;
 import com.teamarc.proxima.entity.User;
@@ -22,6 +23,10 @@ public class CollegeService {
         return collegeRepository.save(college);
     }
 
+    public CollegeDTO getCollegeProfile() {
+        return modelMapper.map(getCurrentCollege(), CollegeDTO.class);
+    }
+
     public List<StudentDTO> getStudents() {
         return collegeRepository.findStudentsById(getCurrentCollege().getId())
                 .stream()
@@ -31,7 +36,8 @@ public class CollegeService {
     private College getCurrentCollege() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return collegeRepository.findByUser(user)
-                .orElseThrow(() -> new ResourceNotFoundException("College not associated with user with id: " + user.getId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "College not associated with user with id: " + user.getId()));
     }
 
     public StudentDTO getStudentById(Long id) {
@@ -39,7 +45,8 @@ public class CollegeService {
                 .stream()
                 .filter(student -> student.getId().equals(id))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id)), StudentDTO.class);
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id)),
+                StudentDTO.class);
     }
 
     public List<StudentDTO> getStudentsByStatus(String status) {

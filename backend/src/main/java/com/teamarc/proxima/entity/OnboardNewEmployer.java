@@ -14,6 +14,7 @@ public class OnboardNewEmployer{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Long userId;
     private String companyName;
     private String companyWebsite;
 }

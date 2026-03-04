@@ -1,6 +1,5 @@
 package com.teamarc.proxima.controller;
 
-
 import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    @GetMapping(path = "/all")
+    public ResponseEntity<java.util.List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
 
     @PostMapping(path = "/request/mentor")
     public ResponseEntity<MentorProfileDTO> requestToBeAMentor(@RequestBody OnboardNewMentorDTO mentorRequestDTO) {
@@ -40,8 +44,12 @@ public class UserController {
     }
 
     @PostMapping(path = "/request/student/{userId}")
-    public ResponseEntity<StudentDTO> requestToBeAStudent(@PathVariable Long userId,@RequestBody String collegeName) {
-        return ResponseEntity.ok(userService.requestStudentOnboard(userId,collegeName));
+    public ResponseEntity<StudentDTO> requestToBeAStudent(@PathVariable Long userId, @RequestBody String collegeName) {
+        return ResponseEntity.ok(userService.requestStudentOnboard(userId, collegeName));
     }
 
+    @GetMapping(path = "/wallet")
+    public ResponseEntity<WalletDTO> getUserWallet() {
+        return ResponseEntity.ok(userService.getUserWallet());
+    }
 }

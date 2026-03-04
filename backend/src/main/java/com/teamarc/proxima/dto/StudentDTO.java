@@ -7,4 +7,5 @@ public class StudentDTO {
     Long id;
     UserDTO user;
     String collegeName;
+    private ApplicantDTO applicant;
 }

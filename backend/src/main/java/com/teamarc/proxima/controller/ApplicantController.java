@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/applicants")
-@Secured("ROLE_APPLICANT")
+@Secured({ "ROLE_APPLICANT", "ROLE_USER" })
 public class ApplicantController {
 
     private final ApplicantService applicantService;
@@ -30,14 +30,15 @@ public class ApplicantController {
         return ResponseEntity.ok(applicantService.getApplicantProfile());
     }
 
-//    @PreAuthorize("@applicantService.isOwnerOfProfile(#id)")
-//    @PutMapping(path = "/profile/{id}")
-//    public ResponseEntity<ApplicantDTO> updateProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
-//        return ResponseEntity.ok(applicantService.updateProfile(id, object));
-//    }
+    @PreAuthorize("@applicantService.isOwnerOfProfile(#id)")
+    @PutMapping(path = "/profile/{id}")
+    public ResponseEntity<ApplicantDTO> updateProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
+        return ResponseEntity.ok(applicantService.updateProfile(id, object));
+    }
 
     @PostMapping(path = "/jobs/{jobId}/apply")
-    public ResponseEntity<List<QuestionDTO>> applyForJob(@PathVariable Long jobId, @RequestBody JobApplicationDTO jobApplication) {
+    public ResponseEntity<List<QuestionDTO>> applyForJob(@PathVariable Long jobId,
+            @RequestBody JobApplicationDTO jobApplication) {
         return ResponseEntity.ok(applicantService.applyJobRequest(jobId, jobApplication));
     }
 
@@ -48,19 +49,21 @@ public class ApplicantController {
     }
 
     @PostMapping(path = "/jobs/{application-id}/accept-application")
-    public ResponseEntity<JobApplicationDTO> acceptJobApplication(@PathVariable Long jobApplicationId, @RequestBody JobApplicationDTO jobApplicationDTO,@RequestBody List<String> certifiedSkills) {
+    public ResponseEntity<JobApplicationDTO> acceptJobApplication(@PathVariable Long jobApplicationId,
+            @RequestBody JobApplicationDTO jobApplicationDTO, @RequestBody List<String> certifiedSkills) {
 
-        return ResponseEntity.ok(applicantService.acceptJobApplication(jobApplicationId, jobApplicationDTO, certifiedSkills));
+        return ResponseEntity
+                .ok(applicantService.acceptJobApplication(jobApplicationId, jobApplicationDTO, certifiedSkills));
     }
-
 
     @GetMapping(path = "/job-applications")
-    public ResponseEntity<Page<JobApplicationDTO>> getAllJobApplications(@RequestParam(defaultValue = "0") Integer pageOffset,
-                                                                         @RequestParam(defaultValue = "10", required = false) Integer pageSize, Pageable pageable) {
-        PageRequest pageRequest = PageRequest.of(pageOffset, pageSize, Sort.by(Sort.Direction.DESC, "appliedDate", "applicationId"));
+    public ResponseEntity<Page<JobApplicationDTO>> getAllJobApplications(
+            @RequestParam(defaultValue = "0") Integer pageOffset,
+            @RequestParam(defaultValue = "10", required = false) Integer pageSize, Pageable pageable) {
+        PageRequest pageRequest = PageRequest.of(pageOffset, pageSize,
+                Sort.by(Sort.Direction.DESC, "appliedDate", "applicationId"));
         return ResponseEntity.ok(applicantService.getAllJobApplications(pageRequest, pageable));
     }
-
 
     @PreAuthorize("@applicantService.isOwnerOfApplication(#applicationId)")
     @GetMapping(path = "/applications/{applicationId}/status")
@@ -69,13 +72,11 @@ public class ApplicantController {
         return ResponseEntity.ok(status);
     }
 
-
     @PostMapping(path = "/resume/upload")
     public ResponseEntity<String> uploadResume(@RequestParam("file") MultipartFile file) {
         applicantService.uploadResume(file);
         return ResponseEntity.ok("Resume uploaded successfully");
     }
-
 
     @PostMapping(path = "/sessions/{sessionId}/request")
     public ResponseEntity<SessionDTO> requestSession(@PathVariable Long sessionId) {
