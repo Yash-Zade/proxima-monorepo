@@ -7,6 +7,7 @@ import com.teamarc.proxima.entity.enums.SessionStatus;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
 import com.teamarc.proxima.repository.ApplicantRepository;
 import com.teamarc.proxima.repository.JobApplicationRepository;
+import com.teamarc.proxima.utils.FileService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,7 @@ public class ApplicantService {
     private final SessionManagementService sessionManagementService;
     private final WalletService walletService;
     private final InterviewQuestionService interviewQuestionService;
+    private final FileService fileService;
 
     @Transactional
     public List<QuestionDTO> applyJobRequest(Long jobId, JobApplicationDTO jobApplicationDTO) {
@@ -71,17 +73,21 @@ public class ApplicantService {
     }
 
     public Page<JobApplicationDTO> getAllJobApplications(PageRequest pageRequest, Pageable pageable) {
-        Page<JobApplication> jobApplications = jobApplicationRepository.findByApplicant(getCurrentApplicant(), pageRequest, pageable);
+        Page<JobApplication> jobApplications = jobApplicationRepository.findByApplicant(getCurrentApplicant(),
+                pageRequest, pageable);
         return jobApplications.map(jobApplication -> modelMapper.map(jobApplication, JobApplicationDTO.class));
     }
 
     public Applicant getCurrentApplicant() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return applicantRepository.findByUser(user)
-                .orElseThrow(() -> new ResourceNotFoundException("Applicant not associated with user with id: " + user.getId()));
-
+                .orElseGet(() -> {
+                    Applicant applicant = Applicant.builder()
+                            .user(user)
+                            .build();
+                    return applicantRepository.save(applicant);
+                });
     }
-
 
     public ApplicantDTO updateProfile(Long applicantId, Map<String, Object> updates) {
         Applicant applicant = applicantRepository.findById(applicantId)
@@ -94,29 +100,29 @@ public class ApplicantService {
         return modelMapper.map(applicantRepository.save(applicant), ApplicantDTO.class);
     }
 
-
     public void uploadResume(MultipartFile file) {
         Applicant applicant = getCurrentApplicant();
-        applicant.setResume(file.getOriginalFilename());
+        String fileUrl = fileService.uploadFile(file);
+        applicant.setResume(fileUrl);
         applicantRepository.save(applicant);
     }
 
     public String checkApplicationStatus(Long applicationId) {
-        JobApplication jobApplication = jobApplicationRepository.findById(applicationId).orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
+        JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
         return jobApplication.getApplicationStatus().name();
     }
 
     public ApplicantDTO getApplicantById(Long applicantId) {
         return modelMapper.map(applicantRepository.findById(applicantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Applicant not found with id: " + applicantId)), ApplicantDTO.class);
+                .orElseThrow(() -> new ResourceNotFoundException("Applicant not found with id: " + applicantId)),
+                ApplicantDTO.class);
     }
-
 
     public SessionDTO requestSession(Long sessionId) {
         ApplicantDTO applicant = getApplicantProfile();
         return sessionManagementService.requestSession(sessionId, applicant);
     }
-
 
     public MentorProfileDTO rateMentor(RatingDTO ratingDTO, Long sessionId) {
         Session session = modelMapper.map(sessionService.getSessionById(sessionId), Session.class);
@@ -125,7 +131,8 @@ public class ApplicantService {
             throw new RuntimeException("Applicant is not the owner of session");
         }
         if (!session.getSessionStatus().equals(SessionStatus.COMPLETED)) {
-            throw new RuntimeException("Session status is not ended hence cannot be Rated, status: " + session.getSessionStatus());
+            throw new RuntimeException(
+                    "Session status is not ended hence cannot be Rated, status: " + session.getSessionStatus());
         }
 
         return ratingService.rateMentor(ratingDTO);
@@ -141,7 +148,8 @@ public class ApplicantService {
 
     public JobApplication getApplicationById(Long applicationId) {
         return jobApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + applicationId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Job application not found with id: " + applicationId));
     }
 
     public boolean isOwnerOfApplication(Long applicationId) {
@@ -171,18 +179,18 @@ public class ApplicantService {
         return sessionManagementService.cancelSession(sessionId);
     }
 
-
     public WalletDTO getWallet() {
         Wallet wallet = walletService.getWalletByUserId(getCurrentApplicant().getUser().getId());
         return modelMapper.map(wallet, WalletDTO.class);
     }
 
-    public JobApplicationDTO acceptJobApplication(Long jobApplicationId, JobApplicationDTO jobApplicationDTO, List<String> certifiedSkills) {
+    public JobApplicationDTO acceptJobApplication(Long jobApplicationId, JobApplicationDTO jobApplicationDTO,
+            List<String> certifiedSkills) {
         JobApplication jobApplication = jobApplicationRepository.findById(jobApplicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
-         Applicant applicant = applicantRepository.getReferenceById(jobApplicationDTO.getApplicantId());
-         applicant.setCertifiedSkills(certifiedSkills);
-         applicantRepository.save(applicant);
+        Applicant applicant = applicantRepository.getReferenceById(jobApplicationDTO.getApplicantId());
+        applicant.setCertifiedSkills(certifiedSkills);
+        applicantRepository.save(applicant);
         jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);
         jobApplication.setJob(modelMapper.map(jobService.getJobById(jobApplicationDTO.getJobId()), Job.class));
         JobApplication savedJobApplication = jobApplicationRepository.save(jobApplication);

@@ -7,79 +7,34 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronRight,
-  XCircle,
+  X,
   Users,
 } from "lucide-react";
 import WalletComponent from "../Wallet/Wallet";
 import apiClient from "../Auth/ApiClient";
-import EmployerProfile from "./EmployerProfile";
 import { Link } from "react-router-dom";
-// Background gradient orb component
-const GradientOrb = ({ className }) => (
-  <div className={`absolute rounded-full blur-3xl opacity-20 ${className}`} />
-);
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 
-// Status badge component
+// Status badge component mapping to strict zinc system
 const StatusBadge = ({ status }) => {
-  const colors = {
-    OPEN: "bg-green-500/20 text-green-500 border-green-500/20",
-    CLOSED: "bg-red-500/20 text-red-500 border-red-500/20",
-    APPLIED: "bg-green-500/20 text-green-500 border-green-500/20",
-    WITHDRAWN: "bg-gray-500/20 text-gray-500 border-gray-500/20",
-    ACCEPTED: "bg-green-500/20 text-green-500 border-green-500/20",
-    SHORTLISTED: "bg-emerald-500/20 text-emerald-500 border-emerald-500/20",
-    REJECTED: "bg-red-500/20 text-red-500 border-red-500/20",
-    ACTIVE: "bg-green-500/20 text-green-500 border-green-500/20",
-    CLOSED_JOB: "bg-gray-500/20 text-gray-500 border-gray-500/20",
-    DRAFT: "bg-emerald-500/20 text-emerald-500 border-emerald-500/20",
-};
+  if (!status) return null;
+  const isPositive = ["OPEN", "ACCEPTED", "ACTIVE"].includes(status);
+  const isNeutral = ["DRAFT", "APPLIED", "SHORTLISTED"].includes(status);
+  const isNegative = ["CLOSED", "WITHDRAWN", "REJECTED", "CLOSED_JOB"].includes(status);
+
+  let variant = "outline";
+  if (isPositive) variant = "default"; // Usually green, now zinc-100 logic
+  else if (isNegative) variant = "destructive"; // Red
+  else if (isNeutral) variant = "secondary"; // Grey fill
 
   return (
-    <span
-      className={`px-3 py-1 rounded-full text-sm border ${
-        colors[status] || colors.OPEN
-      }`}
-    >
-      {status}
-    </span>
+    <Badge variant={variant} className="px-2 py-0.5 text-[10px] tracking-wider font-semibold uppercase">
+      {status.replace('_', ' ')}
+    </Badge>
   );
 };
-
-// JobCard component (if needed in the future)
-const JobCard = ({ job, onViewApplications, onToggleStatus }) => (
-  <div className="border border-white/20 rounded-xl p-4">
-    <div className="flex justify-between items-start mb-4">
-      <h3 className="text-xl font-semibold text-white">{job.title}</h3>
-      <StatusBadge status={job.status} />
-    </div>
-    <div className="flex justify-between items-center">
-      <div className="flex items-center space-x-2">
-        <Users size={18} className="text-gray-400" />
-        <span className="text-sm text-gray-400">
-          {job.applicationCount} applicants
-        </span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <button
-          onClick={() => onViewApplications(job)}
-          className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-sm font-medium"
-        >
-          View Applications
-        </button>
-        <button
-          onClick={() => onToggleStatus(job.id)}
-          className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-            job.status === "OPEN"
-              ? "bg-green-500 hover:bg-green-600"
-              : "bg-red-500 hover:bg-red-600"
-          }`}
-        >
-          {job.status === "OPEN" ? "Close Job" : "Reopen Job"}
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 const EmployerDashboard = () => {
   const [profile, setProfile] = useState(null);
@@ -88,119 +43,104 @@ const EmployerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isApplicationsModalOpen, setIsApplicationsModalOpen] = useState(false);
   const pageSize = 10;
 
-  // Fetch employer profile
   useEffect(() => {
-    const dummyProfile = {
-      employerId: 101,
-      companyName: "Infosys Technologies Ltd.",
-      companyWebsite: "www.infosys.com",
-      user: {
-        id: 101,
-        name: "Amit Sharma",
-        email: "amit.sharma@infosys.com",
-        roles: ["ROLE_EMPLOYER"],
-      },
-    };
-    
-    
-    
-    // async function GetProfile(){
-    //   const EmployerProfile=await apiClient.get(`${import.meta.env.BASE_URL}/employers/profile/${id}`)
-    //   setProfile(EmployerProfile.data)
-    //   setLoading(false)
-    // }
-    // GetProfile()
-    setTimeout(() => {
-      setProfile(dummyProfile);
-      setLoading(false);
-    }, 500);
-  }, [profile]);
+    fetchProfile();
+  }, []);
 
-  // Fetch jobs
+  const fetchProfile = async () => {
+    try {
+      const resp = await apiClient.get('/employers/profile');
+      setProfile(resp.data.data);
+    } catch (err) {
+      console.error("Failed to fetch employer profile:", err);
+      setError("Failed to load profile. Please check your credentials.");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // async function GetJobs() {
-    //   const Jobs = await apiClient.get(`${import.meta.env.BASE_URL}/employers/jobs/${id}`)
-    //   setJobs(Jobs.data);
-    // }
-    // GetJobs()
-    const jobTitles = [
-      "Software Engineer",
-      "Data Scientist",
-      "Marketing Executive",
-      "Product Manager",
-      "UX/UI Designer",
-      "HR Manager",
-      "Chartered Accountant",
-      "Customer Support Lead",
-      "IT Administrator",
-      "Business Development Executive"
-    ];
+    if (profile && profile.employerId) {
+      fetchJobs();
+    }
+  }, [profile, currentPage]);
 
-    const dummyJobs = Array.from({ length: 10 }, (_, index) => ({
-      id: index + 1,
-      title: jobTitles[index % jobTitles.length],
-      status: index % 2 === 0 ? "OPEN" : "CLOSED",
-      createdAt: new Date(2024, 0, index + 1).toISOString(),
-      applicationCount: Math.floor(Math.random() * 50) + 1,
-    }));
-
-    setTimeout(() => {
-      setJobs(dummyJobs);
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const resp = await apiClient.get(`/employers/${profile.employerId}/jobs?pageOffset=${currentPage}&pageSize=${pageSize}`);
+      setJobs(resp.data.data?.content || []);
+      setTotalPages(resp.data.data?.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch jobs:", err);
+      setError("Failed to fetch job postings.");
+    } finally {
       setLoading(false);
-    }, 500);
-  }, [currentPage]);
+    }
+  };
 
-  const handleViewApplications = async(job) => {
+  const handleViewApplications = async (job) => {
     setSelectedJob(job);
-
-    // // Dummy applications data
-    const dummyApplications = Array.from(
-      { length: job.applicationCount },
-      (_, index) => ({
-        id: index + 1,
-        applicantName: `Applicant ${index + 1}`,
-        status: ["APPLIED", "WITHDRAWN", "ACCEPTED", "SHORTLISTED", "REJECTED"][
-          index % 5
-        ],
-      })
-    );
-    // const Applications=await apiClient.get(`employers/jobs/${job.id}/applications`)
-    // setApplications(Applications.data);
-    const Applications = [ 
-      { id: 1, applicantName: "Arjun Mehta", status: "SHORTLISTED" }, // Selected for further process
-      { id: 2, applicantName: "Sneha Iyer", status: "REJECTED" },     // Not selected
-      { id: 3, applicantName: "Vikram Singh", status: "SHORTLISTED" }, // Selected for further process
-      { id: 4, applicantName: "Pooja Deshmukh", status: "REJECTED" },  // Not selected
-  ];
-  
-  // Set the dummy data in state
-  setApplications(Applications);
     setIsApplicationsModalOpen(true);
+    try {
+      // jobId maps to either id or jobId depending on DTO
+      const jobId = job.jobId || job.id;
+      const resp = await apiClient.get(`/employers/jobs/${jobId}/applications`);
+      // Since JobApplicationDTO lacks applicantName, we might only have applicantId
+      setApplications(resp.data.data?.content || []);
+    } catch (err) {
+      console.error("Failed to fetch applications:", err);
+    }
   };
 
-  const handleToggleJobStatus = (jobId) => {
-    setJobs((prevJobs) =>
-      prevJobs.map((job) =>
-        job.id === jobId
-          ? { ...job, status: job.status === "OPEN" ? "CLOSED" : "OPEN" }
-          : job
-      )
-    );
+  const handleToggleJobStatus = async (job) => {
+    const jobId = job.jobId || job.id;
+    try {
+      if (job.status === "OPEN" || job.jobStatus === "OPEN") {
+        await apiClient.post(`/employers/jobs/${jobId}/close`);
+        setJobs((prevJobs) =>
+          prevJobs.map((j) =>
+            (j.jobId || j.id) === jobId
+              ? { ...j, status: "CLOSED", jobStatus: "CLOSED" }
+              : j
+          )
+        );
+      } else {
+        // Assume backend allows PUT updates for status
+        await apiClient.put(`/employers/jobs/${jobId}`, { status: "OPEN", jobStatus: "OPEN" });
+        setJobs((prevJobs) =>
+          prevJobs.map((j) =>
+            (j.jobId || j.id) === jobId
+              ? { ...j, status: "OPEN", jobStatus: "OPEN" }
+              : j
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Failed to toggle status:", err);
+      alert("Error toggling job status.");
+    }
   };
 
-  const handleToggleApplicationStatus = (applicationId) => {
-    setApplications((prevApplications) =>
-      prevApplications.map((app) =>
-        app.id === applicationId
-          ? { ...app, status: toggleStatus(app.status) }
-          : app
-      )
-    );
+  const handleToggleApplicationStatus = async (applicationId, currentStatus) => {
+    const nextStatus = toggleStatus(currentStatus);
+    try {
+      await apiClient.post(`/employers/applications/${applicationId}/status?status=${nextStatus}`);
+      setApplications((prevApplications) =>
+        prevApplications.map((app) =>
+          (app.applicationId || app.id) === applicationId
+            ? { ...app, applicationStatus: nextStatus, status: nextStatus }
+            : app
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update application status:", err);
+      alert("Error updating application status.");
+    }
   };
 
   const toggleStatus = (currentStatus) => {
@@ -213,278 +153,247 @@ const EmployerDashboard = () => {
       OPEN: "CLOSED",
       CLOSED: "OPEN",
     };
-    return statusFlow[currentStatus] || "APPLIED";
+    return statusFlow[currentStatus] || "SHORTLISTED";
   };
 
-  if (loading) {
+  const getNextStatusText = (currentStatus) => {
+    const statusFlow = {
+      APPLIED: "Shortlist",
+      SHORTLISTED: "Accept",
+      ACCEPTED: "Close",
+      REJECTED: "Withdraw",
+      WITHDRAWN: "Apply",
+    };
+    return statusFlow[currentStatus] || "Shortlist";
+  };
+
+  if (loading && !profile) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-zinc-950 font-sans flex items-center justify-center p-4">
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 border-2 border-zinc-800 border-t-zinc-400 rounded-full animate-spin mb-4"></div>
+          <p className="tracking-widest uppercase text-sm font-semibold text-zinc-500 animate-pulse">Initializing Data Stream...</p>
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !profile) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-        <p>Error: {error}</p>
+      <div className="min-h-screen bg-zinc-950 font-sans text-zinc-100 flex items-center justify-center p-4">
+        <p className="text-red-400 font-mono text-sm border border-red-900/50 bg-red-950/20 p-4 rounded-lg">ERR: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden p-4 md:p-8">
-      {/* Background effects */}
-      <GradientOrb className="w-96 h-96 bg-green-500 left-0 top-0" />
-      <GradientOrb className="w-96 h-96 bg-emerald-500 right-0 bottom-0" />
-      <GradientOrb className="w-64 h-64 bg-lime-500 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white pb-20">
 
-      <div className="max-w-7xl mx-auto space-y-8 p-24">
-        {/* Profile Section */}
-        <div className="backdrop-blur-xl bg-gray-900/30 rounded-3xl p-6 border border-white/20">
-        <div className="flex space-x-5">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-6">
-            Employer Dashboard
-          </h1>
-        <WalletComponent/>
+      <div className="max-w-7xl mx-auto space-y-8 px-6 pt-24">
+
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-2">
+              Enterprise Hub
+            </h1>
+            <p className="text-zinc-400 text-sm max-w-xl leading-relaxed">
+              Manage corporate node details, open positions, and review application streams from the network.
+            </p>
+          </div>
+          <div className="w-full md:w-auto p-4 bg-zinc-900 rounded-xl border border-zinc-800 shadow-xl min-w-[300px]">
+            <WalletComponent />
+          </div>
         </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Building2 className="text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Company Name</p>
-                  <p className="text-lg font-medium">{profile?.companyName}</p>
-                </div>
-              </div>
 
-              <div className="flex items-center space-x-3">
-                <Globe className="text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Website</p>
-                  <p className="text-lg font-medium">
+        {/* Profile Section */}
+        <Card className="bg-zinc-900/50 border-zinc-800 shadow-md">
+          <CardHeader className="border-b border-zinc-800/50 pb-5">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-zinc-400" />
+              Corporate Operator Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-5">
+                <div className="flex items-start flex-col gap-1.5 p-3 rounded-lg hover:bg-zinc-900 transition-colors border border-transparent hover:border-zinc-800/50">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 flex items-center gap-2"><Building2 className="w-4 h-4" /> Entity Name</p>
+                  <p className="text-[15px] font-medium text-zinc-200">{profile?.companyName}</p>
+                </div>
+
+                <div className="flex items-start flex-col gap-1.5 p-3 rounded-lg hover:bg-zinc-900 transition-colors border border-transparent hover:border-zinc-800/50">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 flex items-center gap-2"><Globe className="w-4 h-4" /> Domain</p>
+                  <p className="text-[15px] font-medium text-zinc-200 font-mono tracking-tight cursor-pointer hover:underline underline-offset-4 decoration-zinc-700">
                     {profile?.companyWebsite}
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <User2 className="text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Contact Person</p>
-                  <p className="text-lg font-medium">{profile?.user.name}</p>
+              <div className="space-y-5">
+                <div className="flex items-start flex-col gap-1.5 p-3 rounded-lg hover:bg-zinc-900 transition-colors border border-transparent hover:border-zinc-800/50">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 flex items-center gap-2"><User2 className="w-4 h-4" /> Primary Contact</p>
+                  <p className="text-[15px] font-medium text-zinc-200">{profile?.user?.name}</p>
                 </div>
-              </div>
 
-              <div className="flex items-center space-x-3">
-                <Mail className="text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Email</p>
-                  <p className="text-lg font-medium">{profile?.user.email}</p>
+                <div className="flex items-start flex-col gap-1.5 p-3 rounded-lg hover:bg-zinc-900 transition-colors border border-transparent hover:border-zinc-800/50">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 flex items-center gap-2"><Mail className="w-4 h-4" /> Communication Address</p>
+                  <p className="text-[15px] font-medium text-zinc-200">{profile?.user?.email}</p>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Jobs Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Briefcase className="text-gray-400" />
-              <h2 className="text-xl font-semibold">My Job Listings</h2>
+        {/* Jobs List Section */}
+        <Card className="bg-zinc-900/50 border-zinc-800 shadow-md">
+          <CardHeader className="border-b border-zinc-800/50 pb-5 flex flex-row items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-zinc-400" />
+                Active Postings
+              </CardTitle>
+              <CardDescription>Review and manage all corporate network jobs.</CardDescription>
             </div>
-            <button className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg transition-colors text-sm font-medium">
-              <Link to="/addJob">
-                Post New Job
-              </Link>
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="bg-gray-800">
-                  <th className="text-left py-3 px-4 text-sm font-medium">
-                    Job Title
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium">
-                    Applicants
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-gray-800">
-                    <td className="py-3 px-4">{job.title}</td>
-                    <td className="py-3 px-4">{job.applicationCount}</td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={job.status} />
-                    </td>
-                    <td className="py-3 px-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleViewApplications(job)}
-                        className="px-4 py-1 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        View Applications
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleJobStatus(job.id);
-                        }}
-                        className={`px-4 py-1 rounded-lg transition-colors text-sm cursor-pointer font-medium ${
-                          job.status === "OPEN"
-                            ? "bg-green-500 hover:bg-green-600"
-                            : "bg-red-500 hover:bg-red-600"
-                        }`}
-                      >
-                        {job.status === "OPEN" ? "Close Job" : "Reopen Job"}
-                      </button>
-                    </td>
+            <Button variant="default" className="bg-zinc-100 text-zinc-900 hover:bg-zinc-300 font-semibold" asChild>
+              <Link to="/addJob">Deploy New Node</Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-zinc-900/80 text-xs uppercase text-zinc-500 font-bold border-b border-zinc-800">
+                  <tr>
+                    <th className="px-6 py-4 tracking-wider">Position Title</th>
+                    <th className="px-6 py-4 tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-right tracking-wider">Execution</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-6">
-            <p className="text-sm text-gray-400">
-              Showing {jobs.length} of {totalPages * pageSize} jobs
-            </p>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0}
-                className="p-2 rounded-lg hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Previous Page"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
-                }
-                disabled={currentPage === totalPages - 1}
-                className="p-2 rounded-lg hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Next Page"
-              >
-                <ChevronRight size={20} />
-              </button>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {jobs.length > 0 ? jobs.map((job) => (
+                    <tr key={job.jobId || job.id} className="hover:bg-zinc-900/50 transition-colors">
+                      <td className="px-6 py-5 font-semibold text-zinc-200 text-[15px]">{job.title || job.jobTitle}</td>
+                      <td className="px-6 py-5">
+                        <StatusBadge status={job.jobStatus || job.status} />
+                      </td>
+                      <td className="px-6 py-5 text-right flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 text-xs"
+                          onClick={() => handleViewApplications(job)}
+                        >
+                          Applications
+                        </Button>
+                        <Button
+                          variant={(job.status === "OPEN" || job.jobStatus === "OPEN") ? "destructive" : "secondary"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleJobStatus(job);
+                          }}
+                          className="text-xs"
+                        >
+                          {(job.status === "OPEN" || job.jobStatus === "OPEN") ? "Halt" : "Re-open"}
+                        </Button>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-8 text-center text-zinc-500">No postings recorded.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          </div>
-        </div>
+
+            {/* Pagination */}
+            {totalPages > 0 && (
+              <div className="flex justify-between items-center p-6 bg-zinc-900/30 border-t border-zinc-800/50">
+                <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">
+                  Page {(currentPage + 1)} / {totalPages}
+                </p>
+                <div className="flex items-center space-x-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0}
+                    className="w-8 h-8 rounded-lg border-zinc-700"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                    disabled={currentPage === totalPages - 1}
+                    className="w-8 h-8 rounded-lg border-zinc-700"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Applications Modal */}
         {isApplicationsModalOpen && (
-          <div
-            className="fixed inset-0 z-10 bg-black bg-opacity-50 flex items-center justify-center"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="applications-modal-title"
-          >
-            <div
-              className="bg-gray-900 border-white/20 text-white rounded-lg p-6 w-11/12 md:w-3/4 lg:w-1/2 max-h-full overflow-y-auto"
-              role="document"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2
-id="applications-modal-title"
-className="text-xl font-semibold"
->
-Applications for {selectedJob?.title}
-</h2>
-<button
-onClick={() => setIsApplicationsModalOpen(false)}
-className="text-white/50 hover:text-white"
-aria-label="Close Modal"
->
-<XCircle size={24} />
-</button>
-</div>
-<div className="overflow-x-auto">
-<table className="w-full table-auto border-collapse">
-<thead>
-  <tr className="border-b border-white/10">
-    <th className="text-left py-3 px-4">Applicant</th>
-    <th className="text-left py-3 px-4">Status</th>
-    <th className="text-right py-3 px-4">Actions</th>
-  </tr>
-</thead>
-<tbody className="divide-y divide-white/10">
-  {applications.map((application) => (
-    <tr key={application.id} className="hover:bg-white/5">
-      <td className="py-3 px-4">
-        {application.applicantName}
-      </td>
-      <td className="py-3 px-4">
-        <StatusBadge status={application.status} />
-      </td>
-      <td className="py-3 px-4 text-right space-x-2">
-        <button
-          className="px-4 py-1 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-          onClick={() =>
-            alert(
-              `Viewing details for ${application.applicantName}`
-            )
-          }
-        >
-          View
-        </button>
-        <button
-          onClick={() =>
-            handleToggleApplicationStatus(application.id)
-          }
-          className={`px-4 py-1 rounded-lg transition-colors text-sm font-medium ${getApplicationStatusColor(
-            application.status
-          )}`}
-        >
-          {getNextStatus(application.status)}
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-</table>
-</div>
-</div>
-</div>
-)}
-</div>
-</div>
-);
-};
-
-// Helper functions for application status
-const getApplicationStatusColor = (status) => {
-const colors = {
-APPLIED: "bg-green-500 hover:bg-green-600",
-WITHDRAWN: "bg-gray-500 hover:bg-gray-600",
-ACCEPTED: "bg-emerald-500 hover:bg-emerald-600",
-SHORTLISTED: "bg-lime-500 hover:bg-lime-600",
-REJECTED: "bg-red-500 hover:bg-red-600",
-};
-return colors[status] || "bg-green-500 hover:bg-green-600";
-};
-
-const getNextStatus = (currentStatus) => {
-const statusFlow = {
-APPLIED: "Shortlist",
-SHORTLISTED: "Accept",
-ACCEPTED: "Close",
-REJECTED: "Withdraw",
-WITHDRAWN: "Apply",
-};
-return statusFlow[currentStatus] || "Apply";
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <Card className="bg-zinc-950 border-zinc-800 shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+              <CardHeader className="border-b border-zinc-800 flex flex-row items-center justify-between py-4 bg-zinc-900/50">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg">Packet Stream: {selectedJob?.title || selectedJob?.jobTitle}</CardTitle>
+                  <CardDescription>Managing applicants for selected node.</CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" className="hover:bg-zinc-800 text-zinc-400" onClick={() => setIsApplicationsModalOpen(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </CardHeader>
+              <div className="overflow-y-auto flex-1 p-0">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-zinc-900 text-xs uppercase text-zinc-500 font-bold sticky top-0 border-b border-zinc-800">
+                    <tr>
+                      <th className="px-6 py-4 tracking-wider">Candidate Node (App ID)</th>
+                      <th className="px-6 py-4 tracking-wider">Stage</th>
+                      <th className="px-6 py-4 text-right tracking-wider">Decision Matrix</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {applications.length > 0 ? applications.map((application) => (
+                      <tr key={application.applicationId || application.id} className="hover:bg-zinc-900/30 transition-colors">
+                        <td className="px-6 py-4 font-semibold text-zinc-200 text-xs font-mono">
+                          ID: {application.applicantId || application.applicantName}
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={application.applicationStatus || application.status} />
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-8 text-xs bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                            onClick={() => handleToggleApplicationStatus(application.applicationId || application.id, application.applicationStatus || application.status)}
+                          >
+                            Progress: {getNextStatusText(application.applicationStatus || application.status)}
+                          </Button>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-8 text-center text-zinc-500">No applications found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default EmployerDashboard;

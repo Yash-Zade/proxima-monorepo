@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Search, Star } from "lucide-react";
+import { Search, Star, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import apiClient from "../Auth/ApiClient";
 
 const MentorCard = ({ mentor }) => {
@@ -9,101 +14,84 @@ const MentorCard = ({ mentor }) => {
     navigate(`/mentor-profile/${mentor.mentorId}`);
   };
 
+  const mentorName = mentor.user?.name || "Unknown Mentor";
+  const avgRating = mentor.averageRating || 0;
+
   return (
-    <div className="relative group bg-white/5 backdrop-blur-xl rounded-2xl transition-all duration-300 hover:bg-white/10">
-      <div className="relative p-6 rounded-2xl overflow-hidden flex flex-col">
-        <h3 className="text-2xl font-semibold text-white mb-2">
-          {mentor.name}
-        </h3>
-        <p className="text-gray-400 text-sm mb-4 line-clamp-3">{mentor.bio}</p>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {mentor.expertise.map((skill, index) => (
-            <span
-              key={index}
-              className="px-3 py-1 rounded-full bg-green-500/10 text-emerald-300 text-sm"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex items-center">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Star
-                key={index}
-                className={`w-5 h-5 ${
-                  index < Math.round(mentor.avgRating)
-                    ? "text-yellow-400"
-                    : "text-gray-600"
-                }`}
-                fill={
-                  index < Math.round(mentor.avgRating) ? "currentColor" : "none"
-                }
-              />
-            ))}
+    <Card className="bg-zinc-950/50 border-zinc-800/80 hover:bg-zinc-900/50 transition-colors backdrop-blur-sm shadow-sm hover:shadow-md flex flex-col h-full group">
+      <CardHeader className="pb-4 flex flex-row items-start gap-4 space-y-0">
+        <Avatar className="h-12 w-12 border border-zinc-800 bg-zinc-900">
+          <AvatarImage src="" alt={mentorName} />
+          <AvatarFallback className="bg-zinc-800 text-zinc-300 font-semibold">{mentorName.charAt(0)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <CardTitle className="text-xl font-bold text-zinc-100">{mentorName}</CardTitle>
+          <div className="flex items-center text-zinc-400 mt-1">
+            <Star className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500 mr-1.5" />
+            <span className="font-semibold text-sm text-zinc-300">{avgRating.toFixed(1)}</span>
+            <span className="mx-2 text-zinc-700">•</span>
+            <span className="text-sm font-medium">Expert</span>
           </div>
-          <span className="text-gray-400 text-sm">
-            {mentor.avgRating.toFixed(1)} / 5
-          </span>
         </div>
+      </CardHeader>
 
-        <button
-          className="w-full py-2.5 rounded-xl bg-green-500/20 text-white font-medium transition-all duration-300 hover:bg-green-500/30"
+      <CardContent className="flex-grow pb-4">
+        <p className="text-zinc-400 text-sm leading-relaxed mb-6 line-clamp-3">
+          {mentor.bio || "No professional overview available."}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mt-auto">
+          {mentor.expertise && mentor.expertise.length > 0 ? (
+            mentor.expertise.map((skill, index) => (
+              <Badge
+                key={index}
+                variant="secondary"
+                className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 font-medium px-2.5 py-0.5 text-xs"
+              >
+                {skill}
+              </Badge>
+            ))
+          ) : (
+            <span className="text-zinc-500 text-sm">No specific expertise cataloged</span>
+          )}
+        </div>
+      </CardContent>
+
+      <CardFooter className="pt-0 pb-6 border-t border-zinc-800/30 mt-4 px-6 relative">
+        <Button
+          variant="ghost"
+          className="w-full mt-4 bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:text-zinc-50 hover:bg-zinc-800 transition-all font-medium h-10 group-hover:border-zinc-700"
           onClick={handleMentor}
         >
-          Schedule Session
-        </button>
-      </div>
-    </div>
+          Review Profile
+          <ArrowRight className="w-4 h-4 ml-2 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
 const LoadingState = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {[1, 2, 3, 4].map((i) => (
-      <div key={i} className="relative animate-pulse">
-        <div className="absolute inset-0 bg-white/5 backdrop-blur-xl rounded-2xl" />
-        <div className="relative p-6 rounded-2xl h-40">
-          <div className="space-y-4">
-            <div className="h-4 bg-white/10 rounded w-3/4" />
-            <div className="h-4 bg-white/10 rounded w-full" />
-            <div className="h-4 bg-white/10 rounded w-5/6" />
+      <Card key={i} className="animate-pulse bg-zinc-950/50 border-zinc-800/80 h-[280px]">
+        <CardHeader className="flex flex-row gap-4">
+          <div className="h-12 w-12 rounded-full bg-zinc-900" />
+          <div className="space-y-2 flex-1">
+            <div className="h-5 bg-zinc-900 rounded-md w-1/3" />
+            <div className="h-4 bg-zinc-900 rounded-md w-1/4" />
           </div>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="h-4 bg-zinc-900 rounded-md w-full" />
+          <div className="h-4 bg-zinc-900 rounded-md w-4/5" />
+          <div className="flex gap-2 pt-4">
+            <div className="h-5 bg-zinc-900 rounded-md w-16" />
+            <div className="h-5 bg-zinc-900 rounded-md w-20" />
+          </div>
+        </CardContent>
+      </Card>
     ))}
-  </div>
-);
-
-const ErrorState = ({ error, onRetry }) => (
-  <div className="text-center py-12">
-    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-4">
-      <svg
-        className="w-8 h-8 text-red-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      </svg>
-    </div>
-    <h3 className="text-xl font-semibold text-white mb-2">
-      Failed to load mentors
-    </h3>
-    <p className="text-gray-400 mb-4">{error}</p>
-    <button
-      onClick={onRetry}
-      className="px-4 py-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-all duration-300"
-    >
-      Try Again
-    </button>
   </div>
 );
 
@@ -112,148 +100,70 @@ const MentorSearchPage = () => {
   const [filteredMentors, setFilteredMentors] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const dummyData = [
-    {
-      id: 1,
-      name: "Arjun Patel",
-      avgRating: 4.8,
-      bio: "Experienced software engineer specializing in frontend development.",
-      expertise: ["React", "JavaScript", "CSS"],
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      avgRating: 4.5,
-      bio: "Data scientist with expertise in machine learning and AI.",
-      expertise: ["Python", "Machine Learning", "AI"],
-    },
-    {
-      id: 3,
-      name: "Neha Kapoor",
-      avgRating: 4.7,
-      bio: "Digital marketer with a knack for SEO and content strategy.",
-      expertise: ["SEO", "Content Marketing", "Google Ads"],
-    },
-    {
-      id: 4,
-      name: "Rohan Gupta",
-      avgRating: 4.2,
-      bio: "Full-stack developer with a focus on backend technologies.",
-      expertise: ["Node.js", "MongoDB", "AWS"],
-    },
-    {
-      id: 5,
-      name: "Vikram Singh",
-      avgRating: 4.9,
-      bio: "Cybersecurity expert passionate about protecting digital systems.",
-      expertise: ["Cybersecurity", "Ethical Hacking", "Network Security"],
-    },
-    {
-      id: 6,
-      name: "Aisha Khan",
-      avgRating: 4.6,
-      bio: "UI/UX designer with a focus on creating user-friendly interfaces.",
-      expertise: ["UI/UX Design", "Figma", "Prototyping"],
-    },
-    {
-      id: 7,
-      name: "Karan Malhotra",
-      avgRating: 4.3,
-      bio: "DevOps engineer skilled in cloud infrastructure and automation.",
-      expertise: ["Docker", "Kubernetes", "CI/CD"],
-    },
-    {
-      id: 8,
-      name: "Sanya Reddy",
-      avgRating: 4.8,
-      bio: "Mobile app developer specializing in cross-platform solutions.",
-      expertise: ["Flutter", "Dart", "Android"],
-    },
-    {
-      id: 9,
-      name: "Aditya Nair",
-      avgRating: 4.4,
-      bio: "Blockchain developer with experience in smart contracts.",
-      expertise: ["Solidity", "Ethereum", "Web3.js"],
-    },
-    {
-      id: 10,
-      name: "Meera Iyer",
-      avgRating: 4.7,
-      bio: "Product manager with a track record of launching successful tech products.",
-      expertise: ["Product Management", "Agile", "Market Research"],
-    },
-  ];
 
   useEffect(() => {
     const fetchMentors = async () => {
-      setIsLoading(true);
       try {
-        // const response = await apiClient.get("/public/mentors");
-        // const mentorsData = response.data.data.content;
-        setMentors(dummyData);
-        setFilteredMentors(dummyData);
-        setIsLoading(false);
-      } catch (err) {
-        setError("Failed to fetch mentors. Please try again later.");
+        const response = await apiClient.get('/public/mentors');
+        // Extract mentor data from response.data.data (ApiResponse.data)
+        const mentorData = response.data.data?.content || [];
+        setMentors(mentorData);
+        setFilteredMentors(mentorData);
+      } catch (error) {
+        console.error("Failed to fetch mentors:", error);
+      } finally {
         setIsLoading(false);
       }
     };
-
     fetchMentors();
   }, []);
 
   useEffect(() => {
     const filtered = mentors.filter(
-      (mentor) =>
-        mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mentor.expertise.some((skill) =>
-          skill.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+      (mentor) => {
+        const name = mentor.user?.name || "";
+        const expertise = mentor.expertise || [];
+        return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          expertise.some((skill) =>
+            skill.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+      }
     );
     setFilteredMentors(filtered);
   }, [searchQuery, mentors]);
 
   return (
-    <div className="min-h-screen bg-black pt-10">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 -left-40 w-96 h-96 bg-green-500/20 rounded-full mix-blend-screen filter blur-3xl" />
-        <div className="absolute bottom-0 -right-40 w-96 h-96 bg-emerald-500/20 rounded-full mix-blend-screen filter blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-zinc-950 font-sans selection:bg-zinc-800 selection:text-white pt-32 pb-20">
+      <div className="max-w-4xl mx-auto px-6 lg:px-8">
 
-      <div className="relative container mx-auto px-4 py-12">
-        <div className="max-w-2xl mx-auto text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Connect with Expert Mentors
+        <div className="mb-12">
+          <Badge variant="outline" className="px-3 py-1 mb-6 rounded-full border-zinc-800 bg-zinc-950/50 text-zinc-400 gap-2 font-normal">
+            <Users className="w-3 h-3" />
+            Mentor Network
+          </Badge>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tighter mb-4">
+            Elite Expertise
           </h1>
-          <p className="text-gray-400">
-            Find the right mentor to guide you on your journey
+          <p className="text-zinc-400 text-lg max-w-2xl leading-relaxed">
+            Connect directly with seasoned professionals, founders, and architects actively shaping the industry.
           </p>
         </div>
 
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-white/5 backdrop-blur-xl rounded-xl" />
-            <div className="relative flex items-center p-2 rounded-xl">
-              <Search className="w-5 h-5 text-gray-400 ml-3" />
-              <input
-                type="text"
-                placeholder="Search by name or expertise..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent border-none text-white placeholder-gray-400 focus:outline-none focus:ring-0 px-4 py-2"
-              />
-            </div>
-          </div>
+        <div className="relative mb-12 group">
+          <Input
+            type="text"
+            placeholder="Search by exact capability, name, or tech stack..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-zinc-950/50 border-zinc-800 rounded-2xl px-5 py-7 pl-14 h-14
+                focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:border-zinc-700 transition-all text-zinc-50 placeholder-zinc-500 text-base shadow-sm"
+          />
+          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-zinc-500 group-focus-within:text-zinc-300 transition-colors pointer-events-none" size={20} />
         </div>
 
-        <div className="max-w-6xl mx-auto">
+        <div>
           {isLoading ? (
             <LoadingState />
-          ) : error ? (
-            <ErrorState error={error} onRetry={() => window.location.reload()} />
           ) : filteredMentors.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredMentors.map((mentor) => (
@@ -261,15 +171,17 @@ const MentorSearchPage = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
-                <Search className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                No mentors found
-              </h3>
-              <p className="text-gray-400">Try adjusting your search terms</p>
-            </div>
+            <Card className="bg-zinc-950/30 border-dashed border-zinc-800 text-center py-20">
+              <CardContent className="pt-6 flex flex-col items-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 mb-4">
+                  <Users className="w-6 h-6 text-zinc-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-zinc-200 mb-2">
+                  No experts identified
+                </h3>
+                <p className="text-zinc-500">Your specific query yielded zero results. Alter your parameters.</p>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

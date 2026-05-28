@@ -60,7 +60,10 @@ public class PublicControllers {
     }
 
     @PostMapping("/questions")
-    public ResponseEntity<List<QuestionDTO>> createQuestion(@RequestBody String jd, @RequestBody String resume, @RequestBody List<String> certifiedSkills) {
+    public ResponseEntity<List<QuestionDTO>> createQuestion(@RequestBody java.util.Map<String, Object> request) {
+        String jd = (String) request.get("jd");
+        String resume = (String) request.get("resume");
+        List<String> certifiedSkills = (List<String>) request.get("certifiedSkills");
         return ResponseEntity.ok(interviewQuestionService.generateQuestions(jd, resume, certifiedSkills));
     }
 

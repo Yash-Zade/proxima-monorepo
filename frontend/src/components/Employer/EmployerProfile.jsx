@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../Auth/ApiClient";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "../ui/card";
+import { Briefcase, Mail, Building, Globe } from "lucide-react";
 // import WalletComponent from "../Wallet/Wallet";
 
 const EmployerProfile = () => {
   const [employerProfile, setEmployerProfile] = useState({});
+
   useEffect(() => {
-    async function GetProfile(){
-      const currProfile=await apiClient.get(`/employers/profile/${id}`)
-      setEmployerProfile(currProfile)
-    }
-    GetProfile()
+    // async function GetProfile(){
+    //   const currProfile=await apiClient.get(`/employers/profile/${id}`)
+    //   setEmployerProfile(currProfile)
+    // }
+    // GetProfile()
   }, [])
-  
+
   const dummyProfile = {
     name: "Sarah Johnson",
     email: "sarah.johnson@techcorp.com",
@@ -20,41 +23,58 @@ const EmployerProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-green-900 to-emerald-900 p-8 flex items-center justify-center">
-      {/* Gradient orbs */}
-      <div className="fixed top-0 left-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="fixed top-0 right-0 w-96 h-96 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="fixed -bottom-8 left-20 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-
-      {/* Profile Card */}
-      <div className="relative w-full max-w-xl">
-        <div className="backdrop-blur-lg bg-white/10 rounded-2xl shadow-2xl p-8 border border-white/20">
-          <div className="space-y-6 ">
-            {/* Name and Email */}
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white">{dummyProfile.name}</h2>
-              <p className="text-gray-300">{dummyProfile.email}</p>
+    <div className="w-full max-w-2xl mx-auto py-12 px-4 selection:bg-zinc-800 selection:text-white">
+      <Card className="bg-zinc-950 border-zinc-800 shadow-2xl">
+        <CardHeader className="border-b border-zinc-800 pb-6">
+          <CardTitle className="text-2xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+            <Building className="w-6 h-6 text-zinc-400" />
+            Enterprise Node Profile
+          </CardTitle>
+          <CardDescription className="text-zinc-500 uppercase tracking-widest text-xs mt-2">
+            Authorized Corporate Operator
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-8 space-y-6">
+          <div className="space-y-4">
+            {/* Operator Details */}
+            <div className="flex items-center space-x-4 p-4 bg-zinc-900 border border-zinc-800 rounded-lg">
+              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                <span className="text-xl font-bold text-zinc-300">
+                  {dummyProfile.name.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-100">{dummyProfile.name}</h3>
+                <div className="flex items-center text-zinc-400 mt-1 gap-1.5">
+                  <Mail className="w-3.5 h-3.5" />
+                  <span className="text-sm">{dummyProfile.email}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              {/* Company Info */}
-              <div className="space-y-2">
-                <p className="text-lg font-semibold text-white">
-                  {dummyProfile.company}
-                </p>
+
+            {/* Corporate Details */}
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-lg space-y-3">
+              <div className="flex items-center gap-2 text-zinc-100 font-semibold mb-2 line-clamp-1 pb-2 border-b border-zinc-800 last:mb-0">
+                <Briefcase className="w-4 h-4 text-zinc-500" />
+                {dummyProfile.company}
+              </div>
+              <div className="flex items-center gap-2 text-zinc-400">
+                <Globe className="w-4 h-4 text-zinc-500" />
                 <a
                   href={`https://${dummyProfile.website}`}
-                  className="text-emerald-300 hover:text-emerald-400 transition-colors"
+                  className="text-sm hover:text-zinc-100 transition-colors cursor-pointer"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   {dummyProfile.website}
                 </a>
               </div>
-              {/* <WalletComponent /> */}
             </div>
+
+            {/* <WalletComponent /> */}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

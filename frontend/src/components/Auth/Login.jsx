@@ -2,113 +2,107 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { AuthContext } from './context/AuthContext'; // Import AuthContext
-import axios from 'axios';
+import { AuthContext } from './context/AuthContext';
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 const Login = () => {
   const navigate = useNavigate();
   const { register, handleSubmit } = useForm();
-  const { login } = useContext(AuthContext); // Use login from AuthContext
+  const { login } = useContext(AuthContext);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async ({ email, password }) => {
+    setIsLoading(true);
+    setError('');
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_BASE_URL}auth/login`, {
-        email,
-        password
-      }); // Call AuthContext login function
-      console.log(response)
-      if (response?.data?.accessToken) {
-        navigate('/roles'); // Redirect on successful login
+      await login(email, password);
+
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        const dashboardPaths = {
+          employer: '/employerdashboard',
+          student: '/profile',
+          college: '/collegedashboard',
+          mentor: '/mentordashboard',
+          admin: '/admindashboard'
+        };
+        navigate(dashboardPaths[role] || '/');
+      } else {
+        navigate('/roles');
       }
-    } catch (error) {
-      console.error(error);
-      setError('Invalid credentials. Please try again.');
+    } catch (err) {
+      // Backend errors are wrapped: { timeStamp, data: null, error: { status, message, subErrors } }
+      const message =
+        err?.response?.data?.error?.message ||
+        err?.message ||
+        'Invalid credentials. Please try again.';
+      setError(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background effect */}
-      <div className="absolute -left-4 w-96 h-96 bg-green-500/30 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob" />
-      <div className="absolute -right-4 w-96 h-96 bg-emerald-500/30 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000" />
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-5xl relative"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md relative"
       >
-        <div className="backdrop-blur-xl bg-white/[0.02] rounded-3xl shadow-2xl border border-white/[0.05] overflow-hidden">
-          <div className="flex flex-col lg:flex-row">
-            <div className="lg:w-5/12 p-8 lg:p-12 bg-gradient-to-br from-black/50 to-transparent flex flex-col justify-center">
-              <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                className="text-center lg:text-left"
-              >
-                <h1 className="text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-400 mb-4">
-                  Proxima
-                </h1>
-                <h2 className="text-2xl lg:text-3xl font-semibold text-white mb-4">Welcome Back</h2>
-                <p className="text-gray-400 text-lg mb-6">
-                  Start your professional journey with us today.
-                </p>
-                <p className="text-gray-300">
-                  Don&apos;t have an account?{' '}
-                  <Link to="/signup" className="text-green-400 hover:text-green-300 transition-colors font-medium">
-                    Sign Up
-                  </Link>
-                </p>
-              </motion.div>
-            </div>
-
-            <div className="lg:w-7/12 p-8 lg:p-12 bg-black/20">
-              {error && (
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-red-400 text-center mb-6"
-                >
-                  {error}
-                </motion.p>
-              )}
-
-              <form onSubmit={()=>navigate('/')} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-gray-300 text-sm font-medium">Email</label>
-                  <input
-                    {...register("email", {
-                      required: true,
-                      pattern: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
-                    })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500 focus:ring-1 focus:bg-white/[0.05] transition-all duration-200"
-                    placeholder="Enter your email"
-                    type="email"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-gray-300 text-sm font-medium">Password</label>
-                  <input
-                    {...register("password", { required: true })}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-white placeholder-gray-500 focus:border-green-500 focus:ring-green-500 focus:ring-1 focus:bg-white/[0.05] transition-all duration-200"
-                    type="password"
-                    placeholder="Enter your password"
-                  />
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  type="submit"
-                  className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg shadow-green-600/20"
-                >
-                  Login
-                </motion.button>
-              </form>
-            </div>
+        <div className="bg-zinc-950 rounded-2xl border border-zinc-800 p-8 shadow-2xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Log In</h1>
+            <p className="text-zinc-400 mt-2 text-sm">Welcome back to Proxima.</p>
           </div>
+
+          {error && (
+            <div className="p-3 mb-6 bg-red-950/50 border border-red-900 rounded-lg text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label className="text-zinc-300 text-sm font-medium">Email Address</Label>
+              <Input
+                {...register("email", { required: true })}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                placeholder="you@example.com"
+                type="email"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <Label className="text-zinc-300 text-sm font-medium">Password</Label>
+              </div>
+              <Input
+                {...register("password", { required: true })}
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                type="password"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-2.5 px-4 bg-zinc-50 text-zinc-950 hover:bg-zinc-200 rounded-lg font-medium transition-colors disabled:opacity-50 mt-4 h-auto"
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-zinc-400">
+            Don&apos;t have an account?{' '}
+            <Link to="/signup" className="text-zinc-50 hover:underline">
+              Sign up
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>

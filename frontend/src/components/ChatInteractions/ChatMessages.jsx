@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, Mail, Phone, Video, Send, MoreVertical, X } from 'lucide-react';
+import { Search, MessageSquare, Phone, Video, Send, MoreVertical, Terminal, ChevronLeft } from 'lucide-react';
+import apiClient from '../Auth/ApiClient';
+import { Avatar, AvatarFallback } from "../ui/avatar";
 
 const ChatMessages = () => {
   const [contacts, setContacts] = useState([]);
@@ -8,98 +10,42 @@ const ChatMessages = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentUser] = useState({ id: 1, name: "Virat Kohli" }); // Current user is Virat Kohli
-
-  // Dummy data with Indian cricketers
-  const dummyContacts = [
-    {
-      id: 1,
-      name: "Virat Kohli",
-      role: "Mentor",
-      lastMessage: "any updates ?",
-      lastMessageTime: "10:30 AM",
-      unreadCount: 2,
-      online: true,
-    },
-    {
-      id: 2,
-      name: "Sachin Tendulkar",
-      role: "Employer",
-      lastMessage: "Your resume got selected",
-      lastMessageTime: "10:32 AM",
-      unreadCount: 0,
-      online: true,
-    },
-    {
-      id: 3,
-      name: "MS Dhoni",
-      role: "Friend",
-      lastMessage: "How about TCS ?",
-      lastMessageTime: "9:45 AM",
-      unreadCount: 1,
-      online: false,
-    },
-    {
-      id: 4,
-      name: "Batista Sharma",
-      role: "Friend",
-      lastMessage: "Thinking of starting a cricket academy...",
-      lastMessageTime: "9:40 AM",
-      unreadCount: 0,
-      online: true,
-    }
-  ];
-
-  const dummyMessages = [
-    {
-      id: 1,
-      sender: 1, // Mentee
-      timestamp: "10:30 AM",
-      content: "Hey! Thanks for agreeing to chat with me about my career. I’m feeling a bit lost on what to do next."
-    },
-    {
-      id: 2,
-      sender: 2, // Mentor
-      timestamp: "10:32 AM",
-      content: "No problem at all! I’m happy to help. Can you tell me a bit more about where you’re at right now—your job, skills, or what you’re hoping to achieve?"
-    },
-    {
-      id: 3,
-      sender: 1, // Mentee
-      timestamp: "10:33 AM",
-      content: "Sure! I’m currently a junior developer at a small tech company. I like coding, but I’m not sure if I want to stay technical or move into something like project management."
-    },
-    {
-      id: 4,
-      sender: 2, // Mentor
-      timestamp: "10:35 AM",
-      content: "That’s a great place to be—having options! What excites you more: solving technical problems or organizing teams and projects? Maybe think about what parts of your day you enjoy most."
-    },
-    {
-      id: 5,
-      sender: 1, // Mentee
-      timestamp: "10:36 AM",
-      content: "Honestly, I love debugging code, but I also enjoy when I get to lead a small team meeting. It’s tough to choose! How did you decide your career path?"
-    },
-    {
-      id: 6,
-      sender: 2, // Mentor
-      timestamp: "10:38 AM",
-      content: "For me, it was trial and error. I started in tech, then shifted to management because I loved mentoring people like you! You could try a hybrid role—like a tech lead—to test both sides. What do you think about that?"
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState({ id: 0, name: "Local User" });
 
   useEffect(() => {
-    setContacts(dummyContacts);
-    setMessages(dummyMessages);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/users/all');
+        const users = res.data.data || [];
+
+        const mappedContacts = users.map(u => ({
+          id: u.id,
+          name: u.name,
+          role: u.roles?.join(', ') || 'USER',
+          lastMessage: "System initialized. Secure link active.",
+          lastMessageTime: "ACTIVE",
+          unreadCount: 0,
+          online: true,
+          email: u.email
+        }));
+        setContacts(mappedContacts);
+
+        // Match current user if possible (requires /users/me or similar, but for now just assume first or 0)
+        // If we don't have /users/me, we can't reliably know which one is current user from list alone
+        // But for UI purposes, selecting the first contact as "selected" is fine.
+      } catch (err) {
+        console.error("Failed to fetch chat contacts", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase();
+    return name ? name.split(' ').map(word => word[0]).join('').toUpperCase() : 'U';
   };
 
   const handleSendMessage = () => {
@@ -109,9 +55,9 @@ const ChatMessages = () => {
       id: messages.length + 1,
       sender: currentUser.id,
       content: messageInput,
-      timestamp: new Date().toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
       }),
     };
 
@@ -119,70 +65,79 @@ const ChatMessages = () => {
     setMessageInput('');
   };
 
+  if (loading) {
+    return (
+      <div className="h-screen w-full bg-zinc-950 flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-zinc-800 border-t-zinc-100 rounded-full animate-spin"></div>
+        <p className="mt-4 text-zinc-500 font-mono text-xs uppercase tracking-widest">Synchronizing Neural Network...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-[675px] w-full bg-gradient-to-br from-emerald-900 via-gray-900 to-emerald-900 p-4 mt-0">
-      <div className="h-full w-full mx-auto bg-gray-900/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-emerald-700/30 shadow-2xl flex">
+    <div className="h-screen w-full bg-zinc-950 pt-20 pb-0 flex flex-col font-sans selection:bg-zinc-800 selection:text-white">
+      <div className="flex-1 w-full max-w-7xl mx-auto bg-zinc-950 border-x border-t border-zinc-800/80 sm:rounded-tl-2xl sm:rounded-tr-2xl overflow-hidden flex shadow-2xl relative">
+
         {/* Mobile Menu Button */}
-        <button 
-          className="lg:hidden fixed top-6 left-6 z-50 p-2 bg-gray-800/80 backdrop-blur-sm rounded-full"
+        <button
+          className="lg:hidden absolute top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-md"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          <MessageSquare className="w-6 h-6 text-emerald-400" />
+          <MessageSquare className="w-5 h-5 text-zinc-400" />
         </button>
 
         {/* Sidebar */}
-        <div className={`w-80 bg-gray-800/50 backdrop-blur-md border-r border-emerald-700/30 
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-          lg:translate-x-0 transition-transform duration-300 absolute lg:relative z-40 h-full`}>
-          <div className="p-4">
-            <h1 className="text-2xl font-bold text-white mb-4">Messages</h1>
+        <div className={`w-80 bg-zinc-950 border-r border-zinc-800 flex flex-col transition-transform duration-300 h-full
+          ${isSidebarOpen ? 'translate-x-0 absolute inset-y-0 left-0 z-40 bg-zinc-950/95 backdrop-blur-md' : '-translate-x-full absolute lg:relative lg:translate-x-0'}`}>
+
+          <div className="p-5 border-b border-zinc-800">
+            <h1 className="text-xl font-bold text-white mb-4 tracking-tight">Communications</h1>
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search contacts..."
-                className="w-full p-3 pl-10 bg-gray-900/50 text-gray-100 rounded-xl border border-emerald-700/30 focus:outline-none focus:border-emerald-500/50"
+                placeholder="Search nodes..."
+                className="w-full p-2.5 pl-9 bg-zinc-900 text-zinc-100 text-sm rounded-lg border border-zinc-800 focus:outline-none focus:border-zinc-600 placeholder-zinc-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="w-5 h-5 text-gray-500 absolute left-3 top-3.5" />
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3.5" />
             </div>
           </div>
 
-          <div className="overflow-y-auto h-[calc(100%-5rem)]">
+          <div className="flex-1 overflow-y-auto hidden-scrollbar">
             {contacts
               .filter(contact => contact.name.toLowerCase().includes(searchQuery.toLowerCase()))
               .map(contact => (
                 <div
                   key={contact.id}
-                  className={`p-4 hover:bg-emerald-900/30 cursor-pointer transition-colors duration-200
-                    ${selectedContact?.id === contact.id ? 'bg-emerald-900/40' : ''}`}
+                  className={`p-4 border-b border-zinc-800/50 hover:bg-zinc-900/50 cursor-pointer transition-colors
+                    ${selectedContact?.id === contact.id ? 'bg-zinc-900 border-l-2 border-l-zinc-100' : ''}`}
                   onClick={() => {
                     setSelectedContact(contact);
                     setIsSidebarOpen(false);
+                    // Reset messages for a "new" chat simulation if switching
+                    if (selectedContact?.id !== contact.id) setMessages([]);
                   }}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold">
-                        {getInitials(contact.name)}
-                      </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="relative pt-1">
+                      <Avatar className="w-10 h-10 border border-zinc-800">
+                        <AvatarFallback className="bg-zinc-800 text-zinc-300 text-xs font-semibold">
+                          {getInitials(contact.name)}
+                        </AvatarFallback>
+                      </Avatar>
                       {contact.online && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-gray-800" />
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-zinc-950" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-gray-100 truncate">{contact.name}</h3>
-                        <span className="text-xs text-gray-400">{contact.lastMessageTime}</span>
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <h3 className="text-sm font-semibold text-zinc-100 truncate">{contact.name}</h3>
+                        <span className="text-[10px] text-zinc-500 ml-2">{contact.lastMessageTime}</span>
                       </div>
-                      <p className="text-sm text-gray-400">{contact.role}</p>
-                      <div className="flex justify-between items-center mt-1">
-                        <p className="text-sm text-gray-300 truncate">{contact.lastMessage}</p>
-                        {contact.unreadCount > 0 && (
-                          <span className="ml-2 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                            {contact.unreadCount}
-                          </span>
-                        )}
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 mb-1">{contact.role}</p>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-zinc-400 truncate max-w-[180px]">{contact.lastMessage}</p>
                       </div>
                     </div>
                   </div>
@@ -192,100 +147,110 @@ const ChatMessages = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-zinc-950/50">
           {selectedContact ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 bg-gray-800/30 backdrop-blur-sm border-b border-emerald-700/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
+              <div className="h-[73px] px-6 py-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center space-x-4 pl-10 lg:pl-0">
+                  <div className="relative">
+                    <Avatar className="w-10 h-10 border border-zinc-800">
+                      <AvatarFallback className="bg-zinc-800 text-zinc-300 font-semibold">
                         {getInitials(selectedContact.name)}
-                      </div>
-                      {selectedContact.online && (
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-gray-800" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-100">{selectedContact.name}</h3>
-                      <span className="text-sm text-gray-400">
-                        {selectedContact.online ? 'Online' : 'Offline'}
-                      </span>
-                    </div>
+                      </AvatarFallback>
+                    </Avatar>
+                    {selectedContact.online && (
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-zinc-950" />
+                    )}
                   </div>
-                  <div className="flex space-x-2">
-                    <button className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300">
-                      <Phone className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300">
-                      <Video className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
+                  <div>
+                    <h3 className="font-semibold text-zinc-100 leading-tight">{selectedContact.name}</h3>
+                    <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest">
+                      {selectedContact.role}
+                    </span>
                   </div>
+                </div>
+                <div className="flex space-x-1 border-l border-zinc-800 pl-4">
+                  <button className="p-2 hover:bg-zinc-900 rounded-md text-zinc-500 hover:text-zinc-200 transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 hover:bg-zinc-900 rounded-md text-zinc-500 hover:text-zinc-200 transition-colors">
+                    <Video className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 hover:bg-zinc-900 rounded-md text-zinc-500 hover:text-zinc-200 transition-colors">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.length > 0 ? messages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.sender === currentUser.id ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] p-3 rounded-2xl ${
-                        message.sender === currentUser.id
-                          ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
-                          : 'bg-gray-700/50 backdrop-blur-sm text-gray-100'
-                      }`}
+                      className={`max-w-[70%] px-5 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm ${message.sender === currentUser.id
+                          ? 'bg-zinc-100 text-zinc-900 rounded-br-sm'
+                          : 'bg-zinc-900 text-zinc-200 border border-zinc-800 rounded-bl-sm'
+                        }`}
                     >
                       <p>{message.content}</p>
-                      <span className="text-xs mt-1 opacity-70 block">
+                      <span className="text-[10px] mt-2 block text-zinc-500">
                         {message.timestamp}
                       </span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">Handshake completed. Begin transmission.</p>
+                  </div>
+                )}
               </div>
 
-              {/* Message Input */}
-              <div className="p-4 bg-gray-800/30 backdrop-blur-sm border-t border-emerald-700/30">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Type a message..."
-                    className="flex-1 p-3 bg-gray-900/50 text-gray-100 rounded-xl border border-emerald-700/30 focus:outline-none focus:border-emerald-500/50"
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                  <button 
-                    className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl"
-                    onClick={handleSendMessage} 
+              {/* Message Input Area */}
+              <div className="p-5 bg-zinc-950 border-t border-zinc-800">
+                <div className="flex items-end gap-2 max-w-4xl mx-auto">
+                  <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden focus-within:border-zinc-600 transition-colors">
+                    <textarea
+                      rows="1"
+                      placeholder="Transmit response to node..."
+                      className="w-full max-h-32 p-3.5 bg-transparent text-zinc-100 text-sm focus:outline-none resize-none placeholder-zinc-500"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    className="p-3.5 h-fit bg-zinc-100 hover:bg-zinc-300 text-zinc-900 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSendMessage}
+                    disabled={!messageInput.trim()}
                   >
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4" />
                   </button>
+                </div>
+                <div className="text-center mt-2">
+                  <span className="text-[10px] text-zinc-600 font-medium">Transmissions are encrypted point-to-point. Use Shift + Enter for line breaks.</span>
                 </div>
               </div>
             </>
           ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-6">
-                <div className="w-16 h-16 bg-emerald-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="w-8 h-8 text-emerald-400" />
+            <div className="h-full flex items-center justify-center bg-zinc-950/30">
+              <div className="text-center p-8 max-w-sm">
+                <div className="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                  <Terminal className="w-8 h-8 text-zinc-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-100">
-                  Select a contact to start messaging
+                <h2 className="text-lg font-bold text-zinc-200 mb-2">
+                  System Awaiting Connection
                 </h2>
-                <p className="text-gray-400 mt-2">
-                  Choose from your existing conversations or start a new one
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Select a registered node from the left channel list to initialize a secure communication handshake.
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
-import Layout from "./components/Layout/Layout.jsx"; 
+import Layout from "./components/Layout/Layout.jsx";
 import Signup from "./components/Auth/Signup.jsx";
 import Login from "./components/Auth/Login.jsx";
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -21,7 +21,9 @@ import JobPostingForm from "./components/Jobs/PostForm.jsx"
 import JobApplicationForm from "./components/Jobs/ApplyJob.jsx";
 import RoleSelector from "./components/Auth/RoleSelector.jsx";
 import ExamPortal from "./components/ExamPortal/Portal.jsx";
+import Protected from "./components/Auth/Protected.jsx";
 import { AuthProvider } from "./components/Auth/context/AuthContext.jsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -33,84 +35,104 @@ const router = createBrowserRouter([
       },
       {
         path: "/login",
-        element: <Login />,
+        element: <Protected authentication={false}><Login /></Protected>,
       },
       {
         path: "/signup",
-        element: <Signup />,
+        element: <Protected authentication={false}><Signup /></Protected>,
       },
-      //Add Protected Routes
+      // Protected Routes
       {
-        path:"/admindashboard",
-        element: 
-          // <Protected>
-            <AdminDashboard/>
-          // </Protected>,
-      },
-      {
-        path:"/forum",
+        path: "/admindashboard",
         element:
-          // <Protected>
-        <AnonymousForum/>,
-        // </Protected>,
+          <Protected authentication={true}>
+            <AdminDashboard />
+          </Protected>,
       },
       {
-        path:"/mentors",
-        element:<MentorSearchPage/>
-      },
-      {
-        path:"/mentor-profile/:id",
-        element:<MentorProfile/>
-      },
-      {
-        path:"/profile",
+        path: "/forum",
         element:
-          <UserProfile/> 
+          <Protected authentication={true}>
+            <AnonymousForum />
+          </Protected>,
       },
       {
-        path:"/mentordashboard",
-        element:<MentorDashboard/>
+        path: "/mentors",
+        element: <MentorSearchPage />
       },
       {
-        path:"/employerdashboard",
-        element:<EmployerDashboard/>
+        path: "/mentor-profile/:id",
+        element: <MentorProfile />
       },
       {
-        path:"/collegedashboard",
-        element:<CollegeDashboard/>
-      },
-      {
-        path:"/jobs",
-        element:<JobBoard/>
-      },
-      {
-        path:"/chat",
-        element:<ChatInteractions/>
-      },
-      {
-        path:"/jobs/:jobid",
-        element:<JobDetails/>
-      },
-      {
-        path:"/apply/:jobid",
+        path: "/profile",
         element:
-        // <Protected>
-          <JobApplicationForm/>
-        // </Protected>
+          <Protected authentication={true}>
+            <UserProfile />
+          </Protected>
       },
       {
-        path:"/addJob",
+        path: "/mentordashboard",
         element:
-        // <Protected>
-        <JobPostingForm/>
-        // </Protected>
+          <Protected authentication={true}>
+            <MentorDashboard />
+          </Protected>
       },
       {
-        path:"/roles",
-        element:<RoleSelector/>
-      } , {
-        path:"/exam",
-        element:<ExamPortal/>
+        path: "/employerdashboard",
+        element:
+          <Protected authentication={true}>
+            <EmployerDashboard />
+          </Protected>
+      },
+      {
+        path: "/collegedashboard",
+        element:
+          <Protected authentication={true}>
+            <CollegeDashboard />
+          </Protected>
+      },
+      {
+        path: "/jobs",
+        element: <JobBoard />
+      },
+      {
+        path: "/chat",
+        element:
+          <Protected authentication={true}>
+            <ChatInteractions />
+          </Protected>
+      },
+      {
+        path: "/jobs/:jobid",
+        element: <JobDetails />
+      },
+      {
+        path: "/apply/:jobid",
+        element:
+          <Protected authentication={true}>
+            <JobApplicationForm />
+          </Protected>
+      },
+      {
+        path: "/addJob",
+        element:
+          <Protected authentication={true}>
+            <JobPostingForm />
+          </Protected>
+      },
+      {
+        path: "/roles",
+        element:
+          <Protected authentication={true}>
+            <RoleSelector />
+          </Protected>
+      }, {
+        path: "/exam",
+        element:
+          <Protected authentication={true}>
+            <ExamPortal />
+          </Protected>
       }
     ],
   },

@@ -13,7 +13,9 @@ public class OnboardNewMentor{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Long userId;
 
     @ElementCollection
     private List<String> expertise;
+    private Integer experience;
 }

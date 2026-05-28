@@ -1,42 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, X, User, BookOpen, Award } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Calendar, Clock, Video, X, User as UserIcon, BookOpen, Award } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { motion, AnimatePresence } from "framer-motion";
+import apiClient from "../Auth/ApiClient";
 
-// Gradient orb for background flair
-const GradientOrb = ({ className }) => (
-  <div className={`absolute rounded-full blur-3xl opacity-30 ${className}`} />
-);
-
-// Mock data
-const DUMMY_MENTOR = {
-  mentorId: 1,
-  expertise: ["React", "JavaScript", "System Design", "Career Guidance"],
-  user: {
-    name: "Dr. Arjun Patel",
-    title: "Senior Software Architect",
-    email: "arjun.patel@example.com",
-    bio: "15+ years of experience in software development and architecture. Passionate about mentoring and helping others grow in their tech careers.",
-    company: "Tech Innovate India",
-    imageUrl: null
-  },
-  sessions: [
-    {
-      id: 1,
-      title: "One-on-One Mentorship",
-      duration: "60 min",
-      price: 150.00,
-      type: "ONE_ON_ONE"
-    },
-    {
-      id: 2,
-      title: "Code Review Session",
-      duration: "45 min",
-      price: 120.00,
-      type: "ONE_ON_ONE"
-    }
-  ]
-};
-
-// Modern Booking Modal
+// Modern Booking Modal based on Shadcn aesthetic
 const BookingModal = ({ session, onClose, onSubmit }) => {
   const [bookingData, setBookingData] = useState({
     date: '',
@@ -46,189 +18,255 @@ const BookingModal = ({ session, onClose, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ ...bookingData, sessionId: session.id });
+    onSubmit({ ...bookingData, sessionId: session.sessionId });
   };
 
   return (
-    <div className=" fixed inset-0 bg-gray-950/90 backdrop-blur-md flex items-center justify-center p-6 z-50 animate-fadeIn">
-      <div className="w-full max-w-md bg-gray-900/70 backdrop-blur-2xl rounded-3xl p-8 border border-gray-700/50 shadow-xl transform transition-all duration-300 scale-100 hover:scale-102">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">Book Your Session</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-800/50 rounded-full transition-all">
-            <X className="text-gray-400 hover:text-white" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-gray-200 font-medium mb-2">Pick a Date</label>
-            <input
-              type="date"
-              value={bookingData.date}
-              onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-200 font-medium mb-2">Choose a Time</label>
-            <input
-              type="time"
-              value={bookingData.time}
-              onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-200 font-medium mb-2">Add Notes</label>
-            <textarea
-              value={bookingData.notes}
-              onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-white h-28 resize-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-              placeholder="What would you like to focus on?"
-            />
-          </div>
-
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-semibold text-white hover:from-cyan-600 hover:to-blue-700 transition-all shadow-lg"
-            >
-              Book Now
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 px-6 bg-gray-800/50 rounded-lg font-semibold text-gray-300 hover:bg-gray-700/50 transition-all"
-            >
-              Cancel
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 w-full max-w-md relative shadow-2xl"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-zinc-50 tracking-tight">Book Session Node</h2>
+            <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full transition-all">
+              <X className="text-zinc-500 hover:text-zinc-300 w-5 h-5" />
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-zinc-400 text-sm font-medium mb-1.5">Date Parameter</label>
+              <input
+                type="date"
+                value={bookingData.date}
+                onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-50 focus:ring-1 focus:ring-zinc-600 focus:border-zinc-700 transition-all outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 text-sm font-medium mb-1.5">Time Parameter</label>
+              <input
+                type="time"
+                value={bookingData.time}
+                onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-50 focus:ring-1 focus:ring-zinc-600 focus:border-zinc-700 transition-all outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 text-sm font-medium mb-1.5">Context Variables</label>
+              <textarea
+                value={bookingData.notes}
+                onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-50 h-24 resize-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-700 transition-all outline-none"
+                placeholder="Initial problem space..."
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="submit"
+                className="flex-1 bg-zinc-50 hover:bg-zinc-200 text-zinc-950 font-semibold h-11"
+              >
+                Execute Booking
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1 bg-transparent border-zinc-800 text-zinc-300 hover:text-zinc-50 hover:bg-zinc-800 h-11"
+              >
+                Abort
+              </Button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
 const MentorProfile = () => {
+  const params = useParams();
+  const mentorId = params.id;
+
   const [mentor, setMentor] = useState(null);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setMentor(DUMMY_MENTOR);
-      setLoading(false);
-    }, 500);
-  }, []);
+    const fetchData = async () => {
+      try {
+        const [mentorRes, sessionsRes] = await Promise.all([
+          apiClient.get(`/public/mentors/${mentorId}`),
+          apiClient.get(`/public/sessions`)
+        ]);
+
+        setMentor(mentorRes.data.data);
+        const allSessions = sessionsRes.data.data?.content || [];
+        const mentorSessions = allSessions.filter(s => s.mentorId === parseInt(mentorId));
+        setSessions(mentorSessions);
+      } catch (error) {
+        console.error("Failed to fetch mentor profile data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [mentorId]);
 
   const handleBookSession = async (bookingData) => {
-    console.log('Booking session:', bookingData);
-    setSelectedSession(null);
+    try {
+      // Endpoint mapping according to backend conventions:
+      await apiClient.post(`/applicants/sessions/${bookingData.sessionId}/request`);
+      alert(`Session request initiated for session ID: ${bookingData.sessionId}`);
+    } catch (error) {
+      console.error("Failed to book session:", error);
+      alert("Error booking session.");
+    } finally {
+      setSelectedSession(null);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-        <p className="text-xl font-medium animate-pulse">Loading...</p>
+      <div className="min-h-screen bg-zinc-950 text-zinc-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 border-2 border-zinc-800 border-t-zinc-400 rounded-full animate-spin mb-4"></div>
+          <p className="text-sm font-medium text-zinc-500">Retrieving node data...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="pt-24 min-h-screen bg-gray-950 text-white p-6 relative overflow-hidden">
-      {/* Gradient Orbs */}
-      <GradientOrb className="w-72 h-72 bg-cyan-500/50 -left-36 -top-36" />
-      <GradientOrb className="w-96 h-96 bg-purple-500/50 -right-48 -bottom-48" />
+  if (!mentor) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center flex-col">
+        <div className="text-zinc-500 text-lg font-medium mb-4">Profile context not found.</div>
+      </div>
+    );
+  }
 
-      <div className="max-w-6xl mx-auto relative">
-        <div className="pt-20 flex flex-col lg:flex-row gap-8">
-          {/* Profile Section */}
-          <div className="flex-1">
-            <div className="bg-gray-900/60 backdrop-blur-xl rounded-3xl p-8 border border-gray-800/50 shadow-2xl transform transition-all duration-300 hover:shadow-cyan-500/20">
-              {/* Profile Header */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-10">
-                <div className="w-28 h-28 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <User size={40} className="text-white" />
-                </div>
-                <div className="text-center sm:text-left">
-                  <h1 className="text-4xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent tracking-tight">
-                    {mentor.user.name}
-                  </h1>
-                  <p className="text-lg text-gray-300 mt-1">{mentor.user.title}</p>
-                  <p className="text-gray-400">{mentor.user.company}</p>
-                </div>
+  const mentorName = mentor.user?.name || "Unknown Mentor";
+
+  return (
+    <div className="pt-32 pb-20 min-h-screen bg-zinc-950 text-zinc-50 px-6 sm:px-12 selection:bg-zinc-800 selection:text-white font-sans flex justify-center">
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-8">
+
+        {/* Profile Section */}
+        <div className="flex-1 space-y-6">
+          <Card className="bg-zinc-950/50 border-zinc-800/80 backdrop-blur-sm shadow-xl p-2 h-full">
+            <CardHeader className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-8 border-b border-zinc-800/50 mb-6">
+              <Avatar className="w-24 h-24 sm:w-28 sm:h-28 border border-zinc-800 bg-zinc-900 shadow-lg">
+                <AvatarImage src="" alt={mentorName} />
+                <AvatarFallback className="bg-zinc-900 text-zinc-300 text-2xl font-semibold">
+                  {mentorName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="text-center sm:text-left flex-1 mt-2">
+                <CardTitle className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">
+                  {mentorName}
+                </CardTitle>
+                <p className="text-lg text-zinc-300 font-medium">Mentor Authority</p>
+                {mentor.user?.roles && (
+                  <p className="text-zinc-500 flex items-center justify-center sm:justify-start mt-1 space-x-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+                    <span>Role Hash: {mentor.user.roles}</span>
+                  </p>
+                )}
               </div>
+            </CardHeader>
+            <CardContent className="space-y-10">
 
               {/* Expertise Section */}
-              <div className="space-y-10">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-200 mb-4 flex items-center gap-2">
-                    <Award size={24} className="text-cyan-400" />
-                    Expertise
-                  </h2>
-                  <div className="flex flex-wrap gap-3">
-                    {mentor.expertise.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700 text-sm text-cyan-300 font-medium hover:bg-gray-700/50 transition-all"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bio Section */}
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-200 mb-4 flex items-center gap-2">
-                    <BookOpen size={24} className="text-cyan-400" />
-                    About
-                  </h2>
-                  <p className="text-gray-300 leading-relaxed">{mentor.user.bio}</p>
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+                  <Award size={20} className="text-zinc-500" />
+                  Expertise Capabilities
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {mentor.expertise && mentor.expertise.length > 0 ? mentor.expertise.map((skill, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="px-3 py-1 bg-zinc-900 border-zinc-800 text-zinc-300 font-medium hover:bg-zinc-800"
+                    >
+                      {skill}
+                    </Badge>
+                  )) : <span className="text-zinc-500">Unspecified capabilities</span>}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Session Booking Section */}
-          <div className="lg:w-96">
-            <div className="bg-gray-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-800/50 lg:sticky lg:top-8 shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-200 mb-6 tracking-tight">Book a Session</h2>
-              <div className="space-y-4">
-                {mentor.sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="bg-gray-800/40 rounded-xl p-5 border border-gray-700/50 hover:border-cyan-500/50 transition-all transform hover:scale-105 duration-300"
-                  >
-                    <h3 className="font-semibold text-lg text-white mb-2">{session.title}</h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
-                      <span className="flex items-center gap-1">
-                        <Clock size={16} />
-                        {session.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Video size={16} />
-                        Online
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-semibold text-cyan-400">${session.price}</span>
-                      <button
-                        onClick={() => setSelectedSession(session)}
-                        className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-semibold text-white hover:from-cyan-600 hover:to-blue-700 transition-all shadow-md"
-                      >
-                        Book Now
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              {/* Bio Section */}
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-200 mb-4 flex items-center gap-2">
+                  <BookOpen size={20} className="text-zinc-500" />
+                  Context Variables
+                </h2>
+                <p className="text-zinc-400 leading-relaxed bg-zinc-950 border border-zinc-800/60 p-5 rounded-xl whitespace-pre-line">
+                  {mentor.bio || "No expanded bio profile is loaded for this node."}
+                </p>
               </div>
-            </div>
-          </div>
+
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Session Booking Section */}
+        <div className="lg:w-96">
+          <Card className="bg-zinc-950/50 border-zinc-800/80 backdrop-blur-sm shadow-xl p-2 lg:sticky lg:top-24">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">Active Operations</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {sessions.length > 0 ? sessions.map((session) => (
+                <div
+                  key={session.sessionId}
+                  className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-5 hover:bg-zinc-900 transition-all duration-300 group"
+                >
+                  <h3 className="font-semibold text-lg text-zinc-100 mb-3">{session.sessionType || "1-on-1"}</h3>
+                  <div className="flex flex-col gap-2 text-sm text-zinc-500 mb-5">
+                    <span className="flex items-center gap-1.5 bg-zinc-900 px-2 py-1.5 rounded-md break-all">
+                      <Clock size={14} className="flex-shrink-0" />
+                      {new Date(session.sessionStartTime).toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-zinc-900 px-2 py-1.5 rounded-md">
+                      <Video size={14} />
+                      Remote Link: {session.sessionLink ? "Available" : "Pending"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-zinc-800/50">
+                    <span className="text-xl font-bold text-zinc-50">${session.sessionFee}</span>
+                    <Button
+                      onClick={() => setSelectedSession(session)}
+                      className="bg-zinc-50 hover:bg-zinc-200 text-zinc-950 font-semibold px-6"
+                    >
+                      Initialize
+                    </Button>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-zinc-500 text-center py-10 bg-zinc-950 border border-zinc-800/50 rounded-xl">
+                  No availability windows detected for this mentor.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

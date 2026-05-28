@@ -1,245 +1,312 @@
-import React, { useState } from 'react';
-import { Send, User, Users, Search, Plus, MessageSquare, MoreVertical } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, Users, Search, Plus, MessageSquare, MoreVertical, Terminal } from 'lucide-react';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 const AnonymousForum = () => {
   const [selectedForum, setSelectedForum] = useState(null);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentUser] = useState({ id: 1 });
 
-  const forums = [
+  const stompClientRef = useRef(null);
+  const [connected, setConnected] = useState(false);
+
+  // Maintain local state for forum messages
+  const [forums, setForums] = useState([
     {
       id: 1,
-      name: "Tech Career Discussions",
-      description: "Share experiences and advice about tech careers",
+      name: "Engineering Discussions",
+      description: "Architecture, patterns, and development",
       members: 234,
       messages: [
         {
           id: 1,
-          content: "What skills are most in demand for full-stack developers in 2024?",
+          content: "What orchestration tools are you relying on for microservices?",
           timestamp: "2024-01-20T10:30:00",
-          author: "Anonymous #1234"
-        },
-        {
-          id: 2,
-          content: "React, Node.js, and cloud platforms like AWS are consistently top requirements.",
-          timestamp: "2024-01-20T10:35:00",
-          author: "Anonymous #5678"
+          author: "Node #1234"
         }
       ]
     },
     {
       id: 2,
-      name: "Startup Ideas",
-      description: "Brainstorm and discuss innovative startup ideas",
+      name: "Venture Ideation",
+      description: "Brainstorming and early-stage validation",
       members: 156,
-      messages: [
-        {
-          id: 1,
-          content: "Looking for feedback on my AI-powered productivity tool idea",
-          timestamp: "2024-01-20T11:30:00",
-          author: "Anonymous #9012"
-        }
-      ]
+      messages: []
     },
     {
       id: 3,
-      name: "Interview Prep",
-      description: "Practice and share interview experiences",
+      name: "Technical Screening",
+      description: "Algorithm patterns and system design",
       members: 189,
       messages: []
     }
-  ];
+  ]);
+
+  // Generate a steady random author identity for this session
+  const [authorIdentity] = useState("Node #" + Math.floor(1000 + Math.random() * 9000));
+
+  useEffect(() => {
+    // Setup WebSocket connection
+    const backendUrl = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8080';
+    // Remove trailing slash if exists
+    const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+
+    // Using SockJS matching Spring backend
+    const socket = new SockJS(`${baseUrl}/ws`);
+    const stompClient = Stomp.over(socket);
+
+    stompClient.debug = () => { }; // Disable debug logs to keep console clean
+
+    stompClient.connect({}, () => {
+      setConnected(true);
+
+      // Subscribe to global messages
+      stompClient.subscribe('/topic/messages', (messageOutput) => {
+        try {
+          const body = JSON.parse(messageOutput.body);
+          if (body.type === 'FORUM_MSG') {
+            setForums(prevForums => prevForums.map(f => {
+              if (f.id === body.forumId) {
+                // Check if message already exists locally
+                if (f.messages.find(m => m.id === body.message.id)) return f;
+                return { ...f, messages: [...f.messages, body.message] };
+              }
+              return f;
+            }));
+
+            // Need to update selectedForum if it matches to cause a re-render view correctly
+            setSelectedForum(prev => {
+              if (prev && prev.id === body.forumId) {
+                if (prev.messages.find(m => m.id === body.message.id)) return prev;
+                return { ...prev, messages: [...prev.messages, body.message] };
+              }
+              return prev;
+            });
+          }
+        } catch (e) {
+          // Normal message, ignore or handle differently
+        }
+      });
+    }, (error) => {
+      console.error("WebSocket Connection Error:", error);
+      setConnected(false);
+    });
+
+    stompClientRef.current = stompClient;
+
+    return () => {
+      if (stompClient.connected) {
+        stompClient.disconnect();
+      }
+    };
+  }, []);
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedForum) return;
+    if (!messageInput.trim() || !selectedForum || !connected) return;
 
     const newMessage = {
       id: Date.now(),
       content: messageInput,
       timestamp: new Date().toISOString(),
-      author: "Anonymous #" + Math.floor(1000 + Math.random() * 9000)
+      author: authorIdentity
     };
 
-    selectedForum.messages.push(newMessage);
+    // Optimistically update UI
+    setForums(prevForums => prevForums.map(f =>
+      f.id === selectedForum.id ? { ...f, messages: [...f.messages, newMessage] } : f
+    ));
+    setSelectedForum(prev => ({ ...prev, messages: [...prev.messages, newMessage] }));
+
+    // Broadcast to backend
+    const payload = {
+      type: 'FORUM_MSG',
+      forumId: selectedForum.id,
+      message: newMessage
+    };
+
+    try {
+      stompClientRef.current.send("/app/sendMessage", {}, JSON.stringify(payload));
+    } catch (err) {
+      console.error("Failed to transmit over WebSocket:", err);
+    }
+
     setMessageInput('');
   };
 
-  const filteredForums = forums.filter(forum => 
+  const filteredForums = forums.filter(forum =>
     forum.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     forum.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="h-[600px] pt-20 w-full bg-gradient-to-br from-emerald-900 via-gray-900 to-emerald-900 p-4 mt-0">
-      <div className="h-full w-full mx-auto bg-gray-900/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-emerald-700/30 shadow-2xl flex">
+    <div className="h-screen w-full bg-zinc-950 pt-20 pb-0 flex flex-col font-sans selection:bg-zinc-800 selection:text-white">
+      <div className="flex-1 w-full max-w-7xl mx-auto bg-zinc-950 border-x border-t border-zinc-800/80 sm:rounded-tl-2xl sm:rounded-tr-2xl overflow-hidden flex shadow-2xl relative">
+
         {/* Mobile Menu Button */}
-        <button 
-          className="lg:hidden fixed top-6 left-6 z-50 p-2 bg-gray-800/80 backdrop-blur-sm rounded-full"
+        <button
+          className="lg:hidden absolute top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-md"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
-          <MessageSquare className="w-6 h-6 text-emerald-400" />
+          <MessageSquare className="w-5 h-5 text-zinc-400" />
         </button>
 
         {/* Forums List */}
-        <div className={`w-80 bg-gray-800/50 backdrop-blur-md border-r border-emerald-700/30 
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-          lg:translate-x-0 transition-transform duration-300 absolute lg:relative z-40 h-full`}>
-          <div className="p-4">
+        <div className={`w-80 bg-zinc-950 border-r border-zinc-800 flex flex-col
+          ${isSidebarOpen ? 'translate-x-0 absolute inset-y-0 left-0 z-40 bg-zinc-950/95 backdrop-blur-md border-r-2' : '-translate-x-full absolute lg:relative'} 
+          lg:translate-x-0 transition-transform duration-300 h-full`}>
+
+          <div className="p-5 border-b border-zinc-800">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-white">Forums</h1>
-              <motion.button
-                className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Plus className="w-5 h-5" />
-              </motion.button>
+              <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                Public Forums
+                <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-red-500'} ml-2`}></span>
+              </h1>
+              <button className="p-1.5 hover:bg-zinc-900 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors border border-transparent hover:border-zinc-800">
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search forums..."
-                className="w-full p-3 pl-10 bg-gray-900/50 text-gray-100 rounded-xl border border-emerald-700/30 focus:outline-none focus:border-emerald-500/50"
+                placeholder="Search queries..."
+                className="w-full p-2.5 pl-9 bg-zinc-900 text-zinc-100 text-sm rounded-lg border border-zinc-800 focus:outline-none focus:border-zinc-600 placeholder-zinc-500 transition-colors"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="w-5 h-5 text-gray-500 absolute left-3 top-3.5" />
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3.5" />
             </div>
           </div>
 
-          <div className="overflow-y-auto h-[calc(100%-5rem)]">
-            <AnimatePresence>
-              {filteredForums.map((forum) => (
-                <motion.div
-                  key={forum.id}
-                  className={`p-4 hover:bg-emerald-900/30 cursor-pointer transition-colors duration-200
-                    ${selectedForum?.id === forum.id ? 'bg-emerald-900/40' : ''}`}
-                  onClick={() => {
-                    setSelectedForum(forum);
-                    setIsSidebarOpen(false);
-                  }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
-                        <MessageSquare className="w-6 h-6" />
+          <div className="flex-1 overflow-y-auto hidden-scrollbar">
+            {filteredForums.map((forum) => (
+              <div
+                key={forum.id}
+                className={`p-4 border-b border-zinc-800/50 hover:bg-zinc-900/50 cursor-pointer transition-colors
+                  ${selectedForum?.id === forum.id ? 'bg-zinc-900' : ''}`}
+                onClick={() => {
+                  setSelectedForum(forum);
+                  setIsSidebarOpen(false);
+                }}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <h3 className="text-sm font-semibold text-zinc-100 truncate">{forum.name}</h3>
+                      <div className="flex items-center text-zinc-500 text-[10px] uppercase font-bold tracking-wider ml-2">
+                        <Users className="w-3 h-3 mr-1" />
+                        {forum.members}
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-gray-100 truncate">{forum.name}</h3>
-                        <div className="flex items-center text-gray-400 text-sm">
-                          <Users className="w-4 h-4 mr-1" />
-                          {forum.members}
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-400 truncate">{forum.description}</p>
-                    </div>
+                    <p className="text-xs text-zinc-400 line-clamp-2">{forum.description}</p>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Forum Messages */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-zinc-950/50">
           {selectedForum ? (
             <>
-              <div className="p-4 bg-gray-800/30 backdrop-blur-sm border-b border-emerald-700/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white">
-                        <MessageSquare className="w-6 h-6" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-100">{selectedForum.name}</h3>
-                      <span className="text-sm text-gray-400">{selectedForum.members} members</span>
-                    </div>
+              {/* Forum Header */}
+              <div className="h-[73px] px-6 py-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center space-x-4 pl-10 lg:pl-0">
+                  <div>
+                    <h3 className="font-semibold text-zinc-100 leading-tight flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-zinc-500" />
+                      {selectedForum.name}
+                    </h3>
+                    <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest">
+                      {selectedForum.members} IDENTITIES
+                    </span>
                   </div>
-                  <div className="flex space-x-2">
-                    <button className="p-2 hover:bg-emerald-900/30 rounded-full text-gray-300">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                  </div>
+                </div>
+                <div className="flex space-x-1 border-l border-zinc-800 pl-4">
+                  <button className="p-2 hover:bg-zinc-900 rounded-md text-zinc-500 hover:text-zinc-200 transition-colors">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <AnimatePresence>
-                  {selectedForum.messages.map((msg) => (
-                    <motion.div
-                      key={msg.id}
-                      className="flex justify-start"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                    >
-                      <motion.div
-                        className="max-w-[70%] p-3 rounded-2xl bg-gray-700/50 backdrop-blur-sm text-gray-100"
-                        whileHover={{ scale: 1.02 }}
-                      >
-                        <div className="text-xs text-emerald-400 mb-1">{msg.author}</div>
-                        <p>{msg.content}</p>
-                        <span className="text-xs mt-1 opacity-70 block">
-                          {formatTime(msg.timestamp)}
-                        </span>
-                      </motion.div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+              {/* Message Feed */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {selectedForum.messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.author === authorIdentity ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[75%] px-5 py-3 rounded-2xl text-[14px] leading-relaxed shadow-sm border ${msg.author === authorIdentity
+                        ? 'bg-zinc-100 text-zinc-900 border-zinc-200 rounded-br-sm'
+                        : 'bg-zinc-900 text-zinc-200 border-zinc-800 rounded-bl-sm'
+                      }`}>
+                      <div className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${msg.author === authorIdentity ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                        {msg.author === authorIdentity ? 'You' : msg.author}
+                      </div>
+                      <p>{msg.content}</p>
+                      <span className={`text-[10px] mt-2 block ${msg.author === authorIdentity ? 'text-zinc-500' : 'text-zinc-600'}`}>
+                        {formatTime(msg.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {selectedForum.messages.length === 0 && (
+                  <div className="text-center py-20">
+                    <p className="text-sm text-zinc-600">No transmissions in this channel yet.</p>
+                  </div>
+                )}
               </div>
 
-              <div className="p-4 bg-gray-800/30 backdrop-blur-sm border-t border-emerald-700/30">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Share your thoughts anonymously..."
-                    className="flex-1 p-3 bg-gray-900/50 text-gray-100 rounded-xl border border-emerald-700/30 focus:outline-none focus:border-emerald-500/50"
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                  <motion.button 
-                    className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl"
+              {/* Input Area */}
+              <div className="p-5 bg-zinc-950 border-t border-zinc-800">
+                <div className="flex items-center gap-2 max-w-4xl mx-auto">
+                  <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden focus-within:border-zinc-600 transition-colors px-4 py-1.5 flex items-center">
+                    <input
+                      type="text"
+                      placeholder="Broadcast message to channel..."
+                      className="w-full bg-transparent p-2 text-zinc-100 text-sm focus:outline-none placeholder-zinc-600"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSendMessage();
+                      }}
+                    />
+                  </div>
+                  <button
+                    className="p-3 bg-zinc-100 hover:bg-zinc-300 text-zinc-900 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleSendMessage}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    disabled={!messageInput.trim() || !connected}
                   >
-                    <Send className="w-5 h-5" />
-                  </motion.button>
+                    <Send className="w-4 h-4 ml-0.5" />
+                  </button>
+                </div>
+                <div className="text-center mt-2 flex items-center justify-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${connected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                  <span className="text-[10px] text-zinc-600 font-medium uppercase tracking-widest">
+                    {connected ? 'Identities masked. Traffic is monitored.' : 'Connecting to secure stream...'}
+                  </span>
                 </div>
               </div>
             </>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6">
-              <div className="w-16 h-16 bg-emerald-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-emerald-400" />
+            <div className="h-full flex items-center justify-center bg-zinc-950/30">
+              <div className="text-center p-8 max-w-sm">
+                <div className="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                  <Users className="w-8 h-8 text-zinc-600" />
+                </div>
+                <h2 className="text-lg font-bold text-zinc-200 mb-2">
+                  System Awaiting Protocol
+                </h2>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  Select an active forum from the directory tree to inspect anonymous transmissions.
+                </p>
               </div>
-              <h2 className="text-xl font-semibold text-gray-100">
-                Select a forum to join the discussion
-              </h2>
-              <p className="text-gray-400 mt-2">
-                Choose from available forums or create a new one
-              </p>
             </div>
           )}
         </div>

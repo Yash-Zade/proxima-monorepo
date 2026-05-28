@@ -18,6 +18,11 @@ public class CollegeController {
     private final CollegeRepository collegeRepository;
     private final CollegeService collegeService;
 
+    @GetMapping("/profile")
+    public ResponseEntity<com.teamarc.proxima.dto.CollegeDTO> getCollegeProfile() {
+        return ResponseEntity.ok(collegeService.getCollegeProfile());
+    }
+
     @GetMapping("/student")
     public ResponseEntity<List<StudentDTO>> getStudents() {
         return ResponseEntity.ok(collegeService.getStudents());

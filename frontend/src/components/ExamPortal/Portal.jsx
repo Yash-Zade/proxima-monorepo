@@ -1,6 +1,11 @@
 // src/components/ExamPortal/Portal.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from "socket.io-client";
+import { AlertCircle, Camera, CheckCircle2, Clock, ShieldAlert, Terminal, Loader2 } from "lucide-react";
+import apiClient from "../Auth/ApiClient";
+
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
+import { Button } from "../ui/button";
 
 const ExamPortal = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -9,13 +14,12 @@ const ExamPortal = () => {
   const [examStatus, setExamStatus] = useState('not-started');
   const [score, setScore] = useState(0);
   const [warningCount, setWarningCount] = useState(0);
-  const [warningOverlay, setWarningOverlay] = useState(false);
-  
+
   // Webcam states
   const [imageSrc, setImageSrc] = useState("");
   const [focusStatus, setFocusStatus] = useState("Checking...");
   const [error, setError] = useState(null);
-  
+
   // Refs for webcam and timers
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -24,45 +28,9 @@ const ExamPortal = () => {
   const focusLossTimerRef = useRef(null);
   const warningTimeoutRef = useRef(null);
 
-  // Sample questions
-  const questions = [
-    {
-      id: "Q1",
-      difficulty: "Medium",
-      story: "You're a software developer on a team tasked with creating a new e-commerce website. The initial design calls for a simple, static site using HTML, CSS, and basic JavaScript. However, the client now wants a dynamic, interactive shopping cart that updates in real-time without requiring page reloads. The cart needs to persist data even if the user closes the browser, and should integrate with a backend payment gateway. Your team has decided to use React for the front-end and a Python-based RESTful API for the backend. The database is a PostgreSQL instance.",
-      question: "Based on this change in requirements, what are the initial steps you would take to implement the dynamic shopping cart functionality using React and a Python/PostgreSQL backend, focusing specifically on the front-end integration?",
-      options: [
-        { text: "Start by designing the database schema for the shopping cart data in PostgreSQL, then write the Python API endpoints.", correct: false },
-        { text: "Immediately begin coding the React components for the shopping cart, focusing on the user interface and basic interactions. Then, gradually integrate with the backend API.", correct: false },
-        { text: "Plan the API endpoints required for the shopping cart in Python, define the data structures, and then build the React components to interact with those endpoints, ensuring proper data handling and state management.", correct: true },
-        { text: "Use a pre-built e-commerce solution, minimizing development time.", correct: false }
-      ]
-    },
-    {
-      id: "Q2",
-      difficulty: "Hard",
-      story: "Same story as Q1. You've successfully implemented the basic shopping cart functionality. Now, the client wants to add features for user authentication and authorization. They also want to implement a system for tracking user browsing history for personalized recommendations. The system should be secure and compliant with relevant data privacy regulations.",
-      question: "How would you design and implement user authentication and authorization, considering security best practices and data privacy regulations? Outline the key architectural considerations and technologies you'd choose.",
-      options: [
-        { text: "Use basic session-based authentication and store user data directly in the database without encryption.", correct: false },
-        { text: "Implement OAuth 2.0 for authentication and use JWT (JSON Web Tokens) for authorization, storing sensitive data securely using encryption and adhering to relevant data privacy regulations.", correct: true },
-        { text: "Store passwords in plain text in the database for ease of access.", correct: false },
-        { text: "Ignore data privacy regulations and use user data however is convenient.", correct: false }
-      ]
-    },
-    {
-      id: "Q3",
-      difficulty: "Medium",
-      story: "Same story as Q1 and Q2. The website is now live. However, the team is receiving reports of slow response times, especially during peak hours. The client wants to improve the website's performance and scalability.",
-      question: "What steps would you take to diagnose and resolve the performance issues, ensuring the website can handle increased traffic and maintain responsiveness?",
-      options: [
-        { text: "Ignore the performance issues and hope they go away.", correct: false },
-        { text: "Add more servers without optimizing the code.", correct: false },
-        { text: "Use performance monitoring tools to identify bottlenecks, optimize database queries, implement caching strategies, and potentially explore load balancing and scaling solutions.", correct: true },
-        { text: "Rewrite the entire website from scratch.", correct: false }
-      ]
-    }
-  ];
+  // Questions state
+  const [questions, setQuestions] = useState([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
 
   // Format time from seconds to MM:SS
   const formatTime = (seconds) => {
@@ -78,12 +46,12 @@ const ExamPortal = () => {
     const initializeWebcam = async () => {
       try {
         console.log("Initializing webcam...");
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { width: { ideal: 640 }, height: { ideal: 480 } } 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 } }
         });
-        
+
         streamRef.current = stream;
-        
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await new Promise((resolve) => {
@@ -108,14 +76,13 @@ const ExamPortal = () => {
           if (data.image) {
             setImageSrc(`data:image/jpeg;base64,${data.image}`);
             setFocusStatus(data.focus_status);
-            console.log("Focus status updated:", data.focus_status);
           }
         });
 
         const context = canvasRef.current.getContext('2d');
         canvasRef.current.width = 640;
         canvasRef.current.height = 480;
-        
+
         const sendFrame = () => {
           if (videoRef.current && videoRef.current.readyState === 4 && socketRef.current?.connected) {
             context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -128,14 +95,14 @@ const ExamPortal = () => {
 
       } catch (err) {
         console.error("Error in initialization:", err);
-        setError(`Webcam error: ${err.message}`);
-        setFocusStatus("Error: Cannot access webcam");
+        setError(`Camera interface error: ${err.message}`);
+        setFocusStatus("Hardware Error");
       }
     };
 
     if (examStatus === 'in-progress') {
       initializeWebcam();
-      setWarningCount(0); // Reset warning count when exam starts
+      setWarningCount(0);
     }
 
     return () => {
@@ -169,15 +136,14 @@ const ExamPortal = () => {
 
   // Track focus loss
   useEffect(() => {
-    const FOCUS_LOSS_THRESHOLD = 5000; // 5 seconds
+    const FOCUS_LOSS_THRESHOLD = 5000;
     let focusLossTimeout;
 
     const handleFocusLoss = () => {
       const newWarningCount = warningCount + 1;
       setWarningCount(newWarningCount);
-      
+
       if (newWarningCount >= 3) {
-        // Only submit if the exam is still in progress
         if (examStatus === 'in-progress') {
           handleSubmit();
           setWarningCount(0);
@@ -185,7 +151,6 @@ const ExamPortal = () => {
       }
     };
 
-    // Clear any existing timer when focus status changes
     if (focusLossTimerRef.current) {
       clearTimeout(focusLossTimerRef.current);
       focusLossTimerRef.current = null;
@@ -193,210 +158,298 @@ const ExamPortal = () => {
 
     if (examStatus === 'in-progress') {
       if (focusStatus !== "Candidate is Focusing!") {
-        // Debounce the focus loss handling
         focusLossTimeout = setTimeout(handleFocusLoss, FOCUS_LOSS_THRESHOLD);
       }
     }
 
     return () => {
-      if (focusLossTimerRef.current) {
-        clearTimeout(focusLossTimerRef.current);
-      }
-      if (focusLossTimeout) {
-        clearTimeout(focusLossTimeout);
-      }
-      if (warningTimeoutRef.current) {
-        clearTimeout(warningTimeoutRef.current);
-      }
+      if (focusLossTimerRef.current) clearTimeout(focusLossTimerRef.current);
+      if (focusLossTimeout) clearTimeout(focusLossTimeout);
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
     };
   }, [focusStatus, examStatus, warningCount]);
 
   const handleSubmit = () => {
-    let correctAnswers = questions.reduce((count, question, index) => 
-      selectedAnswers[index] === question.options.findIndex(option => option.correct) ? count + 1 : count,
+    let correctAnswers = questions.reduce((count, question, index) =>
+      selectedAnswers[index] === question.options.findIndex(option => option.correct || option.isCorrect) ? count + 1 : count,
       0
     );
     setScore((correctAnswers / questions.length) * 100);
-    
-    // Clear any existing warning overlay
-    const existingOverlay = document.getElementById('warning-overlay');
-    if (existingOverlay) {
-      document.body.removeChild(existingOverlay);
-    }
-    // Clear any pending timeout
+
     if (warningTimeoutRef.current) {
       clearTimeout(warningTimeoutRef.current);
       warningTimeoutRef.current = null;
     }
-    
+
     setExamStatus('completed');
-    console.log("Exam submitted. Score:", (correctAnswers / questions.length) * 100);
   };
 
   return (
-    <div className="pt-24 min-h-screen bg-gray-950 overflow-hidden">
-      <div className="fixed inset-0 bg-gradient-to-b from-gray-950 to-black opacity-90" />
-      
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-green-500/20 rounded-full mix-blend-screen filter blur-3xl animate-float" />
-        <div className="absolute top-1/4 -right-20 w-96 h-96 bg-emerald-500/20 rounded-full mix-blend-screen filter blur-3xl animate-float-delay" />
-      </div>
+    <div className="pt-24 min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white pb-20 border-t border-zinc-900">
+      <div className="max-w-7xl mx-auto px-6 space-y-6">
 
-      <div className="relative container mx-auto p-4">
-        <div className="flex justify-between items-center p-4 mb-6 rounded-lg bg-white/5 backdrop-blur-xl shadow-lg text-white">
-          <h1 className="text-2xl font-bold">Online Examination</h1>
-          <div className="flex items-center gap-4">
+        {/* Top Telemetry Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 rounded-xl bg-zinc-900/50 border border-zinc-800 shadow-sm gap-4">
+          <div className="flex items-center gap-3">
+            <Terminal className="w-5 h-5 text-zinc-500" />
+            <h1 className="text-xl font-bold tracking-tight">Active Assessment Node</h1>
+          </div>
+
+          <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto">
             {examStatus === 'in-progress' && (
               <>
-                <div className={`px-4 py-2 rounded-full ${
-                  focusStatus === "Candidate is Focusing!" 
-                    ? 'bg-emerald-900/50 text-emerald-200' 
-                    : 'bg-red-900/50 text-red-200'
-                }`}>
-                  {focusStatus}
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-bold uppercase tracking-widest ${focusStatus === "Candidate is Focusing!"
+                  ? 'bg-zinc-950 border-zinc-800 text-zinc-400'
+                  : 'bg-red-950/30 border-red-900/50 text-red-500 animate-pulse'
+                  }`}>
+                  {focusStatus === "Candidate is Focusing!" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                  {focusStatus === "Candidate is Focusing!" ? 'TRACKING LOCKED' : 'ALERT: FOCUS LOST'}
                 </div>
-                <div className="px-4 py-2 rounded-full bg-gray-900/50">
-                  Warnings: {warningCount}/3
+                <div className={`px-3 py-1.5 rounded-md border text-xs font-bold uppercase tracking-widest ${warningCount > 0 ? 'bg-red-950/20 border-red-900/30 text-red-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
+                  Strikes: {warningCount}/3
                 </div>
               </>
             )}
-            <span className="font-mono text-xl">{formatTime(timeLeft)}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-100 text-zinc-900 text-sm font-bold font-mono border border-zinc-300 shadow-sm">
+              <Clock className="w-4 h-4" />
+              {formatTime(timeLeft)}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Hardware Monitoring Viewport */}
           {examStatus === 'in-progress' && (
             <div className="lg:col-span-1">
-              <div className="rounded-lg shadow-lg p-4 bg-white/5 backdrop-blur-xl">
-                <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                    style={{ position: 'absolute', opacity: 0 }}
-                  />
-                  {error ? (
-                    <div className="absolute inset-0 flex items-center justify-center text-red-500">
-                      {error}
-                    </div>
-                  ) : imageSrc ? (
-                    <img 
-                      src={imageSrc} 
-                      alt="Processed Video Feed" 
-                      className="w-full h-full object-cover"
+              <Card className="bg-zinc-950 border-zinc-800 h-full">
+                <CardHeader className="border-b border-zinc-800/80 pb-4">
+                  <CardTitle className="text-sm uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    Optical Array
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="aspect-video bg-zinc-900 rounded-lg overflow-hidden relative border border-zinc-800">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover grayscale contrast-125"
+                      style={{ position: 'absolute', opacity: 0 }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                      Loading webcam feed...
+                    {error ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500 bg-red-950/10 p-4 text-center">
+                        <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                        <span className="text-xs uppercase tracking-widest font-bold">{error}</span>
+                      </div>
+                    ) : imageSrc ? (
+                      <img
+                        src={imageSrc}
+                        alt="Processed Video Feed"
+                        className="w-full h-full object-cover grayscale contrast-125 opacity-80 mix-blend-screen"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
+                        <span className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin"></span>
+                        <span className="text-xs uppercase tracking-widest font-bold">Initializing Optics...</span>
+                      </div>
+                    )}
+
+                    {/* Viewport Overlay UI */}
+                    <div className="absolute inset-0 pointer-events-none border-[4px] border-zinc-900/50 rounded-lg"></div>
+                    <div className="absolute top-2 left-2 pointer-events-none">
+                      <span className="bg-red-500 animate-pulse w-2 h-2 block rounded-full"></span>
                     </div>
-                  )}
-                </div>
-              </div>
+                    <div className="absolute bottom-2 right-2 pointer-events-none">
+                      <span className="text-[9px] font-mono text-zinc-500 uppercase">SYS.REC.ACTIVE</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
+          {/* Assessment Main Box */}
           <div className={`lg:col-span-${examStatus === 'in-progress' ? '2' : '3'}`}>
-            <div className="rounded-lg shadow-lg p-6 bg-white/5 backdrop-blur-xl text-white">
+            <Card className="bg-zinc-950 border-zinc-800 shadow-xl h-full">
               {examStatus === 'not-started' && (
-                <div className="text-center">
-                  <h2 className="text-xl font-bold mb-4">PYTHON skill assessment</h2>
-                  <p className=" mb-4">You have 10 minutes to complete this exam. Webcam monitoring and nearby device monitoring will be enabled.</p>
-                  <button
-                    onClick={() => {
-                      console.log("Exam started");
-                      setExamStatus('in-progress');
+                <CardContent className="h-full flex flex-col items-center justify-center text-center p-12 min-h-[400px]">
+                  <ShieldAlert className="w-12 h-12 text-zinc-700 mb-6" />
+                  <h2 className="text-2xl font-bold mb-3 tracking-tight">Python Competency Protocol</h2>
+                  <p className="text-zinc-400 mb-8 max-w-md text-sm leading-relaxed">
+                    You have exactly 10 minutes to complete this assessment. Strict optical monitoring and device telemetry will be enforced. A 3-strike rule applies to optical deviations.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        setLoadingQuestions(true);
+                        const res = await apiClient.post('/public/questions', {
+                          jd: "Software Engineer focusing on React and Spring Boot",
+                          resume: "Experienced developer with solid background in building scalable web applications. Proficient in React, Node, and Spring Boot.",
+                          certifiedSkills: ["React", "Java", "Spring Boot"]
+                        });
+                        // GlobalResponseHandler wraps the List<QuestionDTO> into res.data.data
+                        const questionData = res.data?.data;
+                        if (questionData && questionData.length > 0) {
+                          setQuestions(questionData);
+                        } else {
+                          // Fallback if empty response
+                          setQuestions([
+                            {
+                              id: "FALLBACK-1",
+                              difficulty: "Medium",
+                              story: "You need to build a secure web application.",
+                              question: "What is the primary purpose of HTTPS?",
+                              options: [
+                                { text: "To encrypt data over the network", isCorrect: true },
+                                { text: "To compress HTML responses", isCorrect: false },
+                                { text: "To format web pages", isCorrect: false },
+                                { text: "To enable executing local scripts", isCorrect: false }
+                              ]
+                            }
+                          ]);
+                        }
+                      } catch (err) {
+                        console.error("Failed to load assessment questions", err);
+                        // Fallback on error so UI doesn't break
+                        setQuestions([
+                          {
+                            id: "FALLBACK-1",
+                            difficulty: "Medium",
+                            story: "You need to build a secure web application.",
+                            question: "What is the primary purpose of HTTPS?",
+                            options: [
+                              { text: "To encrypt data over the network", correct: true },
+                              { text: "To compress HTML responses", correct: false },
+                              { text: "To format web pages", correct: false },
+                              { text: "To enable executing local scripts", correct: false }
+                            ]
+                          }
+                        ]);
+                      } finally {
+                        setLoadingQuestions(false);
+                        setExamStatus('in-progress');
+                      }
                     }}
-                    className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300"
+                    disabled={loadingQuestions}
+                    className="bg-zinc-100 hover:bg-zinc-300 text-zinc-900 font-bold px-8 h-12 text-sm uppercase tracking-wider"
                   >
-                    Start Exam
-                  </button>
-                </div>
+                    {loadingQuestions ? (
+                      <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Gathering Intel...</span>
+                    ) : 'Initiate Sequence'}
+                  </Button>
+                </CardContent>
               )}
 
               {examStatus === 'in-progress' && (
-                <>
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Question {currentQuestion + 1} of {questions.length}
-                    </h3>
-                    <div className="mb-4" style={{ userSelect: 'none' }} onContextMenu={(e) => e.preventDefault()}>
-                      <strong>Story:</strong> {questions[currentQuestion].story}
+                <CardContent className="p-6 md:p-8 flex flex-col h-full">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/80">
+                      <h3 className="text-xs font-bold tracking-widest uppercase text-zinc-500">
+                        Block {currentQuestion + 1} <span className="text-zinc-700 mx-1">/</span> {questions.length}
+                      </h3>
+                      <span className="text-[10px] uppercase font-bold text-zinc-600 bg-zinc-900 px-2 py-1 rounded">
+                        Diff: {questions[currentQuestion].difficulty}
+                      </span>
                     </div>
-                    <p className="mb-4" style={{ userSelect: 'none' }} onContextMenu={(e) => e.preventDefault()}>{questions[currentQuestion].question}</p>
+
+                    <div className="mb-6 space-y-4" style={{ userSelect: 'none' }} onContextMenu={(e) => e.preventDefault()}>
+                      <div className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 border-l-2 border-l-zinc-600">
+                        {questions[currentQuestion].story}
+                      </div>
+                      <p className="text-zinc-200 font-medium text-lg leading-snug">
+                        {questions[currentQuestion].question}
+                      </p>
+                    </div>
+
                     <div className="space-y-3" style={{ userSelect: 'none' }} onContextMenu={(e) => e.preventDefault()}>
                       {questions[currentQuestion].options.map((option, index) => (
                         <label
                           key={index}
-                          className={`flex items-center p-3 rounded-lg cursor-pointer ${
-                            selectedAnswers[currentQuestion] === index 
-                              ? 'bg-emerald-900/50' 
-                              : 'bg-white/5'
-                          } hover:bg-white/10 transition-colors duration-200`}
+                          className={`flex items-start p-4 rounded-xl cursor-pointer border transition-colors duration-200 ${selectedAnswers[currentQuestion] === index
+                            ? 'bg-zinc-900 border-zinc-600 shadow-sm'
+                            : 'bg-zinc-950 border-zinc-800 hover:bg-zinc-900/50 hover:border-zinc-700'
+                            }`}
                         >
-                          <input
-                            type="radio"
-                            name={`question-${currentQuestion}`}
-                            checked={selectedAnswers[currentQuestion] === index}
-                            onChange={() => setSelectedAnswers({
-                              ...selectedAnswers,
-                              [currentQuestion]: index
-                            })}
-                            className="mr-3"
-                          />
-                          {option.text}
+                          <div className="mt-0.5 mr-4 flex-shrink-0">
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedAnswers[currentQuestion] === index
+                              ? 'border-zinc-300 bg-zinc-300'
+                              : 'border-zinc-600'
+                              }`}>
+                              {selectedAnswers[currentQuestion] === index && <div className="w-1.5 h-1.5 rounded-full bg-zinc-900" />}
+                            </div>
+                          </div>
+                          <span className={`text-sm leading-relaxed ${selectedAnswers[currentQuestion] === index ? 'text-zinc-200' : 'text-zinc-400'}`}>
+                            {option.text}
+                          </span>
                         </label>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-6">
-                    <button
+                  <div className="flex justify-between mt-8 pt-6 border-t border-zinc-800/80">
+                    <Button
+                      variant="outline"
                       onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
                       disabled={currentQuestion === 0}
-                      className={`px-4 py-2 rounded-lg ${
-                        currentQuestion === 0 
-                          ? 'bg-gray-700 cursor-not-allowed' 
-                          : 'bg-emerald-600 hover:bg-emerald-700'
-                      } text-white transition-colors duration-200`}
+                      className="border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
                     >
-                      Previous
-                    </button>
+                      Step Back
+                    </Button>
+
                     {currentQuestion === questions.length - 1 ? (
-                      <button
+                      <Button
                         onClick={handleSubmit}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
+                        className="bg-zinc-100 hover:bg-zinc-300 text-zinc-900 font-bold"
                       >
-                        Submit
-                      </button>
+                        Commit Assessment
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         onClick={() => setCurrentQuestion(prev => Math.min(questions.length - 1, prev + 1))}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
+                        className="bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium border-zinc-700"
                       >
-                        Next
-                      </button>
+                        Step Forward
+                      </Button>
                     )}
                   </div>
-                </>
+                </CardContent>
               )}
 
               {examStatus === 'completed' && (
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold mb-4">Exam Completed!</h2>
-                  <p className="text-xl mb-4">Your Score: {score.toFixed(1)}%</p>
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Exam Summary</h3>
-                    <div className="space-y-2 text-left">
-                      <p>Total Questions: {questions.length}</p>
-                      <p>Correct Answers: {Math.round((score / 100) * questions.length)}</p>
-                      <p>Time Taken: {formatTime(600 - timeLeft)}</p>
-                      <p>Focus Warnings Received: {warningCount}</p>
+                <CardContent className="h-full flex flex-col items-center justify-center text-center p-8 min-h-[400px]">
+                  <CheckCircle2 className="w-16 h-16 text-zinc-600 mb-4" />
+                  <h2 className="text-2xl font-bold mb-2 tracking-tight">Transmission Terminated</h2>
+
+                  <div className="my-8">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 mb-1">Final Authorization Score</p>
+                    <p className="text-6xl font-black text-zinc-100 font-mono tracking-tighter">{score.toFixed(1)}<span className="text-2xl text-zinc-600">%</span></p>
+                  </div>
+
+                  <div className="w-full max-w-sm mb-8 p-6 bg-zinc-900 border border-zinc-800 rounded-xl space-y-4">
+                    <div className="flex justify-between items-center pb-3 border-b border-zinc-800/50">
+                      <span className="text-xs uppercase font-bold tracking-wider text-zinc-500">Node Queries</span>
+                      <span className="font-mono text-zinc-300">{questions.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-zinc-800/50">
+                      <span className="text-xs uppercase font-bold tracking-wider text-zinc-500">Valid Responses</span>
+                      <span className="font-mono text-zinc-300">{Math.round((score / 100) * questions.length)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-zinc-800/50">
+                      <span className="text-xs uppercase font-bold tracking-wider text-zinc-500">Duration</span>
+                      <span className="font-mono text-zinc-300">{formatTime(600 - timeLeft)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs uppercase font-bold tracking-wider text-zinc-500">Optical Deviations</span>
+                      <span className={`font-mono ${warningCount > 0 ? 'text-red-400' : 'text-zinc-300'}`}>{warningCount}</span>
                     </div>
                   </div>
-                  <div className="space-x-4">
-                    <button
+
+                  <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         setExamStatus('not-started');
                         setTimeLeft(600);
@@ -405,13 +458,12 @@ const ExamPortal = () => {
                         setScore(0);
                         setWarningCount(0);
                       }}
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200"
+                      className="flex-1 border-zinc-800 text-zinc-400 hover:bg-zinc-900"
                     >
-                      Restart Exam
-                    </button>
-                    <button
+                      Re-Initialize
+                    </Button>
+                    <Button
                       onClick={() => {
-                        // Download results as JSON
                         const results = {
                           score: score,
                           timeSpent: 600 - timeLeft,
@@ -423,20 +475,20 @@ const ExamPortal = () => {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = 'exam-results.json';
+                        a.download = 'exam-telemetry.json';
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                       }}
-                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
+                      className="flex-1 bg-zinc-100 hover:bg-zinc-300 text-zinc-900 font-bold"
                     >
-                      Download Results
-                    </button>
+                      Export Logs
+                    </Button>
                   </div>
-                </div>
+                </CardContent>
               )}
-            </div>
+            </Card>
           </div>
         </div>
       </div>
