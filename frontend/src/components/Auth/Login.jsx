@@ -19,7 +19,20 @@ const Login = () => {
     setError('');
     try {
       await login(email, password);
-      navigate('/roles');
+
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        const dashboardPaths = {
+          employer: '/employerdashboard',
+          student: '/profile',
+          college: '/collegedashboard',
+          mentor: '/mentordashboard',
+          admin: '/admindashboard'
+        };
+        navigate(dashboardPaths[role] || '/');
+      } else {
+        navigate('/roles');
+      }
     } catch (err) {
       // Backend errors are wrapped: { timeStamp, data: null, error: { status, message, subErrors } }
       const message =

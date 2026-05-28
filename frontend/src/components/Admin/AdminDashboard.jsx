@@ -70,6 +70,7 @@ const AdminDashboard = () => {
 
   const [employerRequests, setEmployerRequests] = useState([]);
   const [mentorRequests, setMentorRequests] = useState([]);
+  const [collegeRequests, setCollegeRequests] = useState([]);
 
   useEffect(() => {
     fetchAdminData();
@@ -83,7 +84,8 @@ const AdminDashboard = () => {
         mentorsRes,
         requestsRes,
         empReqRes,
-        mentReqRes
+        mentReqRes,
+        collReqRes
       ] = await Promise.all([
         apiClient.get('/admin/totalUsers'),
         apiClient.get('/admin/totalEmployers'),
@@ -91,6 +93,7 @@ const AdminDashboard = () => {
         apiClient.get('/admin/requests'),
         apiClient.get('/admin/requests/employers?pageOffset=0&pageSize=50'),
         apiClient.get('/admin/requests/mentors?pageOffset=0&pageSize=50'),
+        apiClient.get('/admin/requests/colleges?pageOffset=0&pageSize=50'),
       ]);
 
       setMetrics({
@@ -102,11 +105,48 @@ const AdminDashboard = () => {
 
       setEmployerRequests(empReqRes.data.data?.content || []);
       setMentorRequests(mentReqRes.data.data?.content || []);
+      const colleges = collReqRes.data.data?.content || [];
+      console.log("Loaded college requests:", colleges);
+      setCollegeRequests(colleges);
     } catch (err) {
       console.error("Failed to load admin data", err);
       setError("Failed to initialize secure uplink.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApproveCollege = async (request) => {
+    console.log("Approving College Request:", request);
+    const identifier = request.userId || request.id;
+    if (!identifier) {
+      alert("Error: Missing node identity for authorization.");
+      return;
+    }
+    try {
+      await apiClient.post(`/admin/onBoardNewCollege/${identifier}`, request);
+      alert(`${request.name} successfully integrated into the network.`);
+      fetchAdminData();
+    } catch (err) {
+      console.error("Authorization logic failed", err);
+      alert("Validation error during node integration.");
+    }
+  };
+
+  const handleRejectCollege = async (request) => {
+    if (!window.confirm(`Reject ${request.name} from the network?`)) return;
+    const identifier = request.userId || request.id;
+    if (!identifier) {
+      alert("Error: Missing node identity for rejection.");
+      return;
+    }
+    try {
+      await apiClient.post(`/admin/reject/college/${identifier}`, request);
+      alert("Node rejection finalized.");
+      fetchAdminData();
+    } catch (err) {
+      console.error("Rejection logic failed", err);
+      alert("Internal error during node purge.");
     }
   };
 
@@ -384,6 +424,50 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
+            <Card className="bg-zinc-900/50 border-zinc-800">
+              <CardHeader className="border-b border-zinc-800 pb-5">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <UserCog className="w-5 h-5 text-zinc-400" />
+                  College Authorization Queue
+                </CardTitle>
+                <CardDescription>Institutions requesting network validator status.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-zinc-950/50 text-xs uppercase text-zinc-600 font-bold border-b border-zinc-800">
+                      <tr>
+                        <th className="px-6 py-4 tracking-wider">User Node ID</th>
+                        <th className="px-6 py-4 tracking-wider">Institution</th>
+                        <th className="px-6 py-4 tracking-wider">Location</th>
+                        <th className="px-6 py-4 tracking-wider text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800 font-mono">
+                      {collegeRequests.length > 0 ? collegeRequests.map((req, i) => (
+                        <tr key={req.userId || i} className="hover:bg-zinc-900 transition-colors">
+                          <td className="px-6 py-4 text-zinc-400 text-xs">USR-{req.userId || "UNKNOWN"}</td>
+                          <td className="px-6 py-4 text-zinc-300 text-sm font-sans font-medium">{req.name}</td>
+                          <td className="px-6 py-4 text-zinc-500 text-xs">{req.address}</td>
+                          <td className="px-6 py-4 text-right flex justify-end gap-2">
+                            <Button size="sm" variant="outline" className="h-8 border-zinc-700 hover:bg-zinc-800" onClick={() => handleApproveCollege(req)}>
+                              <Check className="w-4 h-4 mr-1 text-emerald-400" /> Accept
+                            </Button>
+                            <Button size="sm" variant="destructive" className="h-8" onClick={() => handleRejectCollege(req)}>
+                              Reject
+                            </Button>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-6 text-center text-zinc-500 font-sans">No pending college requests.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

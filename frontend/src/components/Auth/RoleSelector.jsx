@@ -30,10 +30,20 @@ const RoleSelector = () => {
     if (!selectedRole) return;
     setIsLoading(true);
 
-    // Simulate setting role
+    // Save role to localStorage
+    localStorage.setItem('userRole', selectedRole);
+
     setTimeout(() => {
       setIsLoading(false);
-      navigate('/');
+      // Redirect to the role-specific dashboard
+      const dashboardPaths = {
+        employer: '/employerdashboard',
+        student: '/profile',
+        college: '/collegedashboard',
+        mentor: '/mentordashboard',
+        admin: '/admindashboard'
+      };
+      navigate(dashboardPaths[selectedRole] || '/');
     }, 500);
   };
 

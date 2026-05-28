@@ -48,9 +48,21 @@ const Protected = ({ children, authentication }) => {
         }
       }
 
-      // Token is valid (or refreshed). If this is a guest-only route (login/signup), redirect home.
+      // Token is valid (or refreshed). If this is a guest-only route (login/signup), redirect to dashboard or roles.
       if (!authentication) {
-        navigate('/');
+        const role = localStorage.getItem('userRole');
+        if (role) {
+          const dashboardPaths = {
+            employer: '/employerdashboard',
+            student: '/profile',
+            college: '/collegedashboard',
+            mentor: '/mentordashboard',
+            admin: '/admindashboard'
+          };
+          navigate(dashboardPaths[role] || '/');
+        } else {
+          navigate('/roles');
+        }
       }
     } catch (error) {
       console.error('Error decoding token:', error);
