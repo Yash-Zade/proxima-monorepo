@@ -67,15 +67,26 @@ public class ApplicantController {
 
     @PreAuthorize("@applicantService.isOwnerOfApplication(#applicationId)")
     @GetMapping(path = "/applications/{applicationId}/status")
-    public ResponseEntity<String> checkApplicationStatus(@PathVariable Long applicationId) {
+    public ResponseEntity<Map<String, String>> checkApplicationStatus(@PathVariable Long applicationId) {
         String status = applicantService.checkApplicationStatus(applicationId);
-        return ResponseEntity.ok(status);
+        return ResponseEntity.ok(Map.of("status", status));
     }
 
     @PostMapping(path = "/resume/upload")
-    public ResponseEntity<String> uploadResume(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, String>> uploadResume(@RequestParam("file") MultipartFile file) {
         applicantService.uploadResume(file);
-        return ResponseEntity.ok("Resume uploaded successfully");
+        return ResponseEntity.ok(Map.of("message", "Resume uploaded successfully"));
+    }
+
+    @GetMapping(path = "/resume/download/{resumePath}")
+    public ResponseEntity<Void> downloadResume(@PathVariable String resumePath) {
+        String redirectUrl = resumePath;
+        if (!resumePath.startsWith("http")) {
+            redirectUrl = "https://ucarecdn.com/" + resumePath + "/";
+        }
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FOUND)
+                .location(java.net.URI.create(redirectUrl))
+                .build();
     }
 
     @PostMapping(path = "/sessions/{sessionId}/request")

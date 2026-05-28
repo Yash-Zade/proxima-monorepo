@@ -7,6 +7,7 @@ import com.teamarc.proxima.entity.enums.SessionStatus;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
 import com.teamarc.proxima.repository.ApplicantRepository;
 import com.teamarc.proxima.repository.JobApplicationRepository;
+import com.teamarc.proxima.utils.FileService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,7 @@ public class ApplicantService {
     private final SessionManagementService sessionManagementService;
     private final WalletService walletService;
     private final InterviewQuestionService interviewQuestionService;
+    private final FileService fileService;
 
     @Transactional
     public List<QuestionDTO> applyJobRequest(Long jobId, JobApplicationDTO jobApplicationDTO) {
@@ -100,7 +102,8 @@ public class ApplicantService {
 
     public void uploadResume(MultipartFile file) {
         Applicant applicant = getCurrentApplicant();
-        applicant.setResume(file.getOriginalFilename());
+        String fileUrl = fileService.uploadFile(file);
+        applicant.setResume(fileUrl);
         applicantRepository.save(applicant);
     }
 
