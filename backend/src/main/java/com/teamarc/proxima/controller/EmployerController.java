@@ -36,11 +36,11 @@ public class EmployerController {
         return ResponseEntity.ok(employerService.getEmployerProfileById(id));
     }
 
-//    @PreAuthorize("@employerService.isOwnerOfProfile(#id)")
-//    @PutMapping(path = "/profile/{id}")
-//    public ResponseEntity<EmployerDTO> updateEmployerProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
-//        return ResponseEntity.ok(employerService.updateEmployerProfile(id, object));
-//    }
+   @PreAuthorize("@employerService.isOwnerOfProfile(#id)")
+   @PutMapping(path = "/profile/{id}")
+   public ResponseEntity<EmployerDTO> updateEmployerProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
+       return ResponseEntity.ok(employerService.updateEmployerProfile(id, object));
+   }
 
 
     @GetMapping("{employerId}/jobs")
@@ -68,11 +68,11 @@ public class EmployerController {
         return ResponseEntity.ok(employerService.updateJob(jobId, updates));
     }
 
-//    @PreAuthorize("@employerService.isOwnerOfJob(#jobId)")
-//    @DeleteMapping("/jobs/{jobId}")
-//    public ResponseEntity<JobDTO> deleteJob(@PathVariable Long jobId) {
-//        return ResponseEntity.ok(employerService.deleteJob(jobId));
-//    }
+   @PreAuthorize("@employerService.isOwnerOfJob(#jobId)")
+   @DeleteMapping("/jobs/{jobId}")
+   public ResponseEntity<JobDTO> deleteJob(@PathVariable Long jobId) {
+       return ResponseEntity.ok(employerService.deleteJob(jobId));
+   }
 
     @PreAuthorize("@employerService.isOwnerOfJob(#jobId)")
     @PostMapping("/jobs/{jobId}/close")
