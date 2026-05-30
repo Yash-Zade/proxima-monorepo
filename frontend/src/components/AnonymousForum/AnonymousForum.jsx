@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Users, Search, Plus, MessageSquare, MoreVertical, Terminal } from 'lucide-react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
+import apiClient from '../Auth/ApiClient';
 
 const AnonymousForum = () => {
   const [selectedForum, setSelectedForum] = useState(null);
@@ -102,6 +103,45 @@ const AnonymousForum = () => {
       }
     };
   }, []);
+
+  // Fetch past conversation history when selected forum changes
+  useEffect(() => {
+    if (!selectedForum) return;
+
+    const fetchForumHistory = async () => {
+      try {
+        const res = await apiClient.get(`/api/forum/history/${selectedForum.id}`);
+        const history = res.data.data || [];
+        
+        // Map backend ForumMessage to the state structure: { id, content, timestamp, author }
+        const mappedHistory = history.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          timestamp: msg.timestamp,
+          author: msg.author
+        }));
+
+        setForums(prevForums => prevForums.map(f => {
+          if (f.id === selectedForum.id) {
+            return { ...f, messages: mappedHistory };
+          }
+          return f;
+        }));
+
+        setSelectedForum(prev => {
+          if (prev && prev.id === selectedForum.id) {
+            return { ...prev, messages: mappedHistory };
+          }
+          return prev;
+        });
+
+      } catch (err) {
+        console.error("Failed to load forum message history", err);
+      }
+    };
+
+    fetchForumHistory();
+  }, [selectedForum?.id]);
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], {

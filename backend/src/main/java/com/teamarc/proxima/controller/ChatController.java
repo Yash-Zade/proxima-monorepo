@@ -43,4 +43,10 @@ public class ChatController {
             @PathVariable Long receiverId) {
         return ResponseEntity.ok(chatService.getChatHistory(senderId, receiverId));
     }
+
+    @GetMapping("/api/forum/history/{forumId}")
+    public ResponseEntity<java.util.List<com.teamarc.proxima.entity.ForumMessage>> getForumHistory(
+            @PathVariable Long forumId) {
+        return ResponseEntity.ok(chatService.getForumHistory(forumId));
+    }
 }

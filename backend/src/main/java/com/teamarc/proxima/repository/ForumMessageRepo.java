@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ForumMessageRepo extends JpaRepository<ForumMessage, UUID> {
+    java.util.List<ForumMessage> findByForumIdOrderByTimestampAsc(Long forumId);
 }

@@ -16,6 +16,11 @@ public class ChatService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final com.teamarc.proxima.repository.ChatMessagesRepo chatMessagesRepo;
+    private final com.teamarc.proxima.repository.ForumMessageRepo forumMessageRepo;
+
+    public java.util.List<com.teamarc.proxima.entity.ForumMessage> getForumHistory(Long forumId) {
+        return forumMessageRepo.findByForumIdOrderByTimestampAsc(forumId);
+    }
 
     public java.util.List<ChatMessages> getChatHistory(Long senderId, Long receiverId) {
         return chatMessagesRepo.findBySenderIdAndReceiverIdOrReceiverIdAndSenderIdOrderByTimestampAsc(
