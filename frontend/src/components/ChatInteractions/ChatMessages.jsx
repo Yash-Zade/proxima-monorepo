@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, Phone, Video, Send, MoreVertical, Terminal, ChevronLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MessageSquare, Phone, Video, Send, MoreVertical, Terminal } from 'lucide-react';
 import apiClient from '../Auth/ApiClient';
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 const ChatMessages = () => {
   const [contacts, setContacts] = useState([]);
@@ -11,16 +13,29 @@ const ChatMessages = () => {
   const [messageInput, setMessageInput] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState({ id: 0, name: "Local User" });
+  const [currentUser, setCurrentUser] = useState(null);
 
+  const stompClientRef = useRef(null);
+  const [connected, setConnected] = useState(false);
+
+  // 1. Fetch current user and contacts list
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Load authenticated profile
+        const meRes = await apiClient.get('/users/me');
+        const me = meRes.data.data;
+        setCurrentUser({ id: me.id, name: me.name });
+
+        // Load all users
         const res = await apiClient.get('/users/all');
         const users = res.data.data || [];
 
-        const mappedContacts = users.map(u => ({
+        // Exclude current logged in user
+        const filteredUsers = users.filter(u => u.id !== me.id);
+
+        const mappedContacts = filteredUsers.map(u => ({
           id: u.id,
           name: u.name,
           role: u.roles?.join(', ') || 'USER',
@@ -31,10 +46,6 @@ const ChatMessages = () => {
           email: u.email
         }));
         setContacts(mappedContacts);
-
-        // Match current user if possible (requires /users/me or similar, but for now just assume first or 0)
-        // If we don't have /users/me, we can't reliably know which one is current user from list alone
-        // But for UI purposes, selecting the first contact as "selected" is fine.
       } catch (err) {
         console.error("Failed to fetch chat contacts", err);
       } finally {
@@ -44,24 +55,141 @@ const ChatMessages = () => {
     fetchData();
   }, []);
 
+  // 2. Fetch past conversation history on contact selection
+  useEffect(() => {
+    if (!currentUser || !selectedContact) return;
+
+    const fetchHistory = async () => {
+      try {
+        const res = await apiClient.get(`/api/chat/history/${currentUser.id}/${selectedContact.id}`);
+        const history = res.data.data || [];
+        const mappedHistory = history.map(msg => {
+          const timestampFormatted = new Date(msg.timestamp).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          return {
+            id: msg.id,
+            sender: msg.senderId,
+            content: msg.content,
+            timestamp: timestampFormatted
+          };
+        });
+        setMessages(mappedHistory);
+      } catch (err) {
+        console.error("Failed to load chat history", err);
+      }
+    };
+
+    fetchHistory();
+  }, [selectedContact, currentUser]);
+
+  // 3. Connect to WebSocket & subscribe to private message queue
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const backendUrl = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:8080';
+    const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+
+    const socket = new SockJS(`${baseUrl}/ws`);
+    const stompClient = Stomp.over(socket);
+
+    stompClient.debug = () => {}; // Disable debug logs to keep console clean
+
+    stompClient.connect({}, () => {
+      setConnected(true);
+
+      // Subscribe to private absolute topic destination
+      stompClient.subscribe(`/topic/private-messages/${currentUser.id}`, (messageOutput) => {
+        try {
+          const body = JSON.parse(messageOutput.body);
+          
+          setSelectedContact(activeContact => {
+            // Append message only if it belongs to the currently active conversation
+            if (activeContact && (body.senderId === activeContact.id || body.receiverId === activeContact.id)) {
+              setMessages(prev => {
+                // Prevent duplicate message rendering
+                if (prev.find(m => m.id === body.id)) return prev;
+
+                const timestampFormatted = new Date(body.timestamp).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+
+                return [...prev, {
+                  id: body.id,
+                  sender: body.senderId,
+                  content: body.content,
+                  timestamp: timestampFormatted
+                }];
+              });
+            }
+            return activeContact;
+          });
+        } catch (e) {
+          console.error("Error processing WebSocket message", e);
+        }
+      });
+    }, (error) => {
+      console.error("WebSocket Connection Error:", error);
+      setConnected(false);
+    });
+
+    stompClientRef.current = stompClient;
+
+    return () => {
+      if (stompClient.connected) {
+        stompClient.disconnect();
+      }
+    };
+  }, [currentUser]);
+
   const getInitials = (name) => {
     return name ? name.split(' ').map(word => word[0]).join('').toUpperCase() : 'U';
   };
 
   const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedContact) return;
+    if (!messageInput.trim() || !selectedContact || !currentUser) return;
 
-    const newMessage = {
-      id: messages.length + 1,
-      sender: currentUser.id,
+    const timestampNow = Date.now();
+    const payload = {
+      senderId: currentUser.id,
+      receiverId: selectedContact.id,
       content: messageInput,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
+      timestamp: timestampNow
     };
 
-    setMessages([...messages, newMessage]);
+    // Optimistic UI updates
+    const localTimestamp = new Date(timestampNow).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const tempLocalMessage = {
+      id: "temp-" + Date.now(),
+      sender: currentUser.id,
+      content: messageInput,
+      timestamp: localTimestamp
+    };
+
+    setMessages(prev => [...prev, tempLocalMessage]);
+
+    // Publish private message through the pipeline
+    try {
+      if (connected && stompClientRef.current?.connected) {
+        stompClientRef.current.send("/app/sendPrivateMessage", {}, JSON.stringify(payload));
+      } else {
+        apiClient.post('/api/chat/sendPrivateMessage', payload).catch(err => {
+          console.error("Failed to transmit over REST fallback", err);
+        });
+      }
+    } catch (err) {
+      console.error("Failed to transmit over WebSocket:", err);
+      apiClient.post('/api/chat/sendPrivateMessage', payload).catch(err => {
+        console.error("Failed to transmit over REST fallback after WS error", err);
+      });
+    }
+
     setMessageInput('');
   };
 
@@ -91,7 +219,10 @@ const ChatMessages = () => {
           ${isSidebarOpen ? 'translate-x-0 absolute inset-y-0 left-0 z-40 bg-zinc-950/95 backdrop-blur-md' : '-translate-x-full absolute lg:relative lg:translate-x-0'}`}>
 
           <div className="p-5 border-b border-zinc-800">
-            <h1 className="text-xl font-bold text-white mb-4 tracking-tight">Communications</h1>
+            <h1 className="text-xl font-bold text-white mb-4 tracking-tight flex items-center gap-2">
+              Communications
+              <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-red-500'} ml-2`}></span>
+            </h1>
             <div className="relative">
               <input
                 type="text"
@@ -115,7 +246,6 @@ const ChatMessages = () => {
                   onClick={() => {
                     setSelectedContact(contact);
                     setIsSidebarOpen(false);
-                    // Reset messages for a "new" chat simulation if switching
                     if (selectedContact?.id !== contact.id) setMessages([]);
                   }}
                 >
@@ -235,8 +365,11 @@ const ChatMessages = () => {
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="text-center mt-2">
-                  <span className="text-[10px] text-zinc-600 font-medium">Transmissions are encrypted point-to-point. Use Shift + Enter for line breaks.</span>
+                <div className="text-center mt-2 flex items-center justify-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${connected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                  <span className="text-[10px] text-zinc-600 font-medium uppercase tracking-widest">
+                    {connected ? 'Transmissions are encrypted point-to-point. Use Shift+Enter for line breaks.' : 'Connecting to secure stream...'}
+                  </span>
                 </div>
               </div>
             </>
