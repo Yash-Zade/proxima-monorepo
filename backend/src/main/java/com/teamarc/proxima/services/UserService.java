@@ -20,14 +20,14 @@ import java.util.Set;
 public class UserService implements UserDetailsService {
 
         private final OnboardNewEmployerRepository onboardNewEmployerRepository;
-        private final OnboardNewMentorRepository onboardNewMentorRepository;
+//        private final OnboardNewMentorRepository onboardNewMentorRepository;
         private final UserRepository userRepository;
         private final ModelMapper modelMapper;
         private final OnBoardNewCollegeRepository onBoardNewCollegeRepository;
         private final ApplicantRepository applicantRepository;
         private final CollegeRepository collegeRepository;
         private final StudentRepository studentRepository;
-        private final WalletRepository walletRepository;
+//        private final WalletRepository walletRepository;
 
         @Override
         public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -52,12 +52,12 @@ public class UserService implements UserDetailsService {
                 onboardNewEmployerRepository.save(modelMapper.map(onboardNewEmployerDTO, OnboardNewEmployer.class));
         }
 
-        public void requestMentorOnboard(OnboardNewMentorDTO onboardNewMentorDTO) {
-                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
-                                .getAuthentication().getPrincipal();
-                onboardNewMentorDTO.setUserId(user.getId());
-                onboardNewMentorRepository.save(modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class));
-        }
+//        public void requestMentorOnboard(OnboardNewMentorDTO onboardNewMentorDTO) {
+//                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+//                                .getAuthentication().getPrincipal();
+//                onboardNewMentorDTO.setUserId(user.getId());
+//                onboardNewMentorRepository.save(modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class));
+//        }
 
         public User loadUserByRole(Role role) {
                 return userRepository.findByRoles(role);
@@ -111,17 +111,17 @@ public class UserService implements UserDetailsService {
                 return modelMapper.map(student, StudentDTO.class);
         }
 
-        public WalletDTO getUserWallet() {
-                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
-                                .getAuthentication().getPrincipal();
-                Wallet wallet = walletRepository.findByUser(user)
-                                .orElseGet(() -> {
-                                        Wallet newWallet = Wallet.builder()
-                                                        .user(user)
-                                                        .balance(java.math.BigDecimal.ZERO)
-                                                        .build();
-                                        return walletRepository.save(newWallet);
-                                });
-                return modelMapper.map(wallet, WalletDTO.class);
-        }
+//        public WalletDTO getUserWallet() {
+//                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+//                                .getAuthentication().getPrincipal();
+//                Wallet wallet = walletRepository.findByUser(user)
+//                                .orElseGet(() -> {
+//                                        Wallet newWallet = Wallet.builder()
+//                                                        .user(user)
+//                                                        .balance(java.math.BigDecimal.ZERO)
+//                                                        .build();
+//                                        return walletRepository.save(newWallet);
+//                                });
+//                return modelMapper.map(wallet, WalletDTO.class);
+//        }
 }

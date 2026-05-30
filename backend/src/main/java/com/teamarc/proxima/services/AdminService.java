@@ -17,12 +17,12 @@ import org.springframework.stereotype.Service;
 public class AdminService {
     
     private final EmployerService employerService;
-    private final MentorService mentorService;
+//    private final MentorService mentorService;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final UserService userService;
     private final OnboardNewEmployerRepository onboardNewEmployerRepository;
-    private final OnboardNewMentorRepository onboardNewMentorRepository;
+    // private final OnboardNewMentorRepository onboardNewMentorRepository;
     private final OnBoardNewCollegeRepository onBoardNewCollegeRepository;
     private final CollegeService collegeService;
 
@@ -45,25 +45,25 @@ public class AdminService {
     }
 
 
-    @Transactional
-    public MentorProfileDTO onboardNewMentor(Long userId, OnboardNewMentorDTO onboardNewMentorDTO) {
-        User user = userService.getUserById(userId);
-        if (user.getRoles().contains(Role.MENTOR)) {
-            throw new RuntimeConflictException("User with id: " + userId + " is already a mentor");
-        }
-        Mentor createMentor = Mentor.builder()
-                .expertise(onboardNewMentorDTO.getExpertise())
-                .user(user)
-                .experience(onboardNewMentorDTO.getExperience())
-                .build();
-        user.getRoles().add(Role.MENTOR);
-        userRepository.save(user);
-        Mentor savedMentor = mentorService.createNewMentor(createMentor);
+    // @Transactional
+    // public MentorProfileDTO onboardNewMentor(Long userId, OnboardNewMentorDTO onboardNewMentorDTO) {
+    //     User user = userService.getUserById(userId);
+    //     if (user.getRoles().contains(Role.MENTOR)) {
+    //         throw new RuntimeConflictException("User with id: " + userId + " is already a mentor");
+    //     }
+    //     Mentor createMentor = Mentor.builder()
+    //             .expertise(onboardNewMentorDTO.getExpertise())
+    //             .user(user)
+    //             .experience(onboardNewMentorDTO.getExperience())
+    //             .build();
+    //     user.getRoles().add(Role.MENTOR);
+    //     userRepository.save(user);
+    //     Mentor savedMentor = mentorService.createNewMentor(createMentor);
 
-        onboardNewMentorRepository.delete(modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class));
+    //     onboardNewMentorRepository.delete(modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class));
 
-        return modelMapper.map(savedMentor, MentorProfileDTO.class);
-    }
+    //     return modelMapper.map(savedMentor, MentorProfileDTO.class);
+    // }
 
     @Transactional
     public CollegeDTO onboardNewCollege(Long userId, OnBoardNewCollegeDTO onBoardNewCollegeDTO) {
@@ -93,18 +93,18 @@ public class AdminService {
         return userRepository.countByRoles(Role.EMPLOYER);
     }
 
-    public Long getTotalMentors() {
-        return userRepository.countByRoles(Role.MENTOR);
-    }
+    // public Long getTotalMentors() {
+    //     return userRepository.countByRoles(Role.MENTOR);
+    // }
 
     public Page<OnBoardNewEmployerDTO> getEmployerRequests(PageRequest pageRequest ) {
         return onboardNewEmployerRepository.findAll(pageRequest)
                 .map(onboardNewEmployer -> modelMapper.map(onboardNewEmployer, OnBoardNewEmployerDTO.class));
     }
 
-    public Page<OnboardNewMentorDTO> getMentorRequests(PageRequest pageRequest) {
-        return onboardNewMentorRepository.findAll(pageRequest).map((element) -> modelMapper.map(element, OnboardNewMentorDTO.class));
-    }
+    // public Page<OnboardNewMentorDTO> getMentorRequests(PageRequest pageRequest) {
+    //     return onboardNewMentorRepository.findAll(pageRequest).map((element) -> modelMapper.map(element, OnboardNewMentorDTO.class));
+    // }
 
     public Page<OnBoardNewCollegeDTO> getCollegeRequests(PageRequest pageRequest) {
         return onBoardNewCollegeRepository.findAll(pageRequest).map((element) -> modelMapper.map(element, OnBoardNewCollegeDTO.class));
@@ -116,10 +116,10 @@ public class AdminService {
         onboardNewEmployerRepository.deleteById(onBoardNewEmployer.getId());
     }
 
-    public void rejectMentor(Long userId, OnboardNewMentorDTO onboardNewMentorDTO) {
-        OnboardNewMentor onboardNewMentor = modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class);
-        onboardNewMentorRepository.deleteById(onboardNewMentor.getId());
-    }
+    // public void rejectMentor(Long userId, OnboardNewMentorDTO onboardNewMentorDTO) {
+    //     OnboardNewMentor onboardNewMentor = modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class);
+    //     onboardNewMentorRepository.deleteById(onboardNewMentor.getId());
+    // }
 
     public void rejectCollege(Long collegeId, OnBoardNewCollegeDTO onboardNewCollegeDTO) {
         OnBoardNewCollege onboardNewCollege = modelMapper.map(onboardNewCollegeDTO, OnBoardNewCollege.class);
@@ -127,6 +127,6 @@ public class AdminService {
     }
 
     public Long getTotalRequests() {
-        return onboardNewEmployerRepository.count() + onboardNewMentorRepository.count() + onboardNewMentorRepository.count();
+        return onboardNewEmployerRepository.count();
     }
 }

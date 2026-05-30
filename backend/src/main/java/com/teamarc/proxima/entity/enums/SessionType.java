@@ -1,6 +1,6 @@
-package com.teamarc.proxima.entity.enums;
+// package com.teamarc.proxima.entity.enums;
 
-public enum SessionType {
-    FREE, PAID
-}
+// public enum SessionType {
+//     FREE, PAID
+// }
 

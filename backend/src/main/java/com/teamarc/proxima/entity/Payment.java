@@ -1,36 +1,36 @@
-package com.teamarc.proxima.entity;
+// package com.teamarc.proxima.entity;
 
-import com.teamarc.proxima.entity.enums.PaymentStatus;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+// import com.teamarc.proxima.entity.enums.PaymentStatus;
+// import jakarta.persistence.*;
+// import lombok.*;
+// import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+// import java.math.BigDecimal;
+// import java.time.LocalDateTime;
 
-@Entity
-@Getter
-@Setter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class Payment {
+// @Entity
+// @Getter
+// @Setter
+// @Builder
+// @AllArgsConstructor
+// @NoArgsConstructor
+// public class Payment {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long paymentId;
+//     @Id
+//     @GeneratedValue(strategy = GenerationType.IDENTITY)
+//     private Long paymentId;
 
-    private BigDecimal amount;
+//     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+//     @Enumerated(EnumType.STRING)
+//     private PaymentStatus paymentStatus;
 
-    @CreationTimestamp
-    private LocalDateTime paymentTime;
+//     @CreationTimestamp
+//     private LocalDateTime paymentTime;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id")
-    private Session session;
+//     @OneToOne(fetch = FetchType.LAZY)
+//     @JoinColumn(name = "session_id")
+//     private Session session;
 
-}
+// }
 

@@ -4,7 +4,7 @@ import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.entity.JobApplication;
 import com.teamarc.proxima.services.InterviewQuestionService;
 import com.teamarc.proxima.services.JobService;
-import com.teamarc.proxima.services.MentorService;
+//import com.teamarc.proxima.services.MentorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +21,7 @@ import java.util.List;
 public class PublicControllers {
 
     private final JobService jobService;
-    private final MentorService mentorService;
+//    private final MentorService mentorService;
     private final InterviewQuestionService interviewQuestionService;
 
 
@@ -37,27 +37,27 @@ public class PublicControllers {
         return ResponseEntity.ok(jobService.getJobById(id));
     }
 
-    @GetMapping("/mentors")
-    public ResponseEntity<Page<MentorDTO>> getAllMentors(@RequestParam(defaultValue = "0") Integer pageOffset,
-                                                         @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
-        return ResponseEntity.ok(mentorService.getALLMentors(pageOffset, pageSize));
-    }
+    // @GetMapping("/mentors")
+    // public ResponseEntity<Page<MentorDTO>> getAllMentors(@RequestParam(defaultValue = "0") Integer pageOffset,
+    //                                                      @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
+    //     return ResponseEntity.ok(mentorService.getALLMentors(pageOffset, pageSize));
+    // }
 
-    @GetMapping("/mentors/{id}")
-    public ResponseEntity<MentorDTO> getProfileById(@PathVariable Long id) {
-        return ResponseEntity.ok(mentorService.getProfileById(id));
-    }
+    // @GetMapping("/mentors/{id}")
+    // public ResponseEntity<MentorDTO> getProfileById(@PathVariable Long id) {
+    //     return ResponseEntity.ok(mentorService.getProfileById(id));
+    // }
 
-    @GetMapping("/sessions")
-    public ResponseEntity<Page<SessionDTO>> getAllSessions(@RequestParam(defaultValue = "0") Integer pageOffset,
-                                                           @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
-        return ResponseEntity.ok(mentorService.getSessions(pageOffset, pageSize));
-    }
+    // @GetMapping("/sessions")
+    // public ResponseEntity<Page<SessionDTO>> getAllSessions(@RequestParam(defaultValue = "0") Integer pageOffset,
+    //                                                        @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
+    //     return ResponseEntity.ok(mentorService.getSessions(pageOffset, pageSize));
+    // }
 
-    @GetMapping("/sessions/{id}")
-    public ResponseEntity<SessionDTO> getSessionById(@PathVariable Long id) {
-        return ResponseEntity.ok(mentorService.getSessionById(id));
-    }
+    // @GetMapping("/sessions/{id}")
+    // public ResponseEntity<SessionDTO> getSessionById(@PathVariable Long id) {
+    //     return ResponseEntity.ok(mentorService.getSessionById(id));
+    // }
 
     @PostMapping("/questions")
     public ResponseEntity<List<QuestionDTO>> createQuestion(@RequestBody java.util.Map<String, Object> request) {

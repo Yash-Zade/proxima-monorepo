@@ -1,5 +1,5 @@
-package com.teamarc.proxima.entity.enums;
+// package com.teamarc.proxima.entity.enums;
 
-public enum TransactionType {
-    CREDIT, DEBIT
-}
+// public enum TransactionType {
+//     CREDIT, DEBIT
+// }

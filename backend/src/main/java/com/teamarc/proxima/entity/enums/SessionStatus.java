@@ -1,5 +1,5 @@
-package com.teamarc.proxima.entity.enums;
+// package com.teamarc.proxima.entity.enums;
 
-public enum SessionStatus {
-    SCHEDULED, CANCELLED, COMPLETED, ONGOING, APPLIED
-}
+// public enum SessionStatus {
+//     SCHEDULED, CANCELLED, COMPLETED, ONGOING, APPLIED
+// }

@@ -19,11 +19,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PostMapping(path = "/request/mentor")
-    public ResponseEntity<MentorProfileDTO> requestToBeAMentor(@RequestBody OnboardNewMentorDTO mentorRequestDTO) {
-        userService.requestMentorOnboard(mentorRequestDTO);
-        return ResponseEntity.ok().build();
-    }
+    // @PostMapping(path = "/request/mentor")
+    // public ResponseEntity<MentorProfileDTO> requestToBeAMentor(@RequestBody OnboardNewMentorDTO mentorRequestDTO) {
+    //     userService.requestMentorOnboard(mentorRequestDTO);
+    //     return ResponseEntity.ok().build();
+    // }
 
     @PostMapping(path = "/request/employer")
     public ResponseEntity<EmployerDTO> requestToBeAEmployer(@RequestBody OnBoardNewEmployerDTO employerRequestDTO) {
@@ -48,8 +48,8 @@ public class UserController {
         return ResponseEntity.ok(userService.requestStudentOnboard(userId, collegeName));
     }
 
-    @GetMapping(path = "/wallet")
-    public ResponseEntity<WalletDTO> getUserWallet() {
-        return ResponseEntity.ok(userService.getUserWallet());
-    }
+    // @GetMapping(path = "/wallet")
+    // public ResponseEntity<WalletDTO> getUserWallet() {
+    //     return ResponseEntity.ok(userService.getUserWallet());
+    // }
 }

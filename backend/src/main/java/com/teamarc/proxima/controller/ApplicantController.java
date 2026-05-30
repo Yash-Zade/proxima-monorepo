@@ -89,37 +89,37 @@ public class ApplicantController {
                 .build();
     }
 
-    @PostMapping(path = "/sessions/{sessionId}/request")
-    public ResponseEntity<SessionDTO> requestSession(@PathVariable Long sessionId) {
-        return ResponseEntity.ok(applicantService.requestSession(sessionId));
-    }
+    // @PostMapping(path = "/sessions/{sessionId}/request")
+    // public ResponseEntity<SessionDTO> requestSession(@PathVariable Long sessionId) {
+    //     return ResponseEntity.ok(applicantService.requestSession(sessionId));
+    // }
 
-    @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
-    @PostMapping(path = "/sessions/{sessionId}/rateMentor")
-    public ResponseEntity<MentorProfileDTO> rateMentor(@RequestBody RatingDTO ratingDTO, @PathVariable Long sessionId) {
-        return ResponseEntity.ok(applicantService.rateMentor(ratingDTO, sessionId));
-    }
+    // @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
+    // @PostMapping(path = "/sessions/{sessionId}/rateMentor")
+    // public ResponseEntity<MentorProfileDTO> rateMentor(@RequestBody RatingDTO ratingDTO, @PathVariable Long sessionId) {
+    //     return ResponseEntity.ok(applicantService.rateMentor(ratingDTO, sessionId));
+    // }
 
-    @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
-    @PostMapping(path = "/sessions/{sessionId}/join")
-    public ResponseEntity<SessionDTO> joinSession(@PathVariable Long sessionId, @RequestParam String otp) {
-        return ResponseEntity.ok(applicantService.joinSession(sessionId, otp));
-    }
+    // @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
+    // @PostMapping(path = "/sessions/{sessionId}/join")
+    // public ResponseEntity<SessionDTO> joinSession(@PathVariable Long sessionId, @RequestParam String otp) {
+    //     return ResponseEntity.ok(applicantService.joinSession(sessionId, otp));
+    // }
 
-    @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
-    @PostMapping(path = "/sessions/{sessionId}/end")
-    public ResponseEntity<SessionDTO> endSession(@PathVariable Long sessionId) {
-        return ResponseEntity.ok(applicantService.endSession(sessionId));
-    }
+    // @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
+    // @PostMapping(path = "/sessions/{sessionId}/end")
+    // public ResponseEntity<SessionDTO> endSession(@PathVariable Long sessionId) {
+    //     return ResponseEntity.ok(applicantService.endSession(sessionId));
+    // }
 
-    @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
-    @PostMapping(path = "/sessions/{sessionId}/cancle")
-    public ResponseEntity<SessionDTO> cancleSession(@PathVariable Long sessionId) {
-        return ResponseEntity.ok(applicantService.cancelSession(sessionId));
-    }
+    // @PreAuthorize("@applicantService.isOwnerOfSession(#sessionId)")
+    // @PostMapping(path = "/sessions/{sessionId}/cancle")
+    // public ResponseEntity<SessionDTO> cancleSession(@PathVariable Long sessionId) {
+    //     return ResponseEntity.ok(applicantService.cancelSession(sessionId));
+    // }
 
-    @GetMapping(path = "/wallet")
-    public ResponseEntity<WalletDTO> getWallet() {
-        return ResponseEntity.ok(applicantService.getWallet());
-    }
+    // @GetMapping(path = "/wallet")
+    // public ResponseEntity<WalletDTO> getWallet() {
+    //     return ResponseEntity.ok(applicantService.getWallet());
+    // }
 }

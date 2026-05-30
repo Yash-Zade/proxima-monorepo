@@ -1,27 +1,27 @@
-package com.teamarc.proxima.dto;
+// package com.teamarc.proxima.dto;
 
-import lombok.Data;
+// import lombok.Data;
 
-import java.util.List;
+// import java.util.List;
 
-@Data
-public class MentorProfileDTO {
+// @Data
+// public class MentorProfileDTO {
 
-    private Long mentorId;
+//     private Long mentorId;
 
-    private List<String> expertise;
+//     private List<String> expertise;
 
-    private UserDTO user;
+//     private UserDTO user;
 
-    private List<SessionDTO> sessions;
+//     private List<SessionDTO> sessions;
 
-    private List<RatingDTO> ratings;
+//     private List<RatingDTO> ratings;
 
-    private Double averageRating;
+//     private Double averageRating;
 
-    private Long totalSessions;
+//     private Long totalSessions;
 
-    private String bio;
+//     private String bio;
 
-    private Double experience;
-}
+//     private Double experience;
+// }

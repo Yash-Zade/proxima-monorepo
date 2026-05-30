@@ -1,5 +1,5 @@
-package com.teamarc.proxima.entity.enums;
+// package com.teamarc.proxima.entity.enums;
 
-public enum PaymentStatus {
-    COMPLETED, PENDING, FAILED, REFUNDED
-}
+// public enum PaymentStatus {
+//     COMPLETED, PENDING, FAILED, REFUNDED
+// }

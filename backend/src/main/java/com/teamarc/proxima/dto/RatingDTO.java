@@ -1,17 +1,17 @@
-package com.teamarc.proxima.dto;
+// package com.teamarc.proxima.dto;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+// import jakarta.validation.constraints.NotNull;
+// import lombok.Data;
 
-@Data
-public class RatingDTO {
+// @Data
+// public class RatingDTO {
 
-    private Long ratingId;
+//     private Long ratingId;
 
-    @NotNull(message = "Rating value cannot be null")
-    private Double ratingValue;
+//     @NotNull(message = "Rating value cannot be null")
+//     private Double ratingValue;
 
-    private String comment;
+//     private String comment;
 
-    private SessionDTO session;
-}
+//     private SessionDTO session;
+// }

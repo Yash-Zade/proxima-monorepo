@@ -26,10 +26,10 @@ public class AdminController {
     }
 
 
-    @PostMapping(path = "onBoardNewMentor/{userId}")
-    public ResponseEntity<MentorProfileDTO> onBoardNewMentor(@PathVariable Long userId, @RequestBody OnboardNewMentorDTO onboardNewMentorDTO) {
-        return new ResponseEntity<>(adminService.onboardNewMentor(userId, onboardNewMentorDTO), HttpStatus.CREATED);
-    }
+    // @PostMapping(path = "onBoardNewMentor/{userId}")
+    // public ResponseEntity<MentorProfileDTO> onBoardNewMentor(@PathVariable Long userId, @RequestBody OnboardNewMentorDTO onboardNewMentorDTO) {
+    //     return new ResponseEntity<>(adminService.onboardNewMentor(userId, onboardNewMentorDTO), HttpStatus.CREATED);
+    // }
 
     @PostMapping(path = "onBoardNewCollege/{collegeId}")
     public ResponseEntity<CollegeDTO> onBoardNewCollege(@PathVariable Long collegeId, @RequestBody OnBoardNewCollegeDTO onBoardNewCollegeDTO) {
@@ -42,11 +42,11 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(path = "/reject/mentor/{userId}")
-    public ResponseEntity<Void> rejectMentor(@PathVariable Long userId,@RequestBody OnboardNewMentorDTO onboardNewMentorDTO) {
-        adminService.rejectMentor(userId, onboardNewMentorDTO);
-        return ResponseEntity.ok().build();
-    }
+    // @PostMapping(path = "/reject/mentor/{userId}")
+    // public ResponseEntity<Void> rejectMentor(@PathVariable Long userId,@RequestBody OnboardNewMentorDTO onboardNewMentorDTO) {
+    //     adminService.rejectMentor(userId, onboardNewMentorDTO);
+    //     return ResponseEntity.ok().build();
+    // }
 
     @PostMapping(path = "/reject/college/{collegeId}")
     public ResponseEntity<Void> rejectCollege(@PathVariable Long collegeId, @RequestBody OnBoardNewCollegeDTO onboardNewCollegeDTO) {
@@ -64,10 +64,10 @@ public class AdminController {
         return new ResponseEntity<>(adminService.getTotalEmployers(), HttpStatus.OK);
     }
 
-    @GetMapping(path = "/totalMentors")
-    public ResponseEntity<Long> getTotalMentors() {
-        return new ResponseEntity<>(adminService.getTotalMentors(), HttpStatus.OK);
-    }
+    // @GetMapping(path = "/totalMentors")
+    // public ResponseEntity<Long> getTotalMentors() {
+    //     return new ResponseEntity<>(adminService.getTotalMentors(), HttpStatus.OK);
+    // }
 
     @GetMapping(path = "/requests/employers")
     public ResponseEntity<Page<OnBoardNewEmployerDTO>> getEmployerRequests(@RequestParam(defaultValue = "0") Integer pageOffset,
@@ -76,12 +76,12 @@ public class AdminController {
         return new ResponseEntity<>(adminService.getEmployerRequests(pageRequest), HttpStatus.OK);
     }
 
-    @GetMapping(path = "/requests/mentors")
-    public ResponseEntity<Page<OnboardNewMentorDTO>> getMentorRequests(@RequestParam(defaultValue = "0") Integer pageOffset,
-                                                                      @RequestParam(defaultValue = "10", required = false) Integer pageSize ) {
-        PageRequest pageRequest = PageRequest.of(pageOffset, pageSize);
-        return new ResponseEntity<>(adminService.getMentorRequests(pageRequest), HttpStatus.OK);
-    }
+    // @GetMapping(path = "/requests/mentors")
+    // public ResponseEntity<Page<OnboardNewMentorDTO>> getMentorRequests(@RequestParam(defaultValue = "0") Integer pageOffset,
+    //                                                                   @RequestParam(defaultValue = "10", required = false) Integer pageSize ) {
+    //     PageRequest pageRequest = PageRequest.of(pageOffset, pageSize);
+    //     return new ResponseEntity<>(adminService.getMentorRequests(pageRequest), HttpStatus.OK);
+    // }
     @GetMapping(path = "/requests/colleges")
     public ResponseEntity<Page<OnBoardNewCollegeDTO>> getCollegeRequests(@RequestParam(defaultValue = "0") Integer pageOffset,
                                                                       @RequestParam(defaultValue = "10", required = false) Integer pageSize ) {
