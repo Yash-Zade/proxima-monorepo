@@ -20,8 +20,8 @@ public class ChatMessages {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private UUID senderId;
-    private UUID receiverId;
+    private Long senderId;
+    private Long receiverId;
     private String content;
     private long timestamp;
 }

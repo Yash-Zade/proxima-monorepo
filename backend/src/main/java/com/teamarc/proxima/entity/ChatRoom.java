@@ -18,8 +18,8 @@ public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private UUID senderId;
-    private UUID receiverId;
+    private Long senderId;
+    private Long receiverId;
 
 
 }

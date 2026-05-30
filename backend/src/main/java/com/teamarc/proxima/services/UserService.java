@@ -40,6 +40,12 @@ public class UserService implements UserDetailsService {
                                 .collect(java.util.stream.Collectors.toList());
         }
 
+        public UserDTO getMyProfile(Long userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                return modelMapper.map(user, UserDTO.class);
+        }
+
         public User getUserById(Long userId) {
                 return userRepository.findById(userId)
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));

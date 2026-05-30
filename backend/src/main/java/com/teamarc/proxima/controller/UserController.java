@@ -19,6 +19,13 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping(path = "/me")
+    public ResponseEntity<UserDTO> getMyProfile() {
+        com.teamarc.proxima.entity.User user = (com.teamarc.proxima.entity.User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return ResponseEntity.ok(userService.getMyProfile(user.getId()));
+    }
+
     // @PostMapping(path = "/request/mentor")
     // public ResponseEntity<MentorProfileDTO> requestToBeAMentor(@RequestBody OnboardNewMentorDTO mentorRequestDTO) {
     //     userService.requestMentorOnboard(mentorRequestDTO);
