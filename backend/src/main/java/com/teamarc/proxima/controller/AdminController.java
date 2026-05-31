@@ -31,9 +31,9 @@ public class AdminController {
     //     return new ResponseEntity<>(adminService.onboardNewMentor(userId, onboardNewMentorDTO), HttpStatus.CREATED);
     // }
 
-    @PostMapping(path = "onBoardNewCollege/{collegeId}")
-    public ResponseEntity<CollegeDTO> onBoardNewCollege(@PathVariable Long collegeId, @RequestBody OnBoardNewCollegeDTO onBoardNewCollegeDTO) {
-        return new ResponseEntity<>(adminService.onboardNewCollege(collegeId, onBoardNewCollegeDTO), HttpStatus.CREATED);
+    @PostMapping(path = "onBoardNewCollege/{userId}")
+    public ResponseEntity<CollegeDTO> onBoardNewCollege(@PathVariable Long userId, @RequestBody OnBoardNewCollegeDTO onBoardNewCollegeDTO) {
+        return new ResponseEntity<>(adminService.onboardNewCollege(userId, onBoardNewCollegeDTO), HttpStatus.CREATED);
     }
 
     @PostMapping(path = "/reject/employer/{userId}")
@@ -48,9 +48,9 @@ public class AdminController {
     //     return ResponseEntity.ok().build();
     // }
 
-    @PostMapping(path = "/reject/college/{collegeId}")
-    public ResponseEntity<Void> rejectCollege(@PathVariable Long collegeId, @RequestBody OnBoardNewCollegeDTO onboardNewCollegeDTO) {
-        adminService.rejectCollege(collegeId, onboardNewCollegeDTO);
+    @PostMapping(path = "/reject/college/{userId}")
+    public ResponseEntity<Void> rejectCollege(@PathVariable Long userId, @RequestBody OnBoardNewCollegeDTO onboardNewCollegeDTO) {
+        adminService.rejectCollege(userId, onboardNewCollegeDTO);
         return ResponseEntity.ok().build();
     }
 
