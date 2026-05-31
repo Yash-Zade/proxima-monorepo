@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping(path = "/auth")
 @RequiredArgsConstructor
@@ -36,6 +35,7 @@ public class AuthController {
         String[] tokens = authService.login(LoginRequestDTO.getEmail(), LoginRequestDTO.getPassword());
         Cookie cookie = new Cookie("refreshToken", tokens[1]);
         cookie.setHttpOnly(true);
+        cookie.setPath("/"); // Make cookie accessible across the whole application
         response.addCookie(cookie);
         return ResponseEntity.ok(new LoginResponseDTO(tokens[0]));
     }
@@ -47,8 +47,13 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponseDTO> refresh(HttpServletRequest request) {
-        String refreshToken = Arrays.stream(request.getCookies()).
-                filter(cookie -> "refreshToken".equals(cookie.getName()))
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new AuthenticationServiceException("Refresh token not found inside the Cookies");
+        }
+
+        String refreshToken = Arrays.stream(cookies)
+                .filter(cookie -> "refreshToken".equals(cookie.getName()))
                 .findFirst()
                 .map(Cookie::getValue)
                 .orElseThrow(() -> new AuthenticationServiceException("Refresh token not found inside the Cookies"));

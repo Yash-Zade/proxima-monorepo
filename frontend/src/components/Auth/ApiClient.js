@@ -14,7 +14,8 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     console.log("token", token);
-    if (token) {
+    // Skip attaching Authorization header if this is the refresh token endpoint
+    if (token && !config.url.endsWith('/auth/refresh')) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -26,7 +27,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response && error.response.status === 401) {
+    // If the error is 401 and the request was NOT the refresh token endpoint itself
+    if (error.response && error.response.status === 401 && !error.config.url.endsWith('/auth/refresh')) {
       try {
         // GlobalResponseHandler wraps every response: { timeStamp, data: <payload>, error }
         // So for LoginResponseDTO the token is at response.data.data.accessToken

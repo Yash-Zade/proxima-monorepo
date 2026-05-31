@@ -70,6 +70,7 @@ public class AuthService {
         SecurityContextHolder.clearContext();
         Cookie cookie = new Cookie("refreshToken", null);
         cookie.setHttpOnly(true);
+        cookie.setPath("/"); // Match the path used during creation so browser deletes it correctly
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         return null;
