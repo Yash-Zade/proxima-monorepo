@@ -15,6 +15,16 @@ public class RabbitConfig {
     public Queue emailQueue() {
         return new Queue("emailQueue", true);
     }
+
+    @Bean
+    public Queue directChatQueue() {
+        return new Queue("direct-chat-queue", true);
+    }
+
+    @Bean
+    public Queue forumChatQueue() {
+        return new Queue("forum-chat-queue", true);
+    }
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);

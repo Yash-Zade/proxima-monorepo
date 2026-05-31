@@ -10,7 +10,7 @@ import com.teamarc.proxima.repository.ChatRoomRepo;
 import com.teamarc.proxima.repository.ForumMessageRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +27,9 @@ public class ChatConsumer {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "direct-chat-topic", groupId = "proxima-chat-group")
+    @RabbitListener(queues = "direct-chat-queue")
     public void consumeDirectMessage(String payload) {
-        log.info("Received private message from Kafka: {}", payload);
+        log.info("Received private message from RabbitMQ: {}", payload);
         try {
             ChatMessages chatMessages = objectMapper.readValue(payload, ChatMessages.class);
 
@@ -66,9 +66,9 @@ public class ChatConsumer {
         }
     }
 
-    @KafkaListener(topics = "forum-chat-topic", groupId = "proxima-chat-group")
+    @RabbitListener(queues = "forum-chat-queue")
     public void consumeForumMessage(String payload) {
-        log.info("Received forum message from Kafka: {}", payload);
+        log.info("Received forum message from RabbitMQ: {}", payload);
         try {
             JsonNode rootNode = objectMapper.readTree(payload);
             if (rootNode.has("type") && "FORUM_MSG".equals(rootNode.get("type").asText())) {
