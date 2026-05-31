@@ -14,39 +14,67 @@ const AnonymousForum = () => {
   const [connected, setConnected] = useState(false);
 
   // Maintain local state for forum messages
-  const [forums, setForums] = useState([
-    {
-      id: 1,
-      name: "Engineering Discussions",
-      description: "Architecture, patterns, and development",
-      members: 234,
-      messages: [
-        {
-          id: 1,
-          content: "What orchestration tools are you relying on for microservices?",
-          timestamp: "2024-01-20T10:30:00",
-          author: "Node #1234"
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: "Venture Ideation",
-      description: "Brainstorming and early-stage validation",
-      members: 156,
-      messages: []
-    },
-    {
-      id: 3,
-      name: "Technical Screening",
-      description: "Algorithm patterns and system design",
-      members: 189,
-      messages: []
-    }
-  ]);
+  const [forums, setForums] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newForumName, setNewForumName] = useState('');
+  const [newForumDescription, setNewForumDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Generate a steady random author identity for this session
   const [authorIdentity] = useState("Node #" + Math.floor(1000 + Math.random() * 9000));
+
+  useEffect(() => {
+    const fetchForums = async () => {
+      try {
+        const res = await apiClient.get('/api/forum');
+        const fetchedForums = res.data.data || [];
+        const mapped = fetchedForums.map(f => ({
+          id: f.id,
+          name: f.name,
+          description: f.description,
+          members: f.members || 0,
+          messages: []
+        }));
+        setForums(mapped);
+        if (mapped.length > 0) {
+          setSelectedForum(mapped[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load forums", err);
+      }
+    };
+    fetchForums();
+  }, []);
+
+  const handleCreateForum = async (e) => {
+    e.preventDefault();
+    if (!newForumName.trim() || !newForumDescription.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await apiClient.post('/api/forum', {
+        name: newForumName.trim(),
+        description: newForumDescription.trim(),
+        members: 1
+      });
+      const newForum = res.data.data;
+      const formattedForum = {
+        id: newForum.id,
+        name: newForum.name,
+        description: newForum.description,
+        members: newForum.members || 1,
+        messages: []
+      };
+      setForums(prev => [...prev, formattedForum]);
+      setSelectedForum(formattedForum);
+      setNewForumName('');
+      setNewForumDescription('');
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      console.error("Failed to create forum", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     // Setup WebSocket connection
@@ -210,7 +238,10 @@ const AnonymousForum = () => {
                 Public Forums
                 <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-red-500'} ml-2`}></span>
               </h1>
-              <button className="p-1.5 hover:bg-zinc-900 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors border border-transparent hover:border-zinc-800">
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="p-1.5 hover:bg-zinc-900 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors border border-transparent hover:border-zinc-800"
+              >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -351,6 +382,66 @@ const AnonymousForum = () => {
           )}
         </div>
       </div>
+
+      {/* Create Forum Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl relative">
+            <h2 className="text-xl font-bold text-white mb-2">Create New Forum</h2>
+            <p className="text-xs text-zinc-400 mb-6">
+              Establish a new public channel. All users will be able to view and participate.
+            </p>
+            <form onSubmit={handleCreateForum} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                  Forum Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Frontend Architecture"
+                  value={newForumName}
+                  onChange={(e) => setNewForumName(e.target.value)}
+                  className="w-full p-3 bg-zinc-950 text-zinc-100 text-sm rounded-lg border border-zinc-800 focus:outline-none focus:border-zinc-500 placeholder-zinc-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                  Description
+                </label>
+                <textarea
+                  required
+                  placeholder="Describe what users should discuss here..."
+                  value={newForumDescription}
+                  onChange={(e) => setNewForumDescription(e.target.value)}
+                  rows={3}
+                  className="w-full p-3 bg-zinc-950 text-zinc-100 text-sm rounded-lg border border-zinc-800 focus:outline-none focus:border-zinc-500 placeholder-zinc-600 transition-colors resize-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    setNewForumName('');
+                    setNewForumDescription('');
+                  }}
+                  className="px-4 py-2 bg-transparent hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-sm font-medium rounded-lg transition-colors border border-zinc-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !newForumName.trim() || !newForumDescription.trim()}
+                  className="px-4 py-2 bg-white hover:bg-zinc-200 text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium rounded-lg transition-colors"
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Forum'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
