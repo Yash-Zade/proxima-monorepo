@@ -64,12 +64,12 @@ const AdminDashboard = () => {
   const [metrics, setMetrics] = useState({
     totalUsers: 0,
     totalEmployers: 0,
-    totalMentors: 0,
+    // totalMentors: 0,
     totalRequests: 0,
   });
 
   const [employerRequests, setEmployerRequests] = useState([]);
-  const [mentorRequests, setMentorRequests] = useState([]);
+  // const [mentorRequests, setMentorRequests] = useState([]);
   const [collegeRequests, setCollegeRequests] = useState([]);
 
   useEffect(() => {
@@ -81,30 +81,30 @@ const AdminDashboard = () => {
       const [
         usersRes,
         employersRes,
-        mentorsRes,
+        // mentorsRes,
         requestsRes,
         empReqRes,
-        mentReqRes,
+        // mentReqRes,
         collReqRes
       ] = await Promise.all([
         apiClient.get('/admin/totalUsers'),
         apiClient.get('/admin/totalEmployers'),
-        apiClient.get('/admin/totalMentors'),
+        // apiClient.get('/admin/totalMentors'),
         apiClient.get('/admin/requests'),
         apiClient.get('/admin/requests/employers?pageOffset=0&pageSize=50'),
-        apiClient.get('/admin/requests/mentors?pageOffset=0&pageSize=50'),
+        // apiClient.get('/admin/requests/mentors?pageOffset=0&pageSize=50'),
         apiClient.get('/admin/requests/colleges?pageOffset=0&pageSize=50'),
       ]);
 
       setMetrics({
         totalUsers: usersRes.data.data || 0,
         totalEmployers: employersRes.data.data || 0,
-        totalMentors: mentorsRes.data.data || 0,
+        // totalMentors: mentorsRes.data.data || 0,
         totalRequests: requestsRes.data.data || 0,
       });
 
       setEmployerRequests(empReqRes.data.data?.content || []);
-      setMentorRequests(mentReqRes.data.data?.content || []);
+      // setMentorRequests(mentReqRes.data.data?.content || []);
       const colleges = collReqRes.data.data?.content || [];
       console.log("Loaded college requests:", colleges);
       setCollegeRequests(colleges);
@@ -173,28 +173,28 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleApproveMentor = async (request) => {
-    try {
-      await apiClient.post(`/admin/onBoardNewMentor/${request.userId}`, request);
-      alert("Mentor authorized successfully.");
-      fetchAdminData();
-    } catch (err) {
-      console.error("Error approving mentor", err);
-      alert("Error approving mentor");
-    }
-  };
+  // const handleApproveMentor = async (request) => {
+  //   try {
+  //     await apiClient.post(`/admin/onBoardNewMentor/${request.userId}`, request);
+  //     alert("Mentor authorized successfully.");
+  //     fetchAdminData();
+  //   } catch (err) {
+  //     console.error("Error approving mentor", err);
+  //     alert("Error approving mentor");
+  //   }
+  // };
 
-  const handleRejectMentor = async (request) => {
-    if (!window.confirm("Reject this mentor node?")) return;
-    try {
-      await apiClient.post(`/admin/reject/mentor/${request.userId}`, request);
-      alert("Mentor rejected.");
-      fetchAdminData();
-    } catch (err) {
-      console.error("Error rejecting mentor", err);
-      alert("Error rejecting mentor");
-    }
-  };
+  // const handleRejectMentor = async (request) => {
+  //   if (!window.confirm("Reject this mentor node?")) return;
+  //   try {
+  //     await apiClient.post(`/admin/reject/mentor/${request.userId}`, request);
+  //     alert("Mentor rejected.");
+  //     fetchAdminData();
+  //   } catch (err) {
+  //     console.error("Error rejecting mentor", err);
+  //     alert("Error rejecting mentor");
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -284,7 +284,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800">
+            {/* <Card className="bg-zinc-900/50 border-zinc-800">
               <CardContent className="p-5 flex flex-col justify-between h-full">
                 <div className="flex items-start justify-between mb-4">
                   <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500">Mentors</p>
@@ -292,7 +292,7 @@ const AdminDashboard = () => {
                 </div>
                 <p className="text-3xl font-bold text-zinc-100 tracking-tight">{metrics.totalMentors}</p>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card className="bg-zinc-900/50 border-zinc-800">
               <CardContent className="p-5 flex flex-col justify-between h-full">
@@ -371,7 +371,7 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800">
+            {/* <Card className="bg-zinc-900/50 border-zinc-800">
               <CardHeader className="border-b border-zinc-800 pb-5">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <UserCog className="w-5 h-5 text-zinc-400" />
@@ -422,7 +422,7 @@ const AdminDashboard = () => {
                   </table>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card className="bg-zinc-900/50 border-zinc-800">
               <CardHeader className="border-b border-zinc-800 pb-5">
