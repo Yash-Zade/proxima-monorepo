@@ -19,7 +19,7 @@ export default function JobListings() {
       try {
         const response = await apiClient.get('/public/jobs?pageSize=100'); // Fetch more to allow client-side filtering to be effective
         const responseData = response.data?.data || response.data;
-        
+        console.log(response.data?.data);
         if (responseData && responseData.content) {
           setJobs(responseData.content);
         } else if (Array.isArray(responseData)) {
@@ -50,7 +50,7 @@ export default function JobListings() {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = !searchTerm || 
         job.title?.toLowerCase().includes(searchLower) ||
-        job.company?.toLowerCase().includes(searchLower) ||
+        job.postedBy?.companyName?.toLowerCase().includes(searchLower) ||
         job.skillsRequired?.some(skill => skill.toLowerCase().includes(searchLower));
 
       // Location filter
@@ -162,9 +162,9 @@ export default function JobListings() {
                     <h2 className="text-sm font-bold text-[#241E1A] group-hover:text-amber-800 transition-colors">
                       {job.title}
                     </h2>
-                    {job.company && (
+                    {job?.postedBy?.companyName && (
                       <span className="bg-[#F4ECE1] text-[#241E1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
-                        {job.company}
+                        {job?.postedBy?.companyName}
                       </span>
                     )}
                   </div>
