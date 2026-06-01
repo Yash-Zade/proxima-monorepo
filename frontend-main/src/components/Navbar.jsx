@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut } from 'lucide-react';
+import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -25,6 +25,12 @@ export default function Navbar() {
   if (user) {
     navItems.push({ name: 'Direct Messages', path: '/messages', icon: MessageSquare });
     navItems.push({ name: 'Profile', path: '/profile', icon: User });
+    if (user.roles?.includes('EMPLOYER')) {
+      navItems.push({ name: 'Employer', path: '/employer', icon: Briefcase });
+    }
+    if (user.roles?.includes('ADMIN')) {
+      navItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });
+    }
   }
 
   const confirmLogout = async () => {

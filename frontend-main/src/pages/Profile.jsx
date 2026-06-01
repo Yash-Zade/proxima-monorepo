@@ -21,7 +21,6 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const roles = [
-    { value: 'APPLICANT', label: 'Applicant' },
     { value: 'EMPLOYER', label: 'Employer' },
     { value: 'COLLEGE', label: 'College / University' },
     { value: 'STUDENT', label: 'Student' }
@@ -155,12 +154,6 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
                 <input type="text" value={collegeName} onChange={e => setCollegeName(e.target.value)} required placeholder="e.g. Stanford University" className="w-full bg-white border border-[#EAE2D5] rounded-lg py-2 px-3 text-xs outline-none" />
               </div>
             </div>
-          )}
-
-          {selectedRole === 'APPLICANT' && (
-             <div className="p-4 bg-[#F4ECE1] border border-[#EAE2D5] rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300 text-center">
-                <p className="text-xs text-stone-600 font-semibold">No additional information is required to apply for the Applicant role.</p>
-             </div>
           )}
 
           <div className="pt-4 border-t border-[#EAE2D5]">

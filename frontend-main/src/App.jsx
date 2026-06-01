@@ -9,6 +9,8 @@ import DirectMessages from './pages/DirectMessages';
 import Profile from './pages/Profile';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import AdminDashboard from './pages/AdminDashboard';
+import EmployerDashboard from './pages/EmployerDashboard';
 import Protected from './components/Protected';
 
 export default function App() {
@@ -71,6 +73,22 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <Profile />
+              </Protected>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <Protected authentication={true}>
+                <AdminDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/employer"
+            element={
+              <Protected authentication={true}>
+                <EmployerDashboard />
               </Protected>
             }
           />
