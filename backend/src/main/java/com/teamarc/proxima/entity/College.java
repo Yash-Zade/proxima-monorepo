@@ -26,5 +26,6 @@ public class College {
     private List<Student> students;
 
     @OneToOne
+    @JoinColumn(name = "user_id")
     private User user;
 }

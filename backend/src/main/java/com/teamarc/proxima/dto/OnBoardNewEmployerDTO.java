@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class OnBoardNewEmployerDTO {
 
+    private Long id;
     private Long userId;
     private String companyName;
     private String companyWebsite;
