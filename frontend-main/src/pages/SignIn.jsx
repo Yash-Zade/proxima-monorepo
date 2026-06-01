@@ -27,13 +27,13 @@ export default function SignIn() {
     setLoading(true);
     try {
       console.log('[Dev Alert] Directing LoginRequestDTO post transaction via AuthContext...');
-      
+
       // Dispatch authentication to the global AuthProvider login system
       await login(data.email, data.password);
 
       showToast('Credential keys synchronized successfully!', 'success');
       console.log('[Dev Alert] JWT provisioned and stored. User session connected.');
-      
+
       setTimeout(() => {
         navigate('/profile');
       }, 1000);
@@ -53,7 +53,7 @@ export default function SignIn() {
       <div className="absolute inset-0 bg-[radial-gradient(#E5DAC9_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
 
       <div className="w-full max-w-md bg-white border border-[#E5DAC9] p-8 sm:p-10 rounded-3xl shadow-sm space-y-8 relative z-10">
-        
+
         {/* Logo and Headings */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 group">
@@ -68,7 +68,7 @@ export default function SignIn() {
 
         {/* Auth form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          
+
           {/* Email input */}
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest block">Email Address</label>
@@ -77,7 +77,7 @@ export default function SignIn() {
               <input
                 type="email"
                 placeholder="name@company.com"
-                {...register('email', { 
+                {...register('email', {
                   required: 'Email is required',
                   pattern: { value: /^\S+@\S+$/i, message: 'Please enter a valid email' }
                 })}
@@ -98,12 +98,12 @@ export default function SignIn() {
               <input
                 type="password"
                 placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                {...register('password', { 
-                  required: 'Password is required',
-                  pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                    message: 'Requires 8+ chars: uppercase, lowercase, digit, and special symbol.'
-                  }
+                {...register('password', {
+                  required: 'Password is required'
+                  // pattern: {
+                  //   value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                  //   message: 'Requires 8+ chars: uppercase, lowercase, digit, and special symbol.'
+                  // }
                 })}
                 className="w-full bg-[#FAF6F0] border border-[#E5DAC9] focus:border-[#241E1A] focus:ring-1 focus:ring-[#241E1A] rounded-xl py-2.5 pl-11 pr-4 text-xs transition-all outline-none"
               />
@@ -115,9 +115,8 @@ export default function SignIn() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 px-4 bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center gap-1.5 ${
-              loading ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className={`w-full py-3 px-4 bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center gap-1.5 ${loading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
           >
             {loading ? 'Authenticating...' : 'Sign In'}
             <ArrowRight className="w-3.5 h-3.5" />

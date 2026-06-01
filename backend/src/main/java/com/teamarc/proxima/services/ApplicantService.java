@@ -144,7 +144,7 @@ public class ApplicantService {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JobApplication jobApplication = getApplicationById(applicationId);
         return user.getId() == jobApplication.getApplicant().getUser().getId();
-    }
+     }
 
 //    public boolean isOwnerOfSession(Long sessionId) {
 //        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -173,7 +173,7 @@ public class ApplicantService {
             List<String> certifiedSkills) {
         JobApplication jobApplication = jobApplicationRepository.findById(jobApplicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
-        Applicant applicant = applicantRepository.getReferenceById(jobApplicationDTO.getApplicantId());
+        Applicant applicant = applicantRepository.getReferenceById(jobApplicationDTO.getApplicant().getApplicantId());
         applicant.setCertifiedSkills(certifiedSkills);
         applicantRepository.save(applicant);
         jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);

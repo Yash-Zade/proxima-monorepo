@@ -1,5 +1,6 @@
 package com.teamarc.proxima.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class ApplicantDTO {
 
     private UserDTO user;
 
+    @JsonIgnoreProperties("applicant")
     private List<JobApplicationDTO> jobApplications;
 
     private List<String> skills;

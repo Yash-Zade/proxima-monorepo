@@ -1,5 +1,6 @@
 package com.teamarc.proxima.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.teamarc.proxima.entity.enums.ApplicationStatus;
 import lombok.Data;
 
@@ -9,7 +10,9 @@ import java.time.LocalDateTime;
 public class JobApplicationDTO {
     private Long applicationId;
     private Long jobId;
-    private Long applicantId;
+
+    @JsonIgnoreProperties("jobApplications")
+    private ApplicantDTO applicant;
     private ApplicationStatus applicationStatus;
     private LocalDateTime appliedDate;
 }

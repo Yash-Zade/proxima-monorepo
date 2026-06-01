@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useState, useCallback } from 'react';
 import {
   Briefcase, Plus, X, ChevronLeft, ChevronRight,
   Building2, Globe, Users, CheckCircle2,
-  XCircle, Lock, Trash2, Edit3, Eye, ArrowLeft, Tag
+  XCircle, Lock, Trash2, Edit3, Eye, ArrowLeft, Tag,
+  Mail, MapPin, Award, FileText, ExternalLink, ShieldCheck, User
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -11,11 +12,11 @@ import { Navigate } from 'react-router-dom';
 
 /* ─── helpers ─── */
 const STATUS_COLORS = {
-  OPEN:      'bg-emerald-50 text-emerald-700 border-emerald-200',
-  CLOSED:    'bg-stone-100 text-stone-500 border-stone-200',
-  PENDING:   'bg-amber-50 text-amber-700 border-amber-200',
-  ACCEPTED:  'bg-blue-50 text-blue-700 border-blue-200',
-  REJECTED:  'bg-red-50 text-red-600 border-red-200',
+  OPEN: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  CLOSED: 'bg-stone-100 text-stone-500 border-stone-200',
+  PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+  ACCEPTED: 'bg-blue-50 text-blue-700 border-blue-200',
+  REJECTED: 'bg-red-50 text-red-600 border-red-200',
   WITHDRAWN: 'bg-stone-100 text-stone-400 border-stone-200',
 };
 
@@ -63,12 +64,12 @@ function SkillTagInput({ skills, setSkills }) {
 
 /* ─── Create / Edit Job Modal ─── */
 function JobFormModal({ isOpen, onClose, onSave, initial }) {
-  const [title, setTitle]       = useState('');
-  const [desc, setDesc]         = useState('');
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
   const [location, setLocation] = useState('');
-  const [skills, setSkills]     = useState([]);
-  const [saving, setSaving]     = useState(false);
-  const { showToast }           = useToast();
+  const [skills, setSkills] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -133,12 +134,318 @@ function JobFormModal({ isOpen, onClose, onSave, initial }) {
   );
 }
 
+/* ─── Applicant Details Modal ─── */
+function ApplicantDetailsModal({ app, onClose, onAccept, onReject, actingId }) {
+  if (!app) return null;
+  const applicant = app.applicant;
+  const user = applicant?.user;
+  const hasResumeUrl = applicant?.resume && applicant.resume.startsWith('http');
+
+  const getPreviewUrl = (url) => {
+    if (!url) return '';
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+      return url;
+    }
+    return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+  };
+
+  // Format the applied date
+  const appliedDateStr = app.appliedDate
+    ? new Date(app.appliedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : 'Unknown';
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4 animate-slide-in">
+      <div className={`bg-[#FCF9F3] border border-[#E5DAC9] rounded-3xl p-8 w-full shadow-2xl relative max-h-[90vh] overflow-y-auto transition-all duration-300 ${hasResumeUrl ? 'max-w-5xl' : 'max-w-2xl'}`}>
+        <button onClick={onClose} className="absolute top-6 right-6 text-stone-400 hover:text-[#241E1A] transition-colors p-1 hover:bg-[#F4ECE1] rounded-full">
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Modal Title Header */}
+        <div className="border-b border-[#E5DAC9] pb-6 mb-6">
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-1">Applicant Profile Details</span>
+          <h2 className="text-2xl font-extrabold text-[#241E1A] serif-heading flex items-center gap-2">
+            {user?.name || `Applicant #${applicant?.applicantId}`}
+          </h2>
+          <p className="text-xs text-stone-500 mt-1 flex items-center gap-2">
+            <span>Application #{app.applicationId}</span>
+            <span className="text-stone-300">•</span>
+            <span>Applied: {appliedDateStr}</span>
+          </p>
+        </div>
+
+        {/* Conditional Layout */}
+        <div className={hasResumeUrl ? "grid grid-cols-1 lg:grid-cols-12 gap-8" : "grid grid-cols-1 md:grid-cols-3 gap-8"}>
+          {/* Main Info Columns */}
+          <div className={hasResumeUrl ? "lg:col-span-7 space-y-6" : "md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8"}>
+            
+            {hasResumeUrl ? (
+              // Split Content Layout for wide/preview modal
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Left Column in wide layout: Contact Details */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2">Contact Details</h3>
+                      <div className="space-y-3 bg-[#FDFBF7] border border-[#E5DAC9] p-4 rounded-2xl">
+                        {user?.email && (
+                          <div>
+                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Email Address</span>
+                            <a href={`mailto:${user.email}`} className="text-xs font-semibold text-[#241E1A] hover:underline break-all flex items-center gap-1.5 mt-0.5">
+                              <Mail className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                              {user.email}
+                            </a>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Applicant ID</span>
+                          <span className="text-xs font-bold text-[#241E1A] flex items-center gap-1.5 mt-0.5">
+                            <User className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                            #{applicant?.applicantId}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block mb-1">Current Status</span>
+                          <StatusBadge status={app.applicationStatus} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column in wide layout: Preferred Locations */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-stone-500" />
+                        Preferred Locations
+                      </h3>
+                      <div className="bg-[#FDFBF7] border border-[#E5DAC9] p-4 rounded-2xl flex flex-wrap gap-2 items-center min-h-[116px]">
+                        {applicant?.preferredLocations && applicant.preferredLocations.length > 0 ? (
+                          applicant.preferredLocations.map((loc, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-1 bg-[#F4ECE1] text-[#241E1A] text-[10px] font-bold px-3 py-1 rounded-lg border border-[#EAE2D5] uppercase tracking-wider">
+                              {loc}
+                            </span>
+                          ))
+                        ) : (
+                          <p className="text-xs text-stone-400 italic">Open to all locations.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skills below contact and locations */}
+                <div className="space-y-6">
+                  {/* Certified Skills (Terracotta Accent) */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5 text-[#DFA687]" />
+                      Certified Skills
+                    </h3>
+                    <div className="bg-[#FCF9F3] border border-[#E5DAC9] p-4 rounded-2xl min-h-[64px] flex flex-wrap gap-2 items-center">
+                      {applicant?.certifiedSkills && applicant.certifiedSkills.length > 0 ? (
+                        applicant.certifiedSkills.map((skill, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 bg-[#DFA687] text-[#241E1A] text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm border border-orange-200 uppercase tracking-wider">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">No certified skills listed.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* General Skills (Sage Accent) */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Tag className="w-3.5 h-3.5 text-[#C1CDBC]" />
+                      Professional Skills
+                    </h3>
+                    <div className="bg-[#FCF9F3] border border-[#E5DAC9] p-4 rounded-2xl min-h-[64px] flex flex-wrap gap-2 items-center">
+                      {applicant?.skills && applicant.skills.length > 0 ? (
+                        applicant.skills.map((skill, idx) => (
+                          <span key={idx} className="inline-flex items-center bg-[#C1CDBC] text-[#241E1A] text-[10px] font-bold px-3 py-1 rounded-xl border border-emerald-200 uppercase tracking-wider shadow-sm">
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">No skills listed.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Standard layout columns for narrower modal (no URL resume)
+              <>
+                {/* Left Column: Basic Info & Contacts */}
+                <div className="md:col-span-1 space-y-6">
+                  <div>
+                    <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2">Contact Details</h3>
+                    <div className="space-y-3 bg-[#FDFBF7] border border-[#E5DAC9] p-4 rounded-2xl">
+                      {user?.email && (
+                        <div>
+                          <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Email Address</span>
+                          <a href={`mailto:${user.email}`} className="text-xs font-semibold text-[#241E1A] hover:underline break-all flex items-center gap-1.5 mt-0.5">
+                            <Mail className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                            {user.email}
+                          </a>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Applicant ID</span>
+                        <span className="text-xs font-bold text-[#241E1A] flex items-center gap-1.5 mt-0.5">
+                          <User className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                          #{applicant?.applicantId}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block mb-1">Current Status</span>
+                        <StatusBadge status={app.applicationStatus} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resume / Cover Letter section for text bio */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2">Resume / Credentials</h3>
+                    <div className="bg-[#FDFBF7] border border-[#E5DAC9] p-4 rounded-2xl">
+                      {applicant?.resume ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-stone-600">
+                            <FileText className="w-4 h-4 shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Credentials</span>
+                          </div>
+                          <p className="text-xs text-stone-600 bg-white border border-[#E5DAC9] p-2.5 rounded-lg font-mono break-all max-h-32 overflow-y-auto leading-relaxed">
+                            {applicant.resume}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">No resume details provided.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Skills and Locations */}
+                <div className="md:col-span-2 space-y-6">
+                  {/* Certified Skills (Terracotta Accent) */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5 text-[#DFA687]" />
+                      Certified Skills
+                    </h3>
+                    <div className="bg-[#FCF9F3] border border-[#E5DAC9] p-4 rounded-2xl min-h-[64px] flex flex-wrap gap-2 items-center">
+                      {applicant?.certifiedSkills && applicant.certifiedSkills.length > 0 ? (
+                        applicant.certifiedSkills.map((skill, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 bg-[#DFA687] text-[#241E1A] text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm border border-orange-200 uppercase tracking-wider">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">No certified skills listed.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* General Skills (Sage Accent) */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Tag className="w-3.5 h-3.5 text-[#C1CDBC]" />
+                      Professional Skills
+                    </h3>
+                    <div className="bg-[#FCF9F3] border border-[#E5DAC9] p-4 rounded-2xl min-h-[64px] flex flex-wrap gap-2 items-center">
+                      {applicant?.skills && applicant.skills.length > 0 ? (
+                        applicant.skills.map((skill, idx) => (
+                          <span key={idx} className="inline-flex items-center bg-[#C1CDBC] text-[#241E1A] text-[10px] font-bold px-3 py-1 rounded-xl border border-emerald-200 uppercase tracking-wider shadow-sm">
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">No skills listed.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Preferred Locations */}
+                  <div>
+                    <h3 className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-stone-500" />
+                      Preferred Locations
+                    </h3>
+                    <div className="bg-[#FDFBF7] border border-[#E5DAC9] p-4 rounded-2xl flex flex-wrap gap-2 items-center">
+                      {applicant?.preferredLocations && applicant.preferredLocations.length > 0 ? (
+                        applicant.preferredLocations.map((loc, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 bg-[#F4ECE1] text-[#241E1A] text-[10px] font-bold px-3 py-1 rounded-lg border border-[#EAE2D5] uppercase tracking-wider">
+                            {loc}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-stone-400 italic">Open to all locations.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+          </div>
+
+          {/* Right/Second Side of Wide Layout: Live Resume Previewer */}
+          {hasResumeUrl && (
+            <div className="lg:col-span-5 flex flex-col h-full border-t lg:border-t-0 lg:border-l border-[#E5DAC9] pt-6 lg:pt-0 lg:pl-6">
+              <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-stone-500" />
+                Resume Live Preview
+              </h3>
+              <div className="flex-grow min-h-[460px] lg:h-[460px] border border-[#E5DAC9] rounded-2xl overflow-hidden bg-white shadow-inner flex flex-col">
+                <div className="bg-[#F4ECE1] border-b border-[#E5DAC9] px-4 py-2.5 flex justify-between items-center shrink-0">
+                  <span className="text-[9px] font-bold text-stone-500 uppercase tracking-widest truncate">Document Viewer</span>
+                  <a href={applicant.resume} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#241E1A] hover:underline flex items-center gap-1">
+                    Open in New Tab <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </div>
+                <iframe
+                  src={getPreviewUrl(applicant.resume)}
+                  className="w-full flex-grow border-none min-h-[400px] lg:h-full bg-[#FAF6F0]"
+                  title="Candidate Resume Preview"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Decision Footer */}
+        {app.applicationStatus !== 'WITHDRAWN' && (
+          <div className="flex gap-3 mt-8 pt-6 border-t border-[#E5DAC9]">
+            {app.applicationStatus !== 'ACCEPTED' && (
+              <button disabled={actingId === app.applicationId} onClick={() => onAccept(app.applicationId)}
+                className="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-[#FDFBF7] bg-[#241E1A] hover:bg-[#382F29] rounded-xl transition-all disabled:opacity-40 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                <CheckCircle2 className="w-4 h-4 text-[#C1CDBC]" /> Accept Applicant
+              </button>
+            )}
+            {app.applicationStatus !== 'REJECTED' && (
+              <button disabled={actingId === app.applicationId} onClick={() => onReject(app.applicationId)}
+                className="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-[#241E1A] bg-[#DFA687] hover:bg-[#CE9273] rounded-xl transition-all disabled:opacity-40 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                <XCircle className="w-4 h-4 text-red-700" /> Reject Applicant
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Applications drawer (slide-in panel) ─── */
 function ApplicationsPanel({ job, onClose, onStatusChange }) {
-  const [apps, setApps]           = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [actingId, setActingId]   = useState(null);
-  const { showToast }             = useToast();
+  const [apps, setApps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState(null);
+  const [selectedApp, setSelectedApp] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!job) return;
@@ -146,10 +453,15 @@ function ApplicationsPanel({ job, onClose, onStatusChange }) {
     apiClient.get(`/employers/jobs/${job.jobId}/applications`, { params: { pageOffset: 0, pageSize: 50 } })
       .then(res => {
         const d = res.data?.data ?? res.data;
+        console.log(d);
         setApps(d?.content ?? []);
       })
       .catch(() => showToast('Failed to load applications.', 'error'))
       .finally(() => setLoading(false));
+  }, [job]);
+
+  useEffect(() => {
+    setSelectedApp(null);
   }, [job]);
 
   const changeStatus = async (appId, status) => {
@@ -157,6 +469,7 @@ function ApplicationsPanel({ job, onClose, onStatusChange }) {
     try {
       await apiClient.post(`/employers/applications/${appId}/status`, null, { params: { status } });
       setApps(prev => prev.map(a => a.applicationId === appId ? { ...a, applicationStatus: status } : a));
+      setSelectedApp(prev => prev && prev.applicationId === appId ? { ...prev, applicationStatus: status } : prev);
       onStatusChange?.();
       showToast(`Application marked ${status}.`, 'success');
     } catch {
@@ -169,66 +482,118 @@ function ApplicationsPanel({ job, onClose, onStatusChange }) {
   if (!job) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="flex-1 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-full max-w-md bg-[#FDFBF7] border-l border-[#EAE2D5] flex flex-col shadow-2xl">
-        {/* header */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-[#EAE2D5] shrink-0">
-          <button onClick={onClose} className="text-stone-400 hover:text-[#241E1A] transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Applications</p>
-            <h3 className="text-sm font-extrabold text-[#241E1A] truncate">{job.title}</h3>
+    <>
+      <div className="fixed inset-0 z-50 flex animate-fade-in">
+        <div className="flex-1 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+        <div className="w-full max-w-md bg-[#FDFBF7] border-l border-[#EAE2D5] flex flex-col shadow-2xl">
+          {/* header */}
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-[#EAE2D5] shrink-0">
+            <button onClick={onClose} className="text-stone-400 hover:text-[#241E1A] transition-colors p-1 hover:bg-[#F4ECE1] rounded-lg">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Applications</p>
+              <h3 className="text-sm font-extrabold text-[#241E1A] truncate serif-heading">{job.title}</h3>
+            </div>
+            <span className="text-[10px] font-bold bg-[#241E1A] text-white px-2 py-1 rounded-md">{apps.length}</span>
           </div>
-          <span className="text-[10px] font-bold bg-[#241E1A] text-white px-2 py-1 rounded-md">{apps.length}</span>
-        </div>
-        {/* body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {loading ? (
-            <div className="flex justify-center items-center h-40">
-              <div className="w-6 h-6 rounded-lg bg-[#241E1A] animate-spin" />
-            </div>
-          ) : apps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-stone-400">
-              <Users className="w-8 h-8 mb-2 opacity-30" />
-              <p className="text-xs font-bold uppercase tracking-widest">No applications yet</p>
-            </div>
-          ) : apps.map(app => (
-            <div key={app.applicationId} className="border border-[#EAE2D5] rounded-xl p-4 bg-white">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <p className="text-xs font-bold text-[#241E1A]">Applicant #{app.applicantId}</p>
-                  <p className="text-[10px] text-stone-400">Application #{app.applicationId}</p>
-                </div>
-                <StatusBadge status={app.applicationStatus} />
+          {/* body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {loading ? (
+              <div className="flex justify-center items-center h-40">
+                <div className="w-6 h-6 rounded-lg bg-[#241E1A] animate-spin" />
               </div>
-              {app.appliedDate && (
-                <p className="text-[10px] text-stone-400 mb-3">
-                  Applied: {new Date(app.appliedDate).toLocaleDateString()}
-                </p>
-              )}
-              {app.applicationStatus !== 'WITHDRAWN' && (
-                <div className="flex gap-2 pt-2 border-t border-[#EAE2D5]">
-                  {app.applicationStatus !== 'ACCEPTED' && (
-                    <button disabled={actingId === app.applicationId} onClick={() => changeStatus(app.applicationId, 'ACCEPTED')}
-                      className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-40 border border-emerald-200">
-                      Accept
-                    </button>
+            ) : apps.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-stone-400">
+                <Users className="w-8 h-8 mb-2 opacity-30" />
+                <p className="text-xs font-bold uppercase tracking-widest">No applications yet</p>
+              </div>
+            ) : apps.map(app => (
+              <div key={app.applicationId}
+                onClick={() => setSelectedApp(app)}
+                className="group border border-[#EAE2D5] rounded-xl p-4 bg-white hover:border-[#241E1A] hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#241E1A] truncate serif-heading">
+                      {app.applicant?.user?.name || `Applicant #${app.applicant?.applicantId}`}
+                    </p>
+                    <p className="text-[9px] text-stone-400 mt-0.5">
+                      ID: #{app.applicant?.applicantId} • App #{app.applicationId}
+                    </p>
+                  </div>
+                  <StatusBadge status={app.applicationStatus} />
+                </div>
+
+                {/* Skills summary (up to 3 tags) */}
+                {app.applicant?.skills && app.applicant.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {app.applicant.skills.slice(0, 3).map((skill, index) => (
+                      <span key={index} className="text-[8px] font-bold bg-[#F4ECE1] text-[#241E1A] px-1.5 py-0.5 rounded border border-[#EAE2D5] uppercase tracking-wider">
+                        {skill}
+                      </span>
+                    ))}
+                    {app.applicant.skills.length > 3 && (
+                      <span className="text-[8px] font-bold text-stone-400 self-center ml-0.5">
+                        +{app.applicant.skills.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Email or Locations summary */}
+                <div className="flex flex-col gap-0.5 text-[9px] text-stone-500 mt-1">
+                  {app.applicant?.user?.email && (
+                    <p className="flex items-center gap-1 truncate">
+                      <Mail className="w-3 h-3 text-stone-400 shrink-0" />
+                      <span className="truncate">{app.applicant.user.email}</span>
+                    </p>
                   )}
-                  {app.applicationStatus !== 'REJECTED' && (
-                    <button disabled={actingId === app.applicationId} onClick={() => changeStatus(app.applicationId, 'REJECTED')}
-                      className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-40 border border-red-200">
-                      Reject
-                    </button>
+                  {app.applicant?.preferredLocations && app.applicant.preferredLocations.length > 0 && (
+                    <p className="flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
+                      <span className="truncate">{app.applicant.preferredLocations.slice(0, 2).join(', ')}</span>
+                    </p>
                   )}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {app.appliedDate && (
+                  <p className="text-[9px] text-stone-400 mt-1">
+                    Applied: {new Date(app.appliedDate).toLocaleDateString()}
+                  </p>
+                )}
+
+                {app.applicationStatus !== 'WITHDRAWN' && (
+                  <div className="flex gap-2 pt-2 border-t border-[#EAE2D5] mt-1" onClick={e => e.stopPropagation()}>
+                    {app.applicationStatus !== 'ACCEPTED' && (
+                      <button disabled={actingId === app.applicationId} onClick={() => changeStatus(app.applicationId, 'ACCEPTED')}
+                        className="flex-1 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-40 border border-emerald-200 cursor-pointer">
+                        Accept
+                      </button>
+                    )}
+                    {app.applicationStatus !== 'REJECTED' && (
+                      <button disabled={actingId === app.applicationId} onClick={() => changeStatus(app.applicationId, 'REJECTED')}
+                        className="flex-1 py-1 text-[9px] font-bold uppercase tracking-wider text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-40 border border-red-200 cursor-pointer">
+                        Reject
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      {selectedApp && (
+        <ApplicantDetailsModal
+          app={selectedApp}
+          onClose={() => setSelectedApp(null)}
+          onAccept={id => changeStatus(id, 'ACCEPTED')}
+          onReject={id => changeStatus(id, 'REJECTED')}
+          actingId={actingId}
+        />
+      )}
+    </>
   );
 }
 
@@ -285,18 +650,18 @@ function JobCard({ job, onView, onEdit, onClose, onDelete }) {
 /* ═══════════════════════ MAIN PAGE ═══════════════════════ */
 export default function EmployerDashboard() {
   const { user, loading } = useContext(AuthContext);
-  const { showToast }     = useToast();
+  const { showToast } = useToast();
 
-  const [profile, setProfile]           = useState(null);
-  const [jobs, setJobs]                 = useState([]);
-  const [totalPages, setTotalPages]     = useState(1);
-  const [page, setPage]                 = useState(0);
-  const [fetching, setFetching]         = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [fetching, setFetching] = useState(true);
 
-  const [formOpen, setFormOpen]         = useState(false);
-  const [editTarget, setEditTarget]     = useState(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
 
-  const [viewJob, setViewJob]           = useState(null);
+  const [viewJob, setViewJob] = useState(null);
 
   const isEmployer = user?.roles?.includes('EMPLOYER');
 
@@ -371,7 +736,7 @@ export default function EmployerDashboard() {
 
   if (!user || !isEmployer) return <Navigate to="/" replace />;
 
-  const openJobs   = jobs.filter(j => j.jobStatus === 'OPEN').length;
+  const openJobs = jobs.filter(j => j.jobStatus === 'OPEN').length;
   const closedJobs = jobs.filter(j => j.jobStatus === 'CLOSED').length;
 
   return (
