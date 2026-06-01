@@ -17,6 +17,21 @@ const apiClient = axios.create({
   },
 });
 
+// Queue management variables to handle concurrent 401s
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 /**
  * @notice Request Interceptor
  * @dev Intercepts outgoing requests to attach the Bearer access token stored in localStorage,
@@ -54,7 +69,20 @@ apiClient.interceptors.response.use(
       !originalRequest._retry &&
       !originalRequest.url.endsWith('/auth/refresh')
     ) {
+      // If a refresh is already in progress, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true; // Mark to avoid infinite refresh loops if refresh itself fails
+      isRefreshing = true;
 
       try {
         console.log('[Dev Alert] Access token expired. Requesting refresh rotation...');
@@ -75,14 +103,25 @@ apiClient.interceptors.response.use(
           
           // Re-attach new header and retry the request
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          
+          // Resolve all queued requests with the new token
+          processQueue(null, newAccessToken);
+          
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
         console.error('[Dev Alert] Token refresh rotation failed. Cleaning up node session:', refreshError);
+        
+        // Reject all queued requests
+        processQueue(refreshError, null);
+        
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('userRole'); // Added cleanup for safety
         
         // Redirect to signin route to prompt a fresh login credential check
         window.location.href = '/signin';
+      } finally {
+        isRefreshing = false;
       }
     }
     

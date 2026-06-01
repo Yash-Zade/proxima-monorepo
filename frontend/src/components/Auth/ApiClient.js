@@ -9,6 +9,21 @@ const apiClient = axios.create({
   withCredentials: true, // Include cookies with requests
 });
 
+// Queue management variables to handle concurrent 401s
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Add request interceptor to attach access token
 apiClient.interceptors.request.use(
   (config) => {
@@ -27,8 +42,30 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const originalRequest = error.config;
+
     // If the error is 401 and the request was NOT the refresh token endpoint itself
-    if (error.response && error.response.status === 401 && !error.config.url.endsWith('/auth/refresh')) {
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.endsWith('/auth/refresh')
+    ) {
+      // If a refresh is already in progress, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
         // GlobalResponseHandler wraps every response: { timeStamp, data: <payload>, error }
         // So for LoginResponseDTO the token is at response.data.data.accessToken
@@ -37,12 +74,23 @@ apiClient.interceptors.response.use(
         localStorage.setItem('accessToken', newAccessToken);
 
         // Retry the original request
-        error.config.headers.Authorization = `Bearer ${newAccessToken}`;
-        return apiClient.request(error.config);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        
+        // Resolve all queued requests with the new token
+        processQueue(null, newAccessToken);
+
+        return apiClient(originalRequest);
       } catch (refreshError) {
         console.error('Unable to refresh token:', refreshError);
+        
+        // Reject all queued requests
+        processQueue(refreshError, null);
+
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('userRole'); // Added cleanup for safety
         window.location.href = '/login';
+      } finally {
+        isRefreshing = false;
       }
     }
     return Promise.reject(error);

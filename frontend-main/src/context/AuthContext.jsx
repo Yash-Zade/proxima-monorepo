@@ -14,12 +14,20 @@ export function AuthProvider({ children }) {
 
   // Check current session state on load
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      // Decode or check token to restore session
-      setUser({ authenticated: true });
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          const response = await apiClient.get('/users/me');
+          setUser(response.data?.data || response.data);
+        } catch (error) {
+          console.error('[Dev Alert] Session restore failed:', error);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
   /**
@@ -37,7 +45,17 @@ export function AuthProvider({ children }) {
       const accessToken = response.data?.data?.accessToken;
       if (accessToken) {
         localStorage.setItem('accessToken', accessToken);
-        setUser({ email });
+        try {
+          const profileRes = await apiClient.get('/users/me');
+          const userData = profileRes.data?.data || profileRes.data;
+          setUser(userData);
+          if (userData && userData.roles && userData.roles.length > 0) {
+            localStorage.setItem('userRole', userData.roles[0]);
+          }
+        } catch (err) {
+          console.error('[Dev Alert] Failed to fetch profile after login', err);
+          setUser({ email });
+        }
         return response;
       } else {
         throw new Error('Access token absent from response payload.');

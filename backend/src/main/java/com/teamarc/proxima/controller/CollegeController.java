@@ -33,7 +33,7 @@ public class CollegeController {
         return ResponseEntity.ok(collegeService.getStudentById(id));
     }
 
-    @GetMapping("/student/sttus/{status}")
+    @GetMapping("/student/status/{status}")
     public ResponseEntity<List<StudentDTO>> getStudentsByStatus(@PathVariable String status) {
         return ResponseEntity.ok(collegeService.getStudentsByStatus(status));
     }

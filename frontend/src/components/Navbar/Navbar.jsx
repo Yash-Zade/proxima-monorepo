@@ -121,16 +121,16 @@ export default function Navbar() {
                     <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-transform active:scale-95">
                       <Avatar className="h-8 w-8 border border-zinc-800 bg-zinc-900 transition-opacity hover:opacity-80">
                         <AvatarImage src="" alt="User" />
-                        <AvatarFallback className="bg-zinc-800 text-zinc-300 text-xs font-semibold">A</AvatarFallback>
+                        <AvatarFallback className="bg-zinc-800 text-zinc-300 text-xs font-semibold">{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                       </Avatar>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-zinc-950 border-zinc-800 text-zinc-300 shadow-xl" align="end">
                     <div className="flex items-center justify-start gap-2 p-3">
                       <div className="flex flex-col space-y-0.5 leading-none">
-                        <p className="font-semibold text-zinc-50 text-sm">Alex Profile</p>
+                        <p className="font-semibold text-zinc-50 text-sm">{user?.name || 'User Profile'}</p>
                         <p className="w-[200px] truncate text-xs text-zinc-500 font-medium">
-                          alex@proxima.test
+                          {user?.email || ''}
                         </p>
                       </div>
                     </div>

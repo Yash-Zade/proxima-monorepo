@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import JobListings from './pages/JobListings';
+import JobDetail from './pages/JobDetail';
 import DirectMessages from './pages/DirectMessages';
 import Profile from './pages/Profile';
 import SignIn from './pages/SignIn';
@@ -46,6 +47,14 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <JobListings />
+              </Protected>
+            }
+          />
+          <Route
+            path="/jobs/:id"
+            element={
+              <Protected authentication={true}>
+                <JobDetail />
               </Protected>
             }
           />
