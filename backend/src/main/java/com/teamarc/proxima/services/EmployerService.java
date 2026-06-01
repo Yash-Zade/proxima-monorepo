@@ -54,7 +54,12 @@ public class EmployerService {
 
 
     public JobDTO createJob(JobDTO job) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Employer employer = employerRepository.findByUser(user).orElseThrow(
+                () -> new ResourceNotFoundException("Employer not associated with user with id: " + user.getId())
+        );
         Job newJob = modelMapper.map(job, Job.class);
+        newJob.setPostedBy(employer);
         newJob.setJobStatus(JobStatus.OPEN);
         Job savedJob = jobRepository.save(newJob);
         return modelMapper.map(savedJob, JobDTO.class);

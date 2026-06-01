@@ -1,5 +1,6 @@
 package com.teamarc.proxima.dto;
 
+import com.teamarc.proxima.entity.Employer;
 import com.teamarc.proxima.entity.enums.JobStatus;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
@@ -14,6 +15,8 @@ public class JobDTO {
     @NotEmpty(message = "Job title cannot be empty")
     private String title;
 
+    private EmployerDTO postedBy;
+
     private String description;
 
     @NotEmpty(message = "Job location cannot be empty")
@@ -22,8 +25,6 @@ public class JobDTO {
     private List<String> skillsRequired;
 
     private JobStatus jobStatus;
-
-    private String company;
 
     private String postedDate;
 
