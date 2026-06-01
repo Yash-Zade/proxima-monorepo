@@ -76,6 +76,7 @@ public class AdminService {
                 .website(onBoardNewCollegeDTO.getWebsite())
                 .address(onBoardNewCollegeDTO.getAddress())
                 .email(onBoardNewCollegeDTO.getEmail())
+                .user(user)
                 .build();
         user.getRoles().add(Role.COLLEGE);
         userRepository.save(user);

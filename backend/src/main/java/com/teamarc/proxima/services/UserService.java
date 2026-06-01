@@ -87,6 +87,9 @@ public class UserService implements UserDetailsService {
         }
 
         public void requestCollegeOnboard(OnBoardNewCollegeDTO collegeRequestDTO) {
+                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+                                .getAuthentication().getPrincipal();
+                collegeRequestDTO.setUserId(user.getId());
                 onBoardNewCollegeRepository.save(modelMapper.map(collegeRequestDTO, OnBoardNewCollege.class));
         }
 

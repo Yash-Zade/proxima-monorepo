@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class OnBoardNewCollegeDTO {
     private Long id;
+    private Long userId;
     private String name;
     private String address;
     private String email;
