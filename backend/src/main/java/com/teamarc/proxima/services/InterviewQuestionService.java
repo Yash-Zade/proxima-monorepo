@@ -112,23 +112,78 @@ public class InterviewQuestionService {
                 "2.  **Record Certified Skills:** If the LLM returns a test, and the candidate answers a question correctly, store the corresponding skills from `skill_certifications` in the candidate's profile." +
                 "3.  **Adaptive Testing:** For future applications, compare the required skills for the new job with the candidate's `certified_skills`. Prioritize assessment questions that target skills the candidate *doesn't* yet have certified. DO NOT re-test certified skills unless a significant time has passed (e.g., more than 2 years). When retesting, consider harder or deeper-dive scenarios.";
 
-        // 🔹 Construct API request body
-        Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(Map.of("text", prompt)))
-                )
-        );
+        try {
+            // 🔹 Construct API request body
+            Map<String, Object> requestBody = Map.of(
+                    "contents", List.of(
+                            Map.of("parts", List.of(Map.of("text", prompt)))
+                    )
+            );
 
+            // 🔹 Make API call
+            String apiKey = System.getenv("GEMINI_API_KEY");
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                apiKey = geminiApiKey;
+            }
 
-        // 🔹 Make API call
-        String response = restClient.post()
-                .uri("?key=" + geminiApiKey)
-                .header("Content-Type", "application/json")
-                .body(requestBody)
-                .retrieve()
-                .body(String.class);
+            String response = restClient.post()
+                    .uri("?key=" + apiKey)
+                    .header("Content-Type", "application/json")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(String.class);
 
-        return parseResponse(response);
+            return parseResponse(response);
+        } catch (Exception e) {
+            System.err.println("Gemini API call failed, returning high-quality fallback questions. Error: " + e.getMessage());
+            return getFallbackQuestions(request);
+        }
+    }
+
+    private List<QuestionDTO> getFallbackQuestions(JobApplication request) {
+        String jobTitle = (request != null && request.getJob() != null && request.getJob().getTitle() != null)
+                ? request.getJob().getTitle()
+                : "Software Developer";
+
+        List<QuestionDTO> fallback = new ArrayList<>();
+
+        QuestionDTO q1 = new QuestionDTO();
+        q1.setDifficulty("Medium");
+        q1.setStory("Your team is deploying a new version of the " + jobTitle + " service, but users are experiencing high latency and intermittent connection timeouts under load.");
+        q1.setQuestion("Which of the following is the most effective initial troubleshooting step?");
+        List<OptionDTO> options1 = new ArrayList<>();
+        options1.add(new OptionDTO("Analyze server CPU/memory usage and connection pool metrics", true));
+        options1.add(new OptionDTO("Immediately reboot all application servers", false));
+        options1.add(new OptionDTO("Rewrite the entire authentication module", false));
+        options1.add(new OptionDTO("Increase the load balancer timeout without investigation", false));
+        q1.setOptions(options1);
+        fallback.add(q1);
+
+        QuestionDTO q2 = new QuestionDTO();
+        q2.setDifficulty("Medium");
+        q2.setStory("To secure sensitive endpoints of the " + jobTitle + " platform, you need to implement secure communication.");
+        q2.setQuestion("What is the primary security benefit of using HTTPS over standard HTTP?");
+        List<OptionDTO> options2 = new ArrayList<>();
+        options2.add(new OptionDTO("HTTPS encrypts the data in transit to prevent eavesdropping and tampering", true));
+        options2.add(new OptionDTO("HTTPS speeds up server response times automatically", false));
+        options2.add(new OptionDTO("HTTPS renders HTML content on the client side", false));
+        options2.add(new OptionDTO("HTTPS guarantees that the code is free of bugs", false));
+        q2.setOptions(options2);
+        fallback.add(q2);
+
+        QuestionDTO q3 = new QuestionDTO();
+        q3.setDifficulty("Hard");
+        q3.setStory("During a high-concurrency event on the " + jobTitle + " database, you notice multiple transactional deadlocks occurring on the 'orders' table.");
+        q3.setQuestion("How can you best prevent database deadlocks in concurrent environments?");
+        List<OptionDTO> options3 = new ArrayList<>();
+        options3.add(new OptionDTO("Ensure all concurrent transactions acquire locks on resources in the exact same logical order", true));
+        options3.add(new OptionDTO("Disable database transaction isolation entirely", false));
+        options3.add(new OptionDTO("Run all database queries sequentially on a single thread", false));
+        options3.add(new OptionDTO("Remove primary keys from the tables", false));
+        q3.setOptions(options3);
+        fallback.add(q3);
+
+        return fallback;
     }
 
     private List<QuestionDTO> parseResponse(String response) {

@@ -49,7 +49,21 @@ public class ApplicantService {
             throw new IllegalArgumentException("Invalid job application data");
         }
 
-        JobApplication jobApplication = modelMapper.map(jobApplicationDTO, JobApplication.class);
+        Applicant applicant = getCurrentApplicant();
+
+        java.util.Optional<JobApplication> existingApplication = jobApplicationRepository.findByJob_JobIdAndApplicant_ApplicantId(jobId, applicant.getApplicantId());
+        if (existingApplication.isPresent()) {
+            throw new RuntimeException("You have already applied to this job.");
+        }
+
+        JobApplication jobApplication = new JobApplication();
+        jobApplication.setJob(job);
+        jobApplication.setApplicant(applicant);
+        jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);
+        jobApplication.setAppliedDate(java.time.LocalDateTime.now());
+
+        jobApplication = jobApplicationRepository.save(jobApplication);
+
         return interviewQuestionService.generateQuestions(jobApplication);
 
     }
@@ -129,9 +143,7 @@ public class ApplicantService {
     public boolean isOwnerOfApplication(Long applicationId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         JobApplication jobApplication = getApplicationById(applicationId);
-        ApplicantDTO applicant = getApplicantById(jobApplication.getApplicationId());
-        User applicationUser = modelMapper.map(applicant.getUser(), User.class);
-        return user.equals(applicationUser);
+        return user.getId() == jobApplication.getApplicant().getUser().getId();
     }
 
 //    public boolean isOwnerOfSession(Long sessionId) {
@@ -145,8 +157,7 @@ public class ApplicantService {
     public boolean isOwnerOfProfile(Long applicantId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         ApplicantDTO applicant = getApplicantById(applicantId);
-        User applicantUser = modelMapper.map(applicant.getUser(), User.class);
-        return user.equals(applicantUser);
+        return user.getId() == applicant.getUser().getId();
     }
 
 //    public SessionDTO cancelSession(Long sessionId) {
