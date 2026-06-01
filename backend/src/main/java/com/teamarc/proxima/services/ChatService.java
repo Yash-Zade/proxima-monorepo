@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamarc.proxima.entity.ChatMessages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final RabbitTemplate rabbitTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final com.teamarc.proxima.repository.ChatMessagesRepo chatMessagesRepo;
     private final com.teamarc.proxima.repository.ForumMessageRepo forumMessageRepo;
@@ -31,8 +31,8 @@ public class ChatService {
     public String sendPrivateMessage(ChatMessages chatMessages) {
         try {
             String payload = objectMapper.writeValueAsString(chatMessages);
-            rabbitTemplate.convertAndSend("direct-chat-queue", payload);
-            log.info("Successfully published direct message to RabbitMQ queue for sender: {} and receiver: {}",
+            kafkaTemplate.send("direct-chat-topic", String.valueOf(chatMessages.getSenderId()), payload);
+            log.info("Successfully published direct message to Kafka topic for sender: {} and receiver: {}",
                     chatMessages.getSenderId(), chatMessages.getReceiverId());
             return "Message queued for " + chatMessages.getReceiverId();
         } catch (JsonProcessingException e) {
@@ -42,8 +42,8 @@ public class ChatService {
     }
 
     public String sendForumMessage(String messagePayload) {
-        rabbitTemplate.convertAndSend("forum-chat-queue", messagePayload);
-        log.info("Successfully published forum message to RabbitMQ queue");
+        kafkaTemplate.send("forum-chat-topic", messagePayload);
+        log.info("Successfully published forum message to Kafka topic");
         return "Forum message queued";
     }
 }
