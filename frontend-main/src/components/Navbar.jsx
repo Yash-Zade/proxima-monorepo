@@ -1,6 +1,6 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield, ChevronDown, LayoutDashboard, GraduationCap } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -48,7 +48,7 @@ export default function Navbar() {
       dashboardItems.push({ name: 'Employer', path: '/employer', icon: Briefcase });
     }
     if (user.roles?.includes('COLLEGE')) {
-      navItems.push({ name: 'College', path: '/college', icon: GraduationCap });
+      dashboardItems.push({ name: 'College', path: '/college', icon: GraduationCap });
     }
     if (user.roles?.includes('ADMIN')) {
       dashboardItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });

@@ -15,6 +15,7 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
   const [collegeAddress, setCollegeAddress] = useState('');
   const [collegeEmail, setCollegeEmail] = useState('');
   const [collegeWebsite, setCollegeWebsite] = useState('');
+  const [collegeId, setCollegeId] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Available colleges select state
@@ -30,6 +31,14 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
 
   useEffect(() => {
     if (isOpen) {
+      setSelectedRole('');
+      setCompanyName('');
+      setCompanyWebsite('');
+      setCollegeName('');
+      setCollegeAddress('');
+      setCollegeEmail('');
+      setCollegeWebsite('');
+      setCollegeId('');
       setCollegesLoading(true);
       apiClient.get('/public/colleges')
         .then(res => {
@@ -71,9 +80,14 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
           website: collegeWebsite
         });
       } else if (selectedRole === 'STUDENT') {
+        if (!collegeId) {
+          showToast('Please select a college.', 'error');
+          return;
+        }
         await apiClient.post(`/users/request/student`, {
           userId,
-          collegeId
+          collegeId,
+          collegeName
         });
       }
       showToast('Role application submitted successfully.', 'success');
@@ -166,9 +180,45 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
 
           {selectedRole === 'STUDENT' && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">College Name</label>
-                <input type="text" value={collegeName} onChange={e => setCollegeName(e.target.value)} required placeholder="e.g. Stanford University" className="w-full bg-white border border-[#EAE2D5] rounded-lg py-2 px-3 text-xs outline-none" />
+              <div className="space-y-2 relative">
+                <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Select College</label>
+                
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCollegeDropdownOpen(!isCollegeDropdownOpen)}
+                    className="w-full bg-white border border-[#EAE2D5] hover:border-[#241E1A] focus:border-[#241E1A] rounded-lg py-2.5 px-3 text-xs outline-none font-semibold text-[#241E1A] flex items-center justify-between transition-colors"
+                    disabled={collegesLoading}
+                  >
+                    {collegeName ? collegeName : <span className="text-stone-400">Choose a college...</span>}
+                    <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${isCollegeDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isCollegeDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#EAE2D5] rounded-xl shadow-lg z-50 overflow-hidden py-1 max-h-60 overflow-y-auto">
+                      {collegesLoading ? (
+                        <div className="px-4 py-2 text-xs text-stone-400">Loading colleges...</div>
+                      ) : availableColleges.length > 0 ? (
+                        availableColleges.map((col) => (
+                          <button
+                            key={col.id}
+                            type="button"
+                            onClick={() => {
+                              setCollegeId(col.id);
+                              setCollegeName(col.name);
+                              setIsCollegeDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#241E1A] hover:bg-[#F4ECE1] transition-colors"
+                          >
+                            {col.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-xs text-stone-400">No colleges available</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
