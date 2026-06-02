@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, Shield, ShieldAlert, FileText, UploadCloud, X, Plus, Save, Download, ArrowRight, Sparkles, Brain } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -7,6 +8,8 @@ import apiClient from '../lib/apiClient';
 export default function MySkills() {
   const { user, loading } = useContext(AuthContext);
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [applicantProfile, setApplicantProfile] = useState(null);
   const [skills, setSkills] = useState([]);
@@ -59,6 +62,11 @@ export default function MySkills() {
           const profileData = profileRes.data?.data || profileRes.data;
           setApplicantProfile(profileData);
           setSkills(profileData?.skills || []);
+          
+          if (location.state?.message) {
+            showToast(location.state.message, location.state.message.includes('Failed') ? 'error' : 'success');
+            navigate(location.pathname, { replace: true, state: {} });
+          }
         } catch (error) {
           console.error('[Dev Alert] Error fetching applicant data:', error);
           showToast('Failed to load profile details.', 'error');
@@ -68,7 +76,7 @@ export default function MySkills() {
       };
       fetchData();
     }
-  }, [isApplicant, showToast]);
+  }, [isApplicant, showToast, location, navigate]);
 
   const handleSaveProfile = async () => {
     if (!applicantProfile?.applicantId) return;
@@ -108,23 +116,15 @@ export default function MySkills() {
     }
   };
 
-  const handleCertifySkills = async () => {
+  const handleCertifySkills = () => {
     if (nonCertifiedSkills.length === 0) return;
-    setIsCertifying(true);
-    try {
-      const res = await apiClient.post('/applicants/certified-skills', nonCertifiedSkills);
-      showToast('Skills certified successfully!', 'success');
-      const updatedCertified = res.data?.data || res.data || [];
-      setApplicantProfile(prev => ({
-        ...prev,
-        certifiedSkills: updatedCertified
-      }));
-    } catch (err) {
-      console.error('[Dev Alert] Certifying skills failed:', err);
-      showToast('Failed to certify skills.', 'error');
-    } finally {
-      setIsCertifying(false);
-    }
+    navigate('/exam', {
+      state: {
+        nonCertifiedSkills,
+        resume: applicantProfile?.resume,
+        certifiedSkills
+      }
+    });
   };
 
   if (loading || isFetchingData) {

@@ -13,6 +13,7 @@ import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
 import Sandbox from './pages/Sandbox';
+import ExamPortal from './pages/ExamPortal';
 import Protected from './components/Protected';
 
 export default function App() {
@@ -107,6 +108,14 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <Sandbox />
+              </Protected>
+            }
+          />
+          <Route
+            path="/exam"
+            element={
+              <Protected authentication={true}>
+                <ExamPortal />
               </Protected>
             }
           />
