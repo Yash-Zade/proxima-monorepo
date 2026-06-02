@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaceDetector, FilesetResolver } from "@mediapipe/tasks-vision";
-import { AlertCircle, Camera, CheckCircle2, Clock, ShieldAlert, Terminal, Loader2, ChevronRight, ChevronLeft, Flag } from "lucide-react";
+import { AlertCircle, Camera, CheckCircle2, Clock, ShieldAlert, Terminal, Loader2, ChevronRight, ChevronLeft, Flag, Award } from "lucide-react";
+import confetti from 'canvas-confetti';
+import { useToast } from '../context/ToastContext';
 import apiClient from "../lib/apiClient";
 
 const ExamPortal = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const { nonCertifiedSkills = [], resume = "", certifiedSkills = [] } = location.state || {};
 
@@ -53,7 +56,7 @@ const ExamPortal = () => {
   };
 
   // FIX: handleSubmit uses refs so it never has stale closure issues
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (examStatusRef.current !== 'in-progress') return; // FIX: prevent double-submit
 
     const qs = questionsRef.current;
@@ -68,7 +71,70 @@ const ExamPortal = () => {
     scoreRef.current = finalScore;
     setScore(finalScore);
     setExamStatus('completed');
-  }, []); // FIX: no deps needed since all state accessed via refs
+
+    // Automatically call certification API if passed
+    if (finalScore >= 60 && nonCertifiedSkills.length > 0) {
+      setIsSubmittingResult(true);
+      try {
+        await apiClient.post('/applicants/certified-skills', nonCertifiedSkills);
+
+        // Remove the newly certified skills from the general skills array
+        try {
+          const profileRes = await apiClient.get('/applicants/profile');
+          const profileData = profileRes.data?.data || profileRes.data;
+          
+          if (profileData && profileData.applicantId) {
+            const currentSkills = profileData.skills || [];
+            const updatedSkills = currentSkills.filter(skill => !nonCertifiedSkills.includes(skill));
+            
+            await apiClient.put(`/applicants/profile/${profileData.applicantId}`, {
+              skills: updatedSkills,
+              preferredLocations: profileData.preferredLocations || []
+            });
+          }
+        } catch (profileErr) {
+          console.error("Failed to clean up skills after certification", profileErr);
+        }
+
+        showToast('Skills Certified Successfully!', 'success');
+        triggerConfetti();
+      } catch (err) {
+        console.error("Failed to certify skills after exam", err);
+        showToast('Failed to certify skills due to server error.', 'error');
+      } finally {
+        setIsSubmittingResult(false);
+      }
+    } else if (finalScore < 60) {
+      showToast('Assessment failed. A score of 60% or higher is required.', 'warning');
+    }
+  }, [nonCertifiedSkills, showToast]);
+
+  const triggerConfetti = () => {
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#059669', '#10B981', '#34D399'] // Emerald colors
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#059669', '#10B981', '#34D399']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  };
 
   // Webcam init
   useEffect(() => {
@@ -223,21 +289,8 @@ const ExamPortal = () => {
     };
   }, [examStatus, handleSubmit]);
 
-  const handleFinishCertification = async () => {
-    if (scoreRef.current >= 60 && nonCertifiedSkills.length > 0) {
-      setIsSubmittingResult(true);
-      try {
-        await apiClient.post('/applicants/certified-skills', nonCertifiedSkills);
-        navigate('/skills', { state: { message: "Skills Certified Successfully!" } });
-      } catch (err) {
-        console.error("Failed to certify skills after exam", err);
-        navigate('/skills', { state: { message: "Failed to certify skills due to server error." } });
-      } finally {
-        setIsSubmittingResult(false);
-      }
-    } else {
-      navigate('/skills');
-    }
+  const handleFinishCertification = () => {
+    navigate('/skills', { state: { message: scoreRef.current >= 60 ? "Skills Certified Successfully!" : "Returning to skills hub." } });
   };
 
   // FIX: answer selection extracted to handler so label click works correctly
@@ -453,8 +506,8 @@ const ExamPortal = () => {
                               {selectedAnswers[currentQuestion] === index && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </div>
                           </div>
-                          <span className={`text-sm leading-relaxed font-medium ${selectedAnswers[currentQuestion] === index ? 'text-[#241E1A]' : 'text-stone-600'}`}>
-                            {option.text}
+                          <span className={`text-sm leading-relaxed font-medium break-words ${selectedAnswers[currentQuestion] === index ? 'text-[#241E1A]' : 'text-stone-600'}`}>
+                            {option.text || "Option text missing"}
                           </span>
                         </div>
                       ))}
@@ -509,6 +562,20 @@ const ExamPortal = () => {
                   </div>
 
                   <div className="w-full max-w-sm mb-8 p-6 bg-white border border-[#EAE2D5] rounded-2xl space-y-4 shadow-sm">
+                    {score >= 60 && (
+                      <div className="mb-4 pb-4 border-b border-[#EAE2D5]">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-emerald-600 flex items-center justify-center gap-2 mb-2">
+                          <Award className="w-4 h-4" /> Certification Granted
+                        </h4>
+                        <p className="text-[11px] text-stone-500 font-medium">
+                          The following skills have been verified and added to your profile:
+                          <br />
+                          <span className="text-[#241E1A] font-bold mt-1 block">
+                            {nonCertifiedSkills.join(', ')}
+                          </span>
+                        </p>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center pb-3 border-b border-[#EAE2D5]">
                       <span className="text-[10px] uppercase font-bold tracking-wider text-stone-500">Node Queries</span>
                       <span className="font-mono font-bold text-[#241E1A]">{questions.length}</span>
@@ -551,7 +618,7 @@ const ExamPortal = () => {
                       disabled={isSubmittingResult}
                       className="flex-1 bg-[#241E1A] hover:bg-[#382F29] disabled:opacity-50 text-[#FDFBF7] text-xs font-bold uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
                     >
-                      {isSubmittingResult ? 'Processing...' : (score >= 60 ? 'Apply Certification' : 'Return to Profile')}
+                      {isSubmittingResult ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Return to Profile'}
                     </button>
                   </div>
                 </div>

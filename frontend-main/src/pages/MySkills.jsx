@@ -132,7 +132,6 @@ export default function MySkills() {
       <div className="min-h-[50vh] bg-[#FDFBF7] flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center">
-            <span className="text-[#FDFBF7] font-black text-xs">P</span>
           </div>
           <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Skills Hub...</p>
         </div>

@@ -406,16 +406,16 @@ export default function CollegeDashboard() {
             <GraduationCap className="w-6 h-6 text-[#FDFBF7]" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-[#241E1A] serif-heading">{profile?.name || 'College Panel'}</h1>
+            <h1 className="text-xl font-extrabold tracking-tight text-[#241E1A] serif-heading">{profile?.name || user?.name || 'College Panel'}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-[10px] text-stone-500 font-semibold uppercase tracking-wider">
               {profile?.address && (
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-stone-400" /> {profile.address}
                 </span>
               )}
-              {profile?.email && (
+              {(profile?.email || user?.email) && (
                 <span className="flex items-center gap-1">
-                  <Mail className="w-3 h-3 text-stone-400" /> {profile.email}
+                  <Mail className="w-3 h-3 text-stone-400" /> {profile?.email || user?.email}
                 </span>
               )}
               {profile?.website && (

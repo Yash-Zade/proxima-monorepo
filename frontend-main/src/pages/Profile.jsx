@@ -247,8 +247,13 @@ export default function Profile() {
   const [preferredLocations, setPreferredLocations] = useState([]);
   const [newLocation, setNewLocation] = useState('');
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+
+  const availableLocations = [
+    "Remote", "Hybrid", "San Francisco, CA", "New York, NY", "London, UK", "Berlin, DE", "Toronto, CA", "Bengaluru, IN", "Singapore", "Sydney, AU", "Dubai, UAE"
+  ];
 
   const isApplicant = user?.roles?.includes('APPLICANT') || user?.roles?.includes('USER');
   const certifiedSkills = applicantProfile?.certifiedSkills || [];
@@ -303,14 +308,13 @@ export default function Profile() {
     }
   };
 
-  if (loading) {
+  if (loading || isFetchingData) {
     return (
       <div className="min-h-[50vh] bg-[#FDFBF7] flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center">
-            <span className="text-[#FDFBF7] font-black text-xs">P</span>
           </div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest">Loading Profile Node...</p>
+          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Profile Node...</p>
         </div>
       </div>
     );
@@ -328,273 +332,214 @@ export default function Profile() {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]">
+    <div className="min-h-screen bg-[#FDFBF7] py-8">
       <RoleApplicationModal 
         isOpen={isRoleModalOpen} 
         onClose={() => setIsRoleModalOpen(false)} 
         userId={user?.id}
       />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-24 border-b border-[#EAE2D5]">
-        <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-            
-            {/* Left: Profile Card */}
-            <div className="lg:col-span-1">
-              <div className="bg-white border border-[#EAE2D5] rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#241E1A] to-stone-400" />
-                
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 rounded-xl bg-[#241E1A] text-[#FDFBF7] flex items-center justify-center text-2xl font-bold shadow-sm mb-4">
-                    {initials}
-                  </div>
-                  
-                  <h1 className="text-lg font-bold text-[#241E1A] leading-tight">{name}</h1>
-                  <p className="text-[10px] text-stone-400 font-semibold uppercase tracking-wider mt-1">{email}</p>
-                  
-                  <div className="w-full border-t border-[#EAE2D5] my-5 pt-5">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F4ECE1] border border-[#EAE2D5] text-[9px] font-bold uppercase tracking-wider text-[#241E1A]">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Verified Node
-                    </div>
-                  </div>
+        {/* Main Profile Card inspired by Image */}
+        <div className="bg-white border border-[#EAE2D5] rounded-[32px] overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+          
+          {/* Banner */}
+          <div className="h-40 bg-[#241E1A] relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#241E1A] via-transparent to-stone-600/30" />
+          </div>
 
-                  {roles.length > 0 && (
-                    <div className="w-full mt-5 pt-5 border-t border-[#EAE2D5] space-y-3">
-                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Roles</span>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {roles.map((role, idx) => (
-                          <span key={idx} className="bg-[#241E1A] text-[#FDFBF7] text-[8px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg flex items-center gap-1">
-                            <Shield className="w-3 h-3" />
-                            {role}
-                          </span>
-                        ))}
-                      </div>
+          <div className="px-8 pb-8 relative">
+            {/* Overlapping Avatar */}
+            <div className="absolute -top-16 left-8">
+              <div className="w-32 h-32 rounded-full bg-white p-1.5 shadow-sm border border-[#EAE2D5]">
+                <div className="w-full h-full rounded-full bg-[#241E1A] text-[#FDFBF7] flex items-center justify-center text-4xl font-bold shadow-inner">
+                  {initials}
+                </div>
+              </div>
+            </div>
+
+            {/* Top Right Actions */}
+            <div className="flex justify-end pt-5 gap-3">
+               <button 
+                 onClick={() => setIsRoleModalOpen(true)}
+                 className="bg-[#241E1A] text-[#FDFBF7] hover:bg-[#382F29] text-xs font-bold px-5 py-2.5 rounded-full transition-colors shadow-sm"
+               >
+                 Add Role
+               </button>
+               <button 
+                 onClick={handleSaveProfile}
+                 disabled={isSaving}
+                 className="bg-white border border-[#EAE2D5] hover:bg-[#FAF6F0] text-[#241E1A] text-xs font-bold px-5 py-2.5 rounded-full transition-colors shadow-sm disabled:opacity-50"
+               >
+                 {isSaving ? 'Saving...' : 'Save Profile'}
+               </button>
+            </div>
+
+            {/* Profile Info & Skills Layout */}
+            <div className="mt-2 flex flex-col md:flex-row gap-8 justify-between items-start">
+              
+              {/* Left Side: Name, Role, Location */}
+              <div className="flex-1">
+                <h1 className="text-[28px] font-extrabold text-[#241E1A] tracking-tight">{name}</h1>
+                {roles.length > 0 && (
+                  <p className="text-[15px] font-medium text-stone-500 mt-1">
+                    {roles.map(r => r.charAt(0) + r.slice(1).toLowerCase()).join(', ')}
+                  </p>
+                )}
+                <div className="flex flex-col gap-2 mt-2">
+                  <p className="text-[13px] font-medium text-stone-400">
+                    {preferredLocations.length > 0 ? preferredLocations.join(', ') : 'Location not set'}
+                  </p>
+                  {/* Selected Locations Badges directly under the name */}
+                  {preferredLocations.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {preferredLocations.map((loc, i) => (
+                        <div key={i} className="inline-flex items-center gap-1 bg-[#F4ECE1] text-[#241E1A] px-2 py-0.5 rounded-md border border-[#EAE2D5]">
+                          <span className="text-[10px] font-bold">{loc}</span>
+                          <button onClick={() => setPreferredLocations(preferredLocations.filter((_, idx) => idx !== i))} className="hover:text-red-600 transition-colors">
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
+                </div>
+              </div>
 
-                  <button 
-                    onClick={() => setIsRoleModalOpen(true)}
-                    className="w-full mt-6 bg-white hover:bg-[#FAF6F0] border border-[#EAE2D5] hover:border-[#241E1A] text-[#241E1A] text-[10px] font-bold uppercase tracking-wider py-2.5 rounded-lg transition-all duration-300"
-                  >
-                    Add Role
-                  </button>
+              {/* Right Side: Current Role & Skills */}
+              <div className="flex flex-col gap-5 md:items-end min-w-[200px]">
+                
+                
+
+                <div className="flex flex-col gap-2 md:items-end w-full">
+                  <div className="flex items-center gap-1.5 text-stone-500 justify-end">
+                    <span className="text-[13px] font-semibold">Skills</span>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                  
+                  {certifiedSkills.length > 0 ? (
+                    <div className="flex flex-wrap md:justify-end gap-1.5">
+                      {certifiedSkills.map((skill, i) => (
+                        <span key={i} className="bg-[#FAF6F0] text-[#241E1A] border border-[#EAE2D5] text-[11px] font-bold px-3 py-1.5 rounded-full">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-stone-400">No certified skills yet.</p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Right: Profile Info */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Identity Section */}
-              <div className="bg-white border border-[#EAE2D5] rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 rounded-lg bg-[#F4ECE1] flex items-center justify-center">
-                    <User className="w-4 h-4 text-[#241E1A]" />
+            {/* Bottom Section: 3 Cards mimicking the image */}
+            {isApplicant && (
+              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                {/* Card 1: Ready for work */}
+                <div className="bg-[#FCF9F3] rounded-[20px] p-5 flex flex-col relative border border-[#F4ECE1]">
+                  <div className="mb-4">
+                    <h3 className="text-[13px] font-bold text-[#241E1A] mb-1">Ready for work</h3>
+                    <p className="text-[11px] text-stone-500 leading-tight">Show recruiters where you want to work.</p>
                   </div>
-                  <h2 className="text-xs font-bold text-[#241E1A] uppercase tracking-wider">Core Identity</h2>
+                  
+                  <div className="mt-auto relative z-20">
+                    <button
+                      type="button"
+                      onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+                      className="w-full bg-white border border-[#EAE2D5] hover:border-[#241E1A] rounded-xl py-2 px-3 text-xs outline-none font-semibold text-[#241E1A] flex items-center justify-between transition-colors shadow-sm"
+                    >
+                      <span className="text-stone-400 truncate">Add locations...</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-stone-400 shrink-0 transition-transform ${isLocationDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isLocationDropdownOpen && (
+                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-[#EAE2D5] rounded-xl shadow-lg overflow-hidden py-1 max-h-40 overflow-y-auto">
+                        {availableLocations.filter(loc => !preferredLocations.includes(loc)).length > 0 ? (
+                          availableLocations.filter(loc => !preferredLocations.includes(loc)).map((loc) => (
+                            <button
+                              key={loc}
+                              type="button"
+                              onClick={() => {
+                                setPreferredLocations([...preferredLocations, loc]);
+                                setIsLocationDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2 text-xs font-semibold text-[#241E1A] hover:bg-[#F4ECE1] transition-colors"
+                            >
+                              {loc}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-xs text-stone-400">All added</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider block">Name</label>
-                    <div className="bg-[#FAF6F0] border border-[#EAE2D5] rounded-lg py-2.5 px-3.5 text-xs text-[#241E1A] font-semibold">
-                      {name}
-                    </div>
+                {/* Card 2: Update */}
+                <Link to="/skills" className="bg-[#FCF9F3] rounded-[20px] p-5 flex items-center justify-between group hover:bg-[#F4ECE1] transition-colors border border-[#F4ECE1]">
+                  <div className="pr-2">
+                    <h3 className="text-[13px] font-bold text-[#241E1A] mb-1">Update</h3>
+                    <p className="text-[11px] text-stone-500 leading-tight">Keep your profile updated so that recruiters know you better.</p>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-semibold text-stone-500 uppercase tracking-wider block">Email</label>
-                    <div className="bg-[#FAF6F0] border border-[#EAE2D5] rounded-lg py-2.5 px-3.5 text-xs text-[#241E1A] font-semibold truncate">
-                      {email}
-                    </div>
+                  <div className="shrink-0 w-7 h-7 rounded-full border border-[#241E1A] flex items-center justify-center bg-white group-hover:bg-[#241E1A] transition-colors">
+                    <ArrowRight className="w-3.5 h-3.5 text-[#241E1A] group-hover:text-white transition-colors" />
                   </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="grid grid-cols-2 gap-4">
-                <Link
-                  to="/skills"
-                  className="bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] border border-[#241E1A] rounded-2xl p-4 flex flex-col items-center gap-2 transition-all duration-300 shadow-sm"
-                >
-                  <Brain className="w-5 h-5" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-center">Manage Skills</span>
                 </Link>
-                <Link
-                  to="/jobs"
-                  className="bg-[#FCF9F3] hover:bg-[#FAF6F0] text-[#241E1A] border border-[#EAE2D5] rounded-2xl p-4 flex flex-col items-center gap-2 transition-all duration-300 shadow-sm"
-                >
-                  <Briefcase className="w-5 h-5" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-center">Browse Jobs</span>
-                </Link>
-              </div>
-            </div>
 
+                {/* Card 3: Active Jobs */}
+                <Link to="/jobs" className="bg-[#FCF9F3] rounded-[20px] p-5 flex items-center justify-between group hover:bg-[#F4ECE1] transition-colors border border-[#F4ECE1]">
+                  <div className="pr-2">
+                    <h3 className="text-[13px] font-bold text-[#241E1A] mb-1">Active Jobs</h3>
+                    <p className="text-[11px] text-stone-500 leading-tight">Track your {applications.length} current job submissions.</p>
+                  </div>
+                  <div className="shrink-0 w-7 h-7 rounded-full border border-[#241E1A] flex items-center justify-center bg-white group-hover:bg-[#241E1A] transition-colors">
+                    <ArrowRight className="w-3.5 h-3.5 text-[#241E1A] group-hover:text-white transition-colors" />
+                  </div>
+                </Link>
+
+              </div>
+            )}
           </div>
         </div>
-      </section>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {isApplicant && !isFetchingData && (
-          <div className="space-y-8">
-            
-            {/* Certified Skills */}
-            <div className="bg-white border border-[#EAE2D5] rounded-2xl p-8 shadow-sm">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-[#F4ECE1] flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-[#241E1A]" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-[#241E1A] uppercase tracking-wider">Certified Skills</h2>
-                  <p className="text-[9px] text-stone-400 uppercase tracking-wider">Verified Capabilities</p>
-                </div>
-              </div>
-
-              {certifiedSkills.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
-                  {certifiedSkills.map((skill, i) => (
-                    <div key={i} className="inline-flex items-center gap-2 bg-[#241E1A] text-[#FDFBF7] px-4 py-2 rounded-lg shadow-sm">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span className="text-xs font-semibold">{skill}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 px-4 bg-[#FCF9F3] border border-dashed border-[#EAE2D5] rounded-xl">
-                  <Code2 className="w-6 h-6 text-stone-300 mx-auto mb-2" />
-                  <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider">No Certified Skills Yet</p>
-                  <Link to="/skills" className="text-[10px] text-[#241E1A] font-bold underline mt-2 hover:text-stone-700 inline-block">
-                    Certify Your Skills →
-                  </Link>
-                </div>
-              )}
+        {/* Detailed Application Tracking (Below Profile Card) */}
+        {isApplicant && applications.length > 0 && (
+          <div className="mt-8 bg-white border border-[#EAE2D5] rounded-[32px] p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+            <div className="flex items-center gap-2 mb-6">
+              <Briefcase className="w-5 h-5 text-[#241E1A]" />
+              <h2 className="text-sm font-bold text-[#241E1A]">Application Tracking Details</h2>
             </div>
-
-            {/* Preferred Locations */}
-            <div className="bg-white border border-[#EAE2D5] rounded-2xl p-8 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-lg bg-[#F4ECE1] flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-[#241E1A]" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-[#241E1A] uppercase tracking-wider">Preferred Locations</h2>
-                    <p className="text-[9px] text-stone-400 uppercase tracking-wider">Remote Work Zones</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={handleSaveProfile}
-                  disabled={isSaving}
-                  className="bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] text-[10px] font-semibold uppercase tracking-wider px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            <div className="space-y-3">
+              {applications.map((app) => (
+                <div 
+                  key={app.applicationId} 
+                  className="border border-[#EAE2D5] hover:border-[#241E1A] rounded-2xl p-5 bg-[#FDFBF7] transition-all duration-300 flex justify-between items-start sm:items-center gap-4"
                 >
-                  <Save className="w-3.5 h-3.5" />
-                  {isSaving ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {preferredLocations.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {preferredLocations.map((loc, i) => (
-                      <div key={i} className="inline-flex items-center gap-2 bg-[#F4ECE1] text-[#241E1A] border border-[#EAE2D5] px-3 py-2 rounded-lg">
-                        <span className="text-xs font-semibold">{loc}</span>
-                        <button 
-                          onClick={() => setPreferredLocations(preferredLocations.filter((_, idx) => idx !== i))}
-                          className="hover:text-red-600 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={newLocation} 
-                    onChange={e => setNewLocation(e.target.value)}
-                    placeholder="Add a location..."
-                    className="flex-1 bg-white border border-[#EAE2D5] focus:border-[#241E1A] rounded-lg py-2.5 px-4 text-xs outline-none transition-colors"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newLocation) {
-                        e.preventDefault();
-                        setPreferredLocations([...preferredLocations, newLocation]);
-                        setNewLocation('');
-                      }
-                    }}
-                  />
-                  <button 
-                    onClick={() => { 
-                      if(newLocation) { 
-                        setPreferredLocations([...preferredLocations, newLocation]); 
-                        setNewLocation(''); 
-                      } 
-                    }} 
-                    className="bg-white hover:bg-[#FAF6F0] border border-[#EAE2D5] text-[#241E1A] p-2.5 rounded-lg transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Job Applications */}
-            <div className="bg-white border border-[#EAE2D5] rounded-2xl p-8 shadow-sm">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-[#F4ECE1] flex items-center justify-center">
-                  <Briefcase className="w-5 h-5 text-[#241E1A]" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-[#241E1A] uppercase tracking-wider">Active Submissions</h2>
-                  <p className="text-[9px] text-stone-400 uppercase tracking-wider">{applications.length} Applications</p>
-                </div>
-              </div>
-
-              {applications.length === 0 ? (
-                <div className="text-center py-10 px-4 bg-[#FCF9F3] rounded-xl border border-dashed border-[#EAE2D5]">
-                  <Briefcase className="w-6 h-6 text-stone-300 mx-auto mb-2" />
-                  <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider">No Active Applications</p>
-                  <Link to="/jobs" className="text-[10px] text-[#241E1A] font-bold underline mt-2 hover:text-stone-700 inline-block">
-                    Explore Job Registry →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {applications.map((app) => (
-                    <div 
-                      key={app.applicationId} 
-                      className="border border-[#EAE2D5] hover:border-[#241E1A] rounded-xl p-4 bg-[#FDFBF7] transition-all duration-300 flex justify-between items-start sm:items-center gap-4"
-                    >
-                      <div className="flex-1">
-                        <h3 className="text-xs font-bold text-[#241E1A] uppercase tracking-wider">App #{app.applicationId}</h3>
-                        <p className="text-[10px] text-stone-400 mt-1">Job Ref: #{app.jobId}</p>
-                        <div className="mt-2 inline-flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${app.applicationStatus === 'WITHDRAWN' ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                          <span className={`text-[9px] font-bold uppercase tracking-wider ${app.applicationStatus === 'WITHDRAWN' ? 'text-red-600' : 'text-emerald-600'}`}>
-                            {app.applicationStatus}
-                          </span>
-                        </div>
-                      </div>
-
-                      {app.applicationStatus !== 'WITHDRAWN' && (
-                        <button 
-                          onClick={() => handleWithdraw(app.applicationId)}
-                          className="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shrink-0"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Withdraw
-                        </button>
-                      )}
+                  <div className="flex-1">
+                    <h3 className="text-xs font-bold text-[#241E1A]">Application #{app.applicationId}</h3>
+                    <p className="text-[10px] font-medium text-stone-500 mt-1">Job Ref: #{app.jobId}</p>
+                    <div className="mt-2 inline-flex items-center gap-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${app.applicationStatus === 'WITHDRAWN' ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                      <span className={`text-[10px] font-bold ${app.applicationStatus === 'WITHDRAWN' ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {app.applicationStatus}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
 
+                  {app.applicationStatus !== 'WITHDRAWN' && (
+                    <button 
+                      onClick={() => handleWithdraw(app.applicationId)}
+                      className="text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-4 py-2 rounded-full transition-colors shrink-0"
+                    >
+                      Withdraw
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

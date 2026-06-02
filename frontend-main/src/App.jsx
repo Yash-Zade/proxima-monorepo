@@ -16,6 +16,7 @@ import CollegeDashboard from './pages/CollegeDashboard';
 import Sandbox from './pages/Sandbox';
 import ExamPortal from './pages/ExamPortal';
 import Protected from './components/Protected';
+import MassHiring from './pages/MassHiring';
 
 export default function App() {
   return (
@@ -101,6 +102,14 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <EmployerDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/mass-hiring"
+            element={
+              <Protected authentication={true}>
+                <MassHiring />
               </Protected>
             }
           />

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield, ChevronDown, LayoutDashboard, GraduationCap } from 'lucide-react';
+import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield, ChevronDown, LayoutDashboard, GraduationCap, Users } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -46,6 +46,7 @@ export default function Navbar() {
     
     if (user.roles?.includes('EMPLOYER')) {
       dashboardItems.push({ name: 'Employer', path: '/employer', icon: Briefcase });
+      dashboardItems.push({ name: 'Mass Hiring', path: '/mass-hiring', icon: Users });
     }
     if (user.roles?.includes('COLLEGE')) {
       dashboardItems.push({ name: 'College', path: '/college', icon: GraduationCap });
@@ -80,11 +81,9 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center gap-2">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="w-8 h-8 rounded-lg bg-[#241E1A] flex items-center justify-center transition-transform group-hover:rotate-6">
-                  <span className="text-[#FDFBF7] font-black text-sm tracking-tighter">P</span>
-                </div>
+               
                 <span className="font-extrabold text-lg tracking-tight text-[#241E1A] group-hover:text-amber-800 transition-colors">
-                  proxima
+                  Proxima
                 </span>
               </Link>
             </div>

@@ -749,8 +749,13 @@ export default function EmployerDashboard() {
             <Building2 className="w-6 h-6 text-[#FDFBF7]" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-[#241E1A]">{profile?.companyName || 'Employer Dashboard'}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
+            <h1 className="text-xl font-extrabold tracking-tight text-[#241E1A]">{profile?.companyName || user?.name || 'Employer Dashboard'}</h1>
+            <div className="flex items-center gap-4 mt-0.5">
+              {user?.email && (
+                <span className="flex items-center gap-1 text-[10px] text-stone-400 font-semibold transition-colors">
+                  <Mail className="w-3 h-3" />{user.email}
+                </span>
+              )}
               {profile?.companyWebsite && (
                 <a href={profile.companyWebsite} target="_blank" rel="noreferrer"
                   className="flex items-center gap-1 text-[10px] text-stone-400 hover:text-[#241E1A] font-semibold transition-colors">
