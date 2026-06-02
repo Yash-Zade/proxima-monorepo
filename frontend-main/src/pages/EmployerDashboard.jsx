@@ -236,11 +236,11 @@ function ApplicantDetailsModal({ app, onClose, onAccept, onReject, actingId }) {
 
                 {/* Skills below contact and locations */}
                 <div className="space-y-6">
-                  {/* Certified Skills (Terracotta Accent) */}
+                  {/* Verified Skills (Terracotta Accent) */}
                   <div>
                     <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-[#DFA687]" />
-                      Certified Skills
+                      Verified Skills
                     </h3>
                     <div className="bg-[#FCF9F3] border border-[#E5DAC9] p-4 rounded-2xl min-h-[64px] flex flex-wrap gap-2 items-center">
                       {applicant?.certifiedSkills && applicant.certifiedSkills.length > 0 ? (
@@ -251,7 +251,7 @@ function ApplicantDetailsModal({ app, onClose, onAccept, onReject, actingId }) {
                           </span>
                         ))
                       ) : (
-                        <p className="text-xs text-stone-400 italic">No certified skills listed.</p>
+                        <p className="text-xs text-stone-400 italic">No verified skills listed.</p>
                       )}
                     </div>
                   </div>
@@ -330,11 +330,11 @@ function ApplicantDetailsModal({ app, onClose, onAccept, onReject, actingId }) {
 
                 {/* Right Column: Skills and Locations */}
                 <div className="md:col-span-2 space-y-6">
-                  {/* Certified Skills (Terracotta Accent) */}
+                  {/* Verified Skills (Terracotta Accent) */}
                   <div>
                     <h3 className="text-[10px] font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-[#DFA687]" />
-                      Certified Skills
+                      Verified Skills
                     </h3>
                     <div className="bg-[#FCF9F3] border border-[#E5DAC9] p-4 rounded-2xl min-h-[64px] flex flex-wrap gap-2 items-center">
                       {applicant?.certifiedSkills && applicant.certifiedSkills.length > 0 ? (
@@ -345,7 +345,7 @@ function ApplicantDetailsModal({ app, onClose, onAccept, onReject, actingId }) {
                           </span>
                         ))
                       ) : (
-                        <p className="text-xs text-stone-400 italic">No certified skills listed.</p>
+                        <p className="text-xs text-stone-400 italic">No verified skills listed.</p>
                       )}
                     </div>
                   </div>

@@ -11,6 +11,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
+import Sandbox from './pages/Sandbox';
 import Protected from './components/Protected';
 
 export default function App() {
@@ -89,6 +90,14 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <EmployerDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/sandbox"
+            element={
+              <Protected authentication={true}>
+                <Sandbox />
               </Protected>
             }
           />

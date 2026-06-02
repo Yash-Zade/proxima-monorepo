@@ -185,9 +185,40 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  const [extractedSkills, setExtractedSkills] = useState([]);
+  const [isExtracting, setIsExtracting] = useState(false);
+
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   const isApplicant = user?.roles?.includes('APPLICANT') || user?.roles?.includes('USER');
+
+  const handleExtractSkills = async () => {
+    if (!applicantProfile?.resume) {
+      console.log('No resume found to extract skills from.');
+      return;
+    }
+    setIsExtracting(true);
+    console.log('Starting skill extraction for resume:', applicantProfile.resume);
+    try {
+      const res = await apiClient.post('/public/extract-skills', {
+        resume: applicantProfile.resume
+      });
+      console.log('Extract skills response:', res);
+      const extracted = res.data?.data || res.data || [];
+      console.log('Extracted skills array:', extracted);
+      if (Array.isArray(extracted) && extracted.length > 0) {
+        setExtractedSkills(extracted);
+        showToast('Skills extracted successfully!', 'success');
+      } else {
+        showToast('No skills could be extracted. Please try again.', 'warning');
+      }
+    } catch (err) {
+      console.error('[Dev Alert] Skill extraction failed:', err);
+      showToast('Failed to extract skills.', 'error');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
   useEffect(() => {
     if (isApplicant) {
@@ -481,6 +512,75 @@ export default function Profile() {
                      )}
                    </div>
                 </div>
+
+                {/* AI Skills Extractor */}
+                {applicantProfile?.resume && (
+                  <div className="mt-6 pt-6 border-t border-[#EAE2D5] space-y-4">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">AI Skills Extractor</label>
+                      <button
+                        type="button"
+                        onClick={handleExtractSkills}
+                        disabled={isExtracting}
+                        className="bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] text-[10px] font-semibold uppercase tracking-wider px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+                      >
+                        <Shield className="w-3.5 h-3.5" />
+                        {isExtracting ? 'Extracting...' : 'Extract Skills'}
+                      </button>
+                    </div>
+                    {extractedSkills.length > 0 && (
+                      <div className="space-y-3 p-4 bg-[#FCF9F3] border border-[#EAE2D5] rounded-xl animate-in fade-in slide-in-from-top-2">
+                        <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Extracted Skills (Click to Add):</p>
+                        <div className="flex flex-wrap gap-2">
+                          {extractedSkills.map((skill, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                if (!skills.includes(skill)) {
+                                  setSkills([...skills, skill]);
+                                }
+                                setExtractedSkills(extractedSkills.filter((_, i) => i !== idx));
+                              }}
+                              className="bg-white hover:bg-[#F4ECE1] text-[#241E1A] border border-[#EAE2D5] text-[10px] font-semibold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 shadow-xs"
+                            >
+                              <Plus className="w-3 h-3 text-stone-400" />
+                              {skill}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Verified Skills Card */}
+              <div className="bg-white border border-[#EAE2D5] p-6 rounded-2xl shadow-xs relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#F4ECE1] rounded-bl-full -z-0 opacity-50 flex items-start justify-end p-4">
+                  <Shield className="w-6 h-6 text-[#241E1A]/20" />
+                </div>
+                <h2 className="text-xs font-bold text-[#241E1A] uppercase tracking-wider mb-2 flex items-center gap-2 relative z-10">
+                  <Shield className="w-4 h-4 text-[#241E1A]" />
+                  Verified Skills
+                </h2>
+                <p className="text-[10px] text-stone-500 mb-4 relative z-10">These skills have been verified and certified through our skill assessment tests.</p>
+                
+                {applicantProfile?.certifiedSkills && applicantProfile.certifiedSkills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 relative z-10">
+                    {applicantProfile.certifiedSkills.map((skill, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 bg-[#241E1A] text-[#FDFBF7] border border-[#241E1A] text-[10px] font-bold px-3 py-1.5 rounded-full shadow-xs">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-stone-300" />
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 px-4 bg-[#FCF9F3] border border-dashed border-[#EAE2D5] rounded-xl relative z-10">
+                    <p className="text-xs text-stone-400 font-semibold uppercase tracking-wider">No Verified Skills yet.</p>
+                    <p className="text-[9px] text-stone-400 mt-1">Complete job application tests to earn skill certifications.</p>
+                  </div>
+                )}
               </div>
 
               {/* Job Applications Tracker */}

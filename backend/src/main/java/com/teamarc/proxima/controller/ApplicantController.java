@@ -122,4 +122,14 @@ public class ApplicantController {
     // public ResponseEntity<WalletDTO> getWallet() {
     //     return ResponseEntity.ok(applicantService.getWallet());
     // }
+
+    @GetMapping(path = "/certified-skills")
+    public ResponseEntity<List<String>> getCertifiedSkills() {
+        return ResponseEntity.ok(applicantService.getCertifiedSkills());
+    }
+
+    @PostMapping(path = "/certified-skills")
+    public ResponseEntity<List<String>> addCertifiedSkills(@RequestBody List<String> certifiedSkills) {
+        return ResponseEntity.ok(applicantService.addCertifiedSkills(certifiedSkills));
+    }
 }
