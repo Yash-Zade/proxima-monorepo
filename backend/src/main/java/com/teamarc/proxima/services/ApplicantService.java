@@ -181,4 +181,8 @@ public class ApplicantService {
         JobApplication savedJobApplication = jobApplicationRepository.save(jobApplication);
         return modelMapper.map(savedJobApplication, JobApplicationDTO.class);
     }
+
+    public Applicant getApplicantByUserId(User user) {
+        return applicantRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException("Applicant Not fopund with user Id: "+ user.getId()));
+    }
 }

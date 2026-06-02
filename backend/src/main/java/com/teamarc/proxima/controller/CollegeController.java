@@ -1,5 +1,7 @@
 package com.teamarc.proxima.controller;
 
+import com.teamarc.proxima.dto.CollegeDTO;
+import com.teamarc.proxima.dto.EmployerDTO;
 import com.teamarc.proxima.dto.StudentDTO;
 import com.teamarc.proxima.repository.CollegeRepository;
 import com.teamarc.proxima.services.CollegeService;
@@ -36,5 +38,15 @@ public class CollegeController {
     @GetMapping("/student/status/{status}")
     public ResponseEntity<List<StudentDTO>> getStudentsByStatus(@PathVariable String status) {
         return ResponseEntity.ok(collegeService.getStudentsByStatus(status));
+    }
+
+    @PostMapping("onboard/student/{userId}")
+    public ResponseEntity<StudentDTO> onboardNewStudent(@PathVariable Long userId) {
+        return ResponseEntity.ok(collegeService.onboardNewStudent(userId));
+    }
+
+    @PostMapping("allow/employer/{userId}")
+    public ResponseEntity<EmployerDTO> allowEmployer(@PathVariable Long userId) {
+        return ResponseEntity.ok(collegeService.allowEmployer(userId));
     }
 }

@@ -191,4 +191,9 @@ public class EmployerService {
         return jobRepository.findByPostedBy_EmployerId(employerId, pageRequest, pageable)
                 .map(job -> modelMapper.map(job, JobDTO.class));
     }
+
+    public Employer getEmployerByUser(User user) {
+        return employerRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Employer not found with user id: " + user.getId()));
+    }
 }
