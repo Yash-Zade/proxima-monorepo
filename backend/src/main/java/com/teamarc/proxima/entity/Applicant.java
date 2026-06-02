@@ -23,7 +23,6 @@ public class Applicant {
     @ElementCollection
     private List<String> skills;
 
-
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;

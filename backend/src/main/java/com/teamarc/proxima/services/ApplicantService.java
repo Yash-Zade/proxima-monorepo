@@ -182,6 +182,27 @@ public class ApplicantService {
         return modelMapper.map(savedJobApplication, JobApplicationDTO.class);
     }
 
+    public List<String> getCertifiedSkills() {
+        return getCurrentApplicant().getCertifiedSkills();
+    }
+
+    @Transactional
+    public List<String> addCertifiedSkills(List<String> newSkills) {
+        Applicant applicant = getCurrentApplicant();
+        List<String> currentSkills = applicant.getCertifiedSkills();
+        if (currentSkills == null) {
+            currentSkills = new java.util.ArrayList<>();
+        }
+        for (String skill : newSkills) {
+            if (!currentSkills.contains(skill)) {
+                currentSkills.add(skill);
+            }
+        }
+        applicant.setCertifiedSkills(currentSkills);
+        applicantRepository.save(applicant);
+        return currentSkills;
+    }
+
     public Applicant getApplicantByUserId(User user) {
         return applicantRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException("Applicant Not fopund with user Id: "+ user.getId()));
     }

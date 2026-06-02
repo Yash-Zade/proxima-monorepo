@@ -23,7 +23,7 @@ import java.util.List;
 public class PublicControllers {
 
     private final JobService jobService;
-//    private final MentorService mentorService;
+    // private final MentorService mentorService;
     private final InterviewQuestionService interviewQuestionService;
     private final CollegeRepository collegeRepository;
     private final CollegeService collegeService;
@@ -34,11 +34,11 @@ public class PublicControllers {
 
     }
 
-
     @GetMapping("/jobs")
     public ResponseEntity<Page<JobDTO>> getAllJobs(@RequestParam(defaultValue = "0") Integer pageOffset,
-                                                   @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
-        PageRequest pageRequest = PageRequest.of(pageOffset, pageSize, Sort.by(Sort.Direction.DESC, "postedDate", "jobId"));
+            @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
+        PageRequest pageRequest = PageRequest.of(pageOffset, pageSize,
+                Sort.by(Sort.Direction.DESC, "postedDate", "jobId"));
         return ResponseEntity.ok(jobService.getAllJobs(pageRequest));
     }
 
@@ -48,25 +48,27 @@ public class PublicControllers {
     }
 
     // @GetMapping("/mentors")
-    // public ResponseEntity<Page<MentorDTO>> getAllMentors(@RequestParam(defaultValue = "0") Integer pageOffset,
-    //                                                      @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
-    //     return ResponseEntity.ok(mentorService.getALLMentors(pageOffset, pageSize));
+    // public ResponseEntity<Page<MentorDTO>>
+    // getAllMentors(@RequestParam(defaultValue = "0") Integer pageOffset,
+    // @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
+    // return ResponseEntity.ok(mentorService.getALLMentors(pageOffset, pageSize));
     // }
 
     // @GetMapping("/mentors/{id}")
     // public ResponseEntity<MentorDTO> getProfileById(@PathVariable Long id) {
-    //     return ResponseEntity.ok(mentorService.getProfileById(id));
+    // return ResponseEntity.ok(mentorService.getProfileById(id));
     // }
 
     // @GetMapping("/sessions")
-    // public ResponseEntity<Page<SessionDTO>> getAllSessions(@RequestParam(defaultValue = "0") Integer pageOffset,
-    //                                                        @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
-    //     return ResponseEntity.ok(mentorService.getSessions(pageOffset, pageSize));
+    // public ResponseEntity<Page<SessionDTO>>
+    // getAllSessions(@RequestParam(defaultValue = "0") Integer pageOffset,
+    // @RequestParam(defaultValue = "10", required = false) Integer pageSize) {
+    // return ResponseEntity.ok(mentorService.getSessions(pageOffset, pageSize));
     // }
 
     // @GetMapping("/sessions/{id}")
     // public ResponseEntity<SessionDTO> getSessionById(@PathVariable Long id) {
-    //     return ResponseEntity.ok(mentorService.getSessionById(id));
+    // return ResponseEntity.ok(mentorService.getSessionById(id));
     // }
 
     @PostMapping("/questions")
@@ -75,6 +77,12 @@ public class PublicControllers {
         String resume = (String) request.get("resume");
         List<String> certifiedSkills = (List<String>) request.get("certifiedSkills");
         return ResponseEntity.ok(interviewQuestionService.generateQuestions(jd, resume, certifiedSkills));
+    }
+
+    @PostMapping("/extract-skills")
+    public ResponseEntity<List<String>> extractSkills(@RequestBody java.util.Map<String, String> request) {
+        String resume = request.get("resume");
+        return ResponseEntity.ok(interviewQuestionService.extractSkillsFromResume(resume));
     }
 
 }

@@ -7,11 +7,13 @@ import JobListings from './pages/JobListings';
 import JobDetail from './pages/JobDetail';
 import DirectMessages from './pages/DirectMessages';
 import Profile from './pages/Profile';
+import MySkills from './pages/MySkills';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
-import CollegeDashboard from './pages/CollegeDashboard';
+import Sandbox from './pages/Sandbox';
+import ExamPortal from './pages/ExamPortal';
 import Protected from './components/Protected';
 
 export default function App() {
@@ -78,6 +80,14 @@ export default function App() {
             }
           />
           <Route
+            path="/skills"
+            element={
+              <Protected authentication={true}>
+                <MySkills />
+              </Protected>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <Protected authentication={true}>
@@ -94,10 +104,18 @@ export default function App() {
             }
           />
           <Route
-            path="/college"
+            path="/sandbox"
             element={
               <Protected authentication={true}>
-                <CollegeDashboard />
+                <Sandbox />
+              </Protected>
+            }
+          />
+          <Route
+            path="/exam"
+            element={
+              <Protected authentication={true}>
+                <ExamPortal />
               </Protected>
             }
           />

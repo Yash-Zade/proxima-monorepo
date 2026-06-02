@@ -1,6 +1,6 @@
-import React, { useState, useContext } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield, GraduationCap } from 'lucide-react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, Briefcase, MessageSquare, User, Home, ArrowUpRight, LogOut, Shield, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -11,29 +11,52 @@ import { useToast } from '../context/ToastContext';
  */
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDashboardsOpen, setIsDashboardsOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const { user, logout } = useContext(AuthContext);
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDashboardsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setIsDashboardsOpen(false);
+  }, [location.pathname]);
 
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
-  const navItems = [
+  const mainNavItems = [
     { name: 'Home', path: '/', icon: Home },
     { name: 'Job Listings', path: '/jobs', icon: Briefcase },
   ];
 
+  const dashboardItems = [];
+
   if (user) {
-    navItems.push({ name: 'Direct Messages', path: '/messages', icon: MessageSquare });
-    navItems.push({ name: 'Profile', path: '/profile', icon: User });
+    mainNavItems.push({ name: 'Direct Messages', path: '/messages', icon: MessageSquare });
+    
     if (user.roles?.includes('EMPLOYER')) {
-      navItems.push({ name: 'Employer', path: '/employer', icon: Briefcase });
+      dashboardItems.push({ name: 'Employer', path: '/employer', icon: Briefcase });
     }
     if (user.roles?.includes('COLLEGE')) {
       navItems.push({ name: 'College', path: '/college', icon: GraduationCap });
     }
     if (user.roles?.includes('ADMIN')) {
-      navItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });
+      dashboardItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });
     }
+    if (user.roles?.includes('APPLICANT') || user.roles?.includes('USER')) {
+      dashboardItems.push({ name: 'My Skills', path: '/skills', icon: Shield });
+    }
+    dashboardItems.push({ name: 'Profile', path: '/profile', icon: User });
   }
 
   const confirmLogout = async () => {
@@ -68,7 +91,7 @@ export default function Navbar() {
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => (
+              {mainNavItems.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
@@ -84,6 +107,47 @@ export default function Navbar() {
                   {item.name}
                 </NavLink>
               ))}
+
+              {/* Desktop Dashboards Dropdown */}
+              {dashboardItems.length > 0 && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDashboardsOpen(!isDashboardsOpen)}
+                    className={`relative px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-200 rounded-lg flex items-center gap-2 ${
+                      isDashboardsOpen
+                        ? 'text-[#241E1A] bg-[#F4ECE1]'
+                        : 'text-stone-500 hover:text-[#241E1A] hover:bg-[#FDFBF7]'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    Available Dashboards
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDashboardsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {isDashboardsOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-[#EAE2D5] rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                      <div className="py-2">
+                        {dashboardItems.map((item) => (
+                          <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                                isActive
+                                  ? 'text-[#241E1A] bg-[#F4ECE1]'
+                                  : 'text-stone-500 hover:text-[#241E1A] hover:bg-[#FAF6F0]'
+                              }`
+                            }
+                          >
+                            <item.icon className="w-4 h-4" />
+                            {item.name}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Action Buttons */}
@@ -136,7 +200,7 @@ export default function Navbar() {
         {isOpen && (
           <div className="md:hidden border-t border-[#EAE2D5] bg-[#FDFBF7]" id="mobile-menu">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navItems.map((item) => (
+              {mainNavItems.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
@@ -153,6 +217,35 @@ export default function Navbar() {
                   {item.name}
                 </NavLink>
               ))}
+
+              {/* Mobile Dashboards Section */}
+              {dashboardItems.length > 0 && (
+                <div className="pt-2 pb-1">
+                  <div className="flex items-center gap-3 px-3 py-2 text-xs font-bold uppercase tracking-widest text-stone-400">
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    Available Dashboards
+                  </div>
+                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-[#EAE2D5] ml-4">
+                    {dashboardItems.map((item) => (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setIsOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold uppercase tracking-wider transition-colors ${
+                            isActive
+                              ? 'text-[#241E1A] bg-[#F4ECE1]'
+                              : 'text-stone-500 hover:text-[#241E1A] hover:bg-stone-50'
+                          }`
+                        }
+                      >
+                        <item.icon className="w-4 h-4" />
+                        {item.name}
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="border-t border-[#EAE2D5] my-2 pt-2 px-3 flex flex-col gap-3">
                 {user ? (
                   <div className="flex flex-col gap-3">

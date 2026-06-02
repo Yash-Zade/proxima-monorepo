@@ -57,9 +57,4 @@ public class CollegeController {
     public ResponseEntity<EmployerDTO> allowEmployer(@PathVariable Long userId) {
         return ResponseEntity.ok(collegeService.allowEmployer(userId));
     }
-
-    @GetMapping("/student/onboard/requests")
-    public ResponseEntity<List<OnBoardNewStudentDTO>> getStudentOnboardRequests() {
-        return ResponseEntity.ok(studentService.getStudentOnboardRequests());
-    }
 }

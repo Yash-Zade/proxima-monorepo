@@ -23,4 +23,8 @@ public class Employer {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "college_id")
+    private College college;
+
 }
