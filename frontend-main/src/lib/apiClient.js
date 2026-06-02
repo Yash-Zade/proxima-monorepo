@@ -65,7 +65,7 @@ apiClient.interceptors.response.use(
     // Trigger token rotation if 401 occurs and we haven't already retried this request
     if (
       error.response &&
-      error.response.status === 401 &&
+      (error.response.status === 401 || error.response.status === 403) &&
       !originalRequest._retry &&
       !originalRequest.url.endsWith('/auth/refresh')
     ) {
