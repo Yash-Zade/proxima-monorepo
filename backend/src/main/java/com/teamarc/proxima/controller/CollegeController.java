@@ -2,9 +2,11 @@ package com.teamarc.proxima.controller;
 
 import com.teamarc.proxima.dto.CollegeDTO;
 import com.teamarc.proxima.dto.EmployerDTO;
+import com.teamarc.proxima.dto.OnBoardNewStudentDTO;
 import com.teamarc.proxima.dto.StudentDTO;
 import com.teamarc.proxima.repository.CollegeRepository;
 import com.teamarc.proxima.services.CollegeService;
+import com.teamarc.proxima.services.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +21,10 @@ public class CollegeController {
 
     private final CollegeRepository collegeRepository;
     private final CollegeService collegeService;
+    private final StudentService studentService;
 
     @GetMapping("/profile")
-    public ResponseEntity<com.teamarc.proxima.dto.CollegeDTO> getCollegeProfile() {
+    public ResponseEntity<CollegeDTO> getCollegeProfile() {
         return ResponseEntity.ok(collegeService.getCollegeProfile());
     }
 
@@ -45,8 +48,18 @@ public class CollegeController {
         return ResponseEntity.ok(collegeService.onboardNewStudent(userId));
     }
 
+    @PostMapping("reject/student/{userId}")
+    public ResponseEntity<Void> rejectOnboardNewStudent(@PathVariable Long userId) {
+        return ResponseEntity.ok(collegeService.rejectOnboardNewStudent(userId));
+    }
+
     @PostMapping("allow/employer/{userId}")
     public ResponseEntity<EmployerDTO> allowEmployer(@PathVariable Long userId) {
         return ResponseEntity.ok(collegeService.allowEmployer(userId));
+    }
+
+    @GetMapping("/student/onboard/requests")
+    public ResponseEntity<List<OnBoardNewStudentDTO>> getStudentOnboardRequests() {
+        return ResponseEntity.ok(studentService.getStudentOnboardRequests());
     }
 }

@@ -7,13 +7,11 @@ import com.teamarc.proxima.exceptions.ResourceNotFoundException;
 import com.teamarc.proxima.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.boot.ApplicationArguments;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +23,7 @@ public class UserService implements UserDetailsService {
         private final ModelMapper modelMapper;
         private final OnBoardNewCollegeRepository onBoardNewCollegeRepository;
         private final ApplicantRepository applicantRepository;
-        private final CollegeRepository collegeRepository;
-        private final StudentRepository studentRepository;
+        private final OnBoardNewStudentRepository onBoardNewStudentRepository;
 //        private final WalletRepository walletRepository;
 
         @Override
@@ -52,14 +49,14 @@ public class UserService implements UserDetailsService {
         }
 
         public void requestEmployerOnboard(OnBoardNewEmployerDTO onboardNewEmployerDTO) {
-                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+                User user = (User) SecurityContextHolder.getContext()
                                 .getAuthentication().getPrincipal();
                 onboardNewEmployerDTO.setUserId(user.getId());
                 onboardNewEmployerRepository.save(modelMapper.map(onboardNewEmployerDTO, OnboardNewEmployer.class));
         }
 
 //        public void requestMentorOnboard(OnboardNewMentorDTO onboardNewMentorDTO) {
-//                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+//                User user = (User) SecurityContextHolder.getContext()
 //                                .getAuthentication().getPrincipal();
 //                onboardNewMentorDTO.setUserId(user.getId());
 //                onboardNewMentorRepository.save(modelMapper.map(onboardNewMentorDTO, OnboardNewMentor.class));
@@ -87,41 +84,21 @@ public class UserService implements UserDetailsService {
         }
 
         public void requestCollegeOnboard(OnBoardNewCollegeDTO collegeRequestDTO) {
-                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+                User user = (User) SecurityContextHolder.getContext()
                                 .getAuthentication().getPrincipal();
                 collegeRequestDTO.setUserId(user.getId());
                 onBoardNewCollegeRepository.save(modelMapper.map(collegeRequestDTO, OnBoardNewCollege.class));
         }
 
-        public StudentDTO requestStudentOnboard(Long userId, String collegeName) {
-                User user = userRepository.findById(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-                Student student = Student.builder()
-                                .user(user)
-                                .college(collegeRepository.findByName(collegeName)
-                                                .orElseThrow(
-                                                                () -> new ResourceNotFoundException(
-                                                                                "College not found with name: "
-                                                                                                + collegeName)))
-                                .build();
-
-                Applicant applicant = Applicant.builder()
-                                .user(user)
-                                .jobApplications(null)
-                                .resume(null)
-                                .build();
-
-                user.getRoles().add(Role.STUDENT);
-                user.getRoles().add(Role.APPLICANT);
-                userRepository.save(user);
-                applicantRepository.save(applicant);
-                studentRepository.save(student);
-                student.setApplicant(applicant);
-                return modelMapper.map(student, StudentDTO.class);
+        public void requestStudentOnboard(OnBoardNewStudentDTO onBoardNewStudentDTO) {
+                User user = (User) SecurityContextHolder.getContext()
+                                .getAuthentication().getPrincipal();
+                onBoardNewStudentDTO.setUserId(user.getId());
+                onBoardNewStudentRepository.save(modelMapper.map(onBoardNewStudentDTO, OnBoardNewStudent.class));
         }
 
 //        public WalletDTO getUserWallet() {
-//                User user = (User) org.springframework.security.core.context.SecurityContextHolder.getContext()
+//                User user = (User) SecurityContextHolder.getContext()
 //                                .getAuthentication().getPrincipal();
 //                Wallet wallet = walletRepository.findByUser(user)
 //                                .orElseGet(() -> {

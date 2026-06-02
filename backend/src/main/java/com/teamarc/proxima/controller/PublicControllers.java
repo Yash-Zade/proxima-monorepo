@@ -2,6 +2,8 @@ package com.teamarc.proxima.controller;
 
 import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.entity.JobApplication;
+import com.teamarc.proxima.repository.CollegeRepository;
+import com.teamarc.proxima.services.CollegeService;
 import com.teamarc.proxima.services.InterviewQuestionService;
 import com.teamarc.proxima.services.JobService;
 //import com.teamarc.proxima.services.MentorService;
@@ -23,6 +25,14 @@ public class PublicControllers {
     private final JobService jobService;
 //    private final MentorService mentorService;
     private final InterviewQuestionService interviewQuestionService;
+    private final CollegeRepository collegeRepository;
+    private final CollegeService collegeService;
+
+    @GetMapping("/colleges")
+    public ResponseEntity<List<CollegeDTO>> getAllColleges() {
+        return ResponseEntity.ok(collegeService.getAllColleges());
+
+    }
 
 
     @GetMapping("/jobs")

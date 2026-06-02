@@ -50,9 +50,10 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(path = "/request/student/{userId}")
-    public ResponseEntity<StudentDTO> requestToBeAStudent(@PathVariable Long userId, @RequestBody String collegeName) {
-        return ResponseEntity.ok(userService.requestStudentOnboard(userId, collegeName));
+    @PostMapping(path = "/request/student")
+    public ResponseEntity<StudentDTO> requestToBeAStudent(@RequestBody OnBoardNewStudentDTO onBoardNewStudentDTO) {
+        userService.requestStudentOnboard(onBoardNewStudentDTO);
+        return ResponseEntity.ok().build();
     }
 
     // @GetMapping(path = "/wallet")

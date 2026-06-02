@@ -1,13 +1,13 @@
 package com.teamarc.proxima.services;
 
-import com.teamarc.proxima.dto.ApplicantDTO;
 import com.teamarc.proxima.dto.CollegeDTO;
 import com.teamarc.proxima.dto.EmployerDTO;
 import com.teamarc.proxima.dto.StudentDTO;
 import com.teamarc.proxima.entity.*;
+import com.teamarc.proxima.entity.enums.Role;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
-import com.teamarc.proxima.repository.ApplicantRepository;
 import com.teamarc.proxima.repository.CollegeRepository;
+import com.teamarc.proxima.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +24,7 @@ public class CollegeService {
     private final StudentService studentService;
     private final ApplicantService applicantService;
     private final EmployerService employerService;
+    private final UserRepository userRepository;
 
     public College createNewCollege(College college) {
         return collegeRepository.save(college);
@@ -34,7 +35,7 @@ public class CollegeService {
     }
 
     public List<StudentDTO> getStudents() {
-        return collegeRepository.findStudentsById(getCurrentCollege().getId())
+        return studentService.getStudentsByCollegeId(getCurrentCollege().getId())
                 .stream()
                 .map(student -> modelMapper.map(student, StudentDTO.class)).toList();
     }
@@ -47,7 +48,7 @@ public class CollegeService {
     }
 
     public StudentDTO getStudentById(Long id) {
-        return modelMapper.map(collegeRepository.findStudentsById(getCurrentCollege().getId())
+        return modelMapper.map(studentService.getStudentsByCollegeId(getCurrentCollege().getId())
                 .stream()
                 .filter(student -> student.getId().equals(id))
                 .findFirst()
@@ -56,7 +57,7 @@ public class CollegeService {
     }
 
     public List<StudentDTO> getStudentsByStatus(String status) {
-        return collegeRepository.findStudentsById(getCurrentCollege().getId())
+        return studentService.getStudentsByCollegeId(getCurrentCollege().getId())
                 .stream()
                 .filter(student -> student.getApplicant()
                         .getJobApplications()
@@ -70,12 +71,22 @@ public class CollegeService {
         College college = getCurrentCollege();
         Applicant applicant = applicantService.getApplicantByUserId(user);
         Student student = Student.builder()
-                        .college(college)
-                        .user(user)
-                        .applicant(applicant)
-                        .build();
+                .college(college)
+                .user(user)
+                .applicant(applicant)
+                .build();
+        user.getRoles().add(Role.STUDENT);
+        userRepository.save(user);
+        studentService.deleteOnboardRequest(userId, college.getId());
 
         return modelMapper.map(studentService.createNewStudent(student), StudentDTO.class);
+    }
+
+    public Void rejectOnboardNewStudent(Long userId) {
+        User user = userService.getUserById(userId);
+        College college = getCurrentCollege();
+        studentService.deleteOnboardRequest(userId, college.getId());
+        return null;
     }
 
     public EmployerDTO allowEmployer(Long userId) {
@@ -86,5 +97,16 @@ public class CollegeService {
         return modelMapper.map(employer, EmployerDTO.class);
     }
 
-
+    public List<CollegeDTO> getAllColleges() {
+        return collegeRepository.findAll().stream()
+                .map(college -> {
+                    com.teamarc.proxima.dto.CollegeDTO dto = new CollegeDTO();
+                    dto.setId(college.getId());
+                    dto.setName(college.getName());
+                    dto.setAddress(college.getAddress());
+                    dto.setEmail(college.getEmail());
+                    dto.setWebsite(college.getWebsite());
+                    return dto;
+                }).toList();
+    }
 }

@@ -29,6 +29,6 @@ public class College {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "college", cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Employer> allowedEmployers;
 }

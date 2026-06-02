@@ -14,4 +14,5 @@ public class CollegeDTO {
     private String email;
     private String website;
     private List<Student> students;
+    private List<EmployerDTO> allowedEmployers;
 }
