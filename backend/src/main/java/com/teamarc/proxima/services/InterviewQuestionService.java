@@ -23,7 +23,6 @@ public class InterviewQuestionService {
 
     private final String geminiApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
     private final String geminiApiKey = "AQ.Ab8RN6LQOK6rYXqLlYWtdF2A3AOCe7BAU8br_pdFS0v4VX1A3g";
-
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 

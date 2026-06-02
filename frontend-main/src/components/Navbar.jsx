@@ -50,6 +50,9 @@ export default function Navbar() {
     if (user.roles?.includes('ADMIN')) {
       dashboardItems.push({ name: 'Admin Panel', path: '/admin', icon: Shield });
     }
+    if (user.roles?.includes('APPLICANT') || user.roles?.includes('USER')) {
+      dashboardItems.push({ name: 'My Skills', path: '/skills', icon: Shield });
+    }
     dashboardItems.push({ name: 'Profile', path: '/profile', icon: User });
   }
 

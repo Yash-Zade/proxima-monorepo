@@ -7,6 +7,7 @@ import JobListings from './pages/JobListings';
 import JobDetail from './pages/JobDetail';
 import DirectMessages from './pages/DirectMessages';
 import Profile from './pages/Profile';
+import MySkills from './pages/MySkills';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/AdminDashboard';
@@ -74,6 +75,14 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <Profile />
+              </Protected>
+            }
+          />
+          <Route
+            path="/skills"
+            element={
+              <Protected authentication={true}>
+                <MySkills />
               </Protected>
             }
           />
