@@ -11,6 +11,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
+import CollegeDashboard from './pages/CollegeDashboard';
 import Protected from './components/Protected';
 
 export default function App() {
@@ -89,6 +90,14 @@ export default function App() {
             element={
               <Protected authentication={true}>
                 <EmployerDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/college"
+            element={
+              <Protected authentication={true}>
+                <CollegeDashboard />
               </Protected>
             }
           />

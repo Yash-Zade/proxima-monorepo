@@ -17,14 +17,37 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
   const [collegeAddress, setCollegeAddress] = useState('');
   const [collegeEmail, setCollegeEmail] = useState('');
   const [collegeWebsite, setCollegeWebsite] = useState('');
+  const [collegeId, setCollegeId] = useState(null);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Available colleges select state
+  const [availableColleges, setAvailableColleges] = useState([]);
+  const [collegesLoading, setCollegesLoading] = useState(false);
+  const [isCollegeDropdownOpen, setIsCollegeDropdownOpen] = useState(false);
 
   const roles = [
     { value: 'EMPLOYER', label: 'Employer' },
     { value: 'COLLEGE', label: 'College / University' },
     { value: 'STUDENT', label: 'Student' }
   ];
+
+  useEffect(() => {
+    if (isOpen) {
+      setCollegesLoading(true);
+      apiClient.get('/public/colleges')
+        .then(res => {
+          const list = res.data?.data ?? res.data ?? [];
+          setAvailableColleges(list);
+        })
+        .catch(err => {
+          console.error('[Dev Alert] Failed to load colleges:', err);
+        })
+        .finally(() => {
+          setCollegesLoading(false);
+        });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -54,8 +77,9 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
       } else if (selectedRole === 'APPLICANT') {
         await apiClient.post(`/users/request/applicant/${userId}`);
       } else if (selectedRole === 'STUDENT') {
-        await apiClient.post(`/users/request/student/${userId}`, collegeName, {
-          headers: { 'Content-Type': 'text/plain' }
+        await apiClient.post(`/users/request/student`, {
+          userId,
+          collegeId
         });
       }
       
@@ -148,10 +172,43 @@ function RoleApplicationModal({ isOpen, onClose, userId }) {
           )}
 
           {selectedRole === 'STUDENT' && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">College Name</label>
-                <input type="text" value={collegeName} onChange={e => setCollegeName(e.target.value)} required placeholder="e.g. Stanford University" className="w-full bg-white border border-[#EAE2D5] rounded-lg py-2 px-3 text-xs outline-none" />
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 relative">
+              <div className="space-y-2 relative">
+                <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Select College Name</label>
+                
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCollegeDropdownOpen(!isCollegeDropdownOpen)}
+                    className="w-full bg-white border border-[#EAE2D5] focus:border-[#241E1A] hover:border-[#241E1A] rounded-lg py-2.5 px-3 text-xs outline-none font-semibold text-[#241E1A] flex items-center justify-between transition-colors shadow-sm"
+                  >
+                    {collegeName ? collegeName : (collegesLoading ? 'Loading colleges...' : 'Choose a college...')}
+                    <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${isCollegeDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isCollegeDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#EAE2D5] rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2">
+                      {availableColleges.length === 0 ? (
+                        <div className="px-4 py-2.5 text-xs text-stone-400 italic">No registered colleges available</div>
+                      ) : (
+                        availableColleges.map((col) => (
+                          <button
+                            key={col.id}
+                            type="button"
+                            onClick={() => {
+                              setCollegeName(col.name);
+                              setCollegeId(col.id);
+                              setIsCollegeDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#241E1A] hover:bg-[#F4ECE1] transition-colors"
+                          >
+                            {col.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
