@@ -21,8 +21,6 @@ import java.util.Map;
 @Service
 public class InterviewQuestionService {
 
-    private final String geminiApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-    private final String geminiApiKey = "AQ.Ab8RN6LQOK6rYXqLlYWtdF2A3AOCe7BAU8br_pdFS0v4VX1A3g";
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
@@ -113,7 +111,8 @@ public class InterviewQuestionService {
                 +
                 "[" +
                 "  {" +
-                "    'question_id': 'Q1'" +
+                "    'question_id': 'Q1'," +
+                "    'difficulty': 'Medium'," +
                 "    'story': 'A short, realistic job-related scenario where the candidate's skills are tested. This story is the foundation for ALL questions. "
                 +
                 "This should be an open-ended story that allows for multiple follow-up questions. *The story should involve situations where the candidate needs to use skills NOT present in the Certified Skills list. "
@@ -134,7 +133,8 @@ public class InterviewQuestionService {
                 +
                 "  }," +
                 "  {" +
-                "    'question_id': 'Q2'" +
+                "    'question_id': 'Q2'," +
+                "    'difficulty': 'Hard'," +
                 "    'story': 'Same story as Q1. Do NOT change the story. Ensure the scenario involves situations that require skills *not* in the Certified Skills list.  Continue focusing on the most important uncertified skills from the Job Description.',\n"
                 +
                 "    'question': 'Building upon the previous scenario, what is the next logical step, showcasing skills *not* yet certified?"
@@ -151,6 +151,7 @@ public class InterviewQuestionService {
                 "  }," +
                 "  {" +
                 "    'question_id': 'Q3'," +
+                "    'difficulty': 'Medium'," +
                 "    'story': 'Same story as Q1 and Q2. Do NOT change the story. The scenario should continue to require skills *not* in the Certified Skills list. Focus on strategic, high-level skills needed for the role that are not yet certified.',\n"
                 +
                 "    'question': 'Considering the long-term implications of the situation, how should the candidate strategically address this, demonstrating *new* skills?',\n"
@@ -299,16 +300,20 @@ public class InterviewQuestionService {
 
             for (JsonNode questionNode : questionsArray) {
                 QuestionDTO question = new QuestionDTO();
-                question.setDifficulty(questionNode.get("difficulty").asText());
-                question.setStory(questionNode.get("story").asText());
-                question.setQuestion(questionNode.get("question").asText());
+                question.setDifficulty(
+                        questionNode.has("difficulty") ? questionNode.get("difficulty").asText() : "Medium");
+                question.setStory(questionNode.has("story") ? questionNode.get("story").asText() : "");
+                question.setQuestion(questionNode.has("question") ? questionNode.get("question").asText() : "");
 
                 List<OptionDTO> options = new ArrayList<>();
-                for (JsonNode optionNode : questionNode.get("options")) {
-                    OptionDTO option = new OptionDTO();
-                    option.setText(optionNode.get("text").asText());
-                    option.setCorrect(optionNode.get("is_correct").asBoolean());
-                    options.add(option);
+                if (questionNode.has("options") && questionNode.get("options").isArray()) {
+                    for (JsonNode optionNode : questionNode.get("options")) {
+                        OptionDTO option = new OptionDTO();
+                        option.setText(optionNode.has("text") ? optionNode.get("text").asText() : "");
+                        option.setCorrect(
+                                optionNode.has("is_correct") ? optionNode.get("is_correct").asBoolean() : false);
+                        options.add(option);
+                    }
                 }
                 question.setOptions(options);
                 questions.add(question);
@@ -390,5 +395,111 @@ public class InterviewQuestionService {
             // expired
             return List.of("Java", "Spring Boot", "React", "Docker", "SQL", "Git", "REST APIs");
         }
+    }
+
+    public List<QuestionDTO> generateQuestionsForSkills(List<String> skillsToCertify, String resume) {
+        String resumeText = extractTextFromPdfUrl(resume);
+        if (resumeText == null || resumeText.trim().isEmpty()) {
+            resumeText = resume != null ? resume : "No resume provided";
+        }
+
+        String prompt = "You are an AI assistant specializing in creating ATS-optimized, story-based skill assessment tests. "
+                +
+                "Your task is to generate a skill assessment test to assess a candidate's actual skills, focusing *exclusively* on the following skills: "
+                + String.join(", ", skillsToCertify) + ". "
+                +
+                "The test should use a consistent, overarching story. The number of questions should be *flexible*, aiming for the *minimum* required to thoroughly assess and certify these skills (aim for around 3-5 questions, but adjust as needed). "
+                +
+                "Input Variables:" +
+                "Skills to Certify: " + String.join(", ", skillsToCertify) + " " +
+                "Resume: " + resumeText + " " +
+                "Output Requirements:" +
+                "1. **Generate Test:** Generate a JSON-formatted skill assessment test with the following structure. "
+                +
+                "All questions should be based on the SAME overarching story scenario. The number of questions should be driven by the skills needing assessment, not a fixed number. "
+                +
+                "[" +
+                "  {" +
+                "    'question_id': 'Q1'," +
+                "    'difficulty': 'Medium'," +
+                "    'story': 'A short, realistic job-related scenario where the candidate's skills are tested. This story is the foundation for ALL questions. "
+                +
+                "This should be an open-ended story that allows for multiple follow-up questions. *The story should involve situations where the candidate needs to use the skills to certify.*',"
+                +
+                "    'question': 'Based on the story, what action should the candidate take, demonstrating the skills to certify?',"
+                +
+                "    'answer_type': 'multiple_choice', // OR 'text'," +
+                "    'options': [" +
+                "      {'text': 'Option A', 'is_correct': false}," +
+                "      {'text': 'Option B', 'is_correct': false}," +
+                "      {'text': 'Option C', 'is_correct': true}," +
+                "      {'text': 'Option D', 'is_correct': false}" +
+                "    ]," +
+                "    'skill_certifications': ['Skill1', 'Skill2'] // Skills certified upon correct answer to THIS question. "
+                +
+                "*These skills MUST be from the provided Skills to Certify list.*"
+                +
+                "  }" +
+                "]" +
+                "Story Guidelines:" +
+                "A SINGLE, overarching story MUST be used for ALL questions. The questions should build upon each other within the context of the same story.\n"
+                +
+                "The story should reflect real-world challenges and REQUIRE the candidate to use the skills to certify."
+                +
+                "Output Notes:" +
+                "*   **ONE STORY:** Emphasize that the entire assessment uses ONE single story." +
+                "*   **Flexible Question Count:** Generate as many questions as needed to thoroughly certify the requested skills (aim for 3-5, but be flexible)."
+                +
+                "*   **Skill Certification:** Each question MUST clearly define which skills are certified if answered correctly."
+                +
+                "*   **JSON Validity:** The ENTIRE output MUST be a valid JSON array."
+                +
+                "*    **Answer type:** acceptable_answer_range and expected_answer_keywords both should be there only if answer_type is 'text'";
+
+        try {
+            Map<String, Object> requestBody = Map.of(
+                    "contents", List.of(
+                            Map.of("parts", List.of(Map.of("text", prompt)))));
+
+            String apiKey = System.getenv("GEMINI_API_KEY");
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                apiKey = geminiApiKey;
+            }
+
+            String response = restClient.post()
+                    .uri("?key=" + apiKey)
+                    .header("Content-Type", "application/json")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(String.class);
+
+            return parseResponse(response);
+        } catch (Exception e) {
+            System.err.println(
+                    "Gemini API call failed, returning high-quality fallback questions for skills. Error: "
+                            + e.getMessage());
+            return getFallbackQuestionsForSkills(skillsToCertify);
+        }
+    }
+
+    private List<QuestionDTO> getFallbackQuestionsForSkills(List<String> skills) {
+        String skillContext = skills != null && !skills.isEmpty() ? String.join(", ", skills) : "General Skills";
+        List<QuestionDTO> fallback = new ArrayList<>();
+
+        QuestionDTO q1 = new QuestionDTO();
+        q1.setDifficulty("Medium");
+        q1.setStory("You are working on a system that requires expertise in " + skillContext
+                + ". A critical performance issue has been reported in production.");
+        q1.setQuestion(
+                "What is your first step to diagnose the problem utilizing your knowledge in " + skillContext + "?");
+        List<OptionDTO> options1 = new ArrayList<>();
+        options1.add(new OptionDTO("Review system logs and performance metrics to identify the bottleneck", true));
+        options1.add(new OptionDTO("Restart the entire production environment immediately", false));
+        options1.add(new OptionDTO("Rewrite the failing module from scratch", false));
+        options1.add(new OptionDTO("Ignore the issue if it cannot be reproduced locally", false));
+        q1.setOptions(options1);
+        fallback.add(q1);
+
+        return fallback;
     }
 }

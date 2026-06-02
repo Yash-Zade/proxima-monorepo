@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { io } from "socket.io-client";
+import { FaceDetector, FilesetResolver } from "@mediapipe/tasks-vision";
 import { AlertCircle, Camera, CheckCircle2, Clock, ShieldAlert, Terminal, Loader2, ChevronRight, ChevronLeft, Flag } from "lucide-react";
 import apiClient from "../lib/apiClient";
 
@@ -24,8 +24,10 @@ const ExamPortal = () => {
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-  const socketRef = useRef(null);
-  const canvasRef = useRef(document.createElement('canvas'));
+  const detectorRef = useRef(null);
+  const detectionIntervalRef = useRef(null);
+  const noFaceTimerRef = useRef(null);
+  
   const focusLossTimerRef = useRef(null);
   const examStatusRef = useRef(examStatus);        // FIX: track status in ref to avoid stale closures
   const warningCountRef = useRef(warningCount);    // FIX: track warnings in ref
@@ -72,9 +74,9 @@ const ExamPortal = () => {
   useEffect(() => {
     if (examStatus !== 'in-progress') return;
 
-    let frameInterval;
     setWarningCount(0);
     warningCountRef.current = 0;
+    setFocusStatus("Candidate is Focusing!");
 
     const initializeWebcam = async () => {
       try {
@@ -93,34 +95,56 @@ const ExamPortal = () => {
           });
         }
 
-        socketRef.current = io("https://web-production-28b98.up.railway.app/", {
-          transports: ['websocket'],
-          reconnection: true,
-          reconnectionAttempts: 5
+        // Initialize MediaPipe FaceDetector
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+        );
+        detectorRef.current = await FaceDetector.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`,
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO"
         });
 
-        socketRef.current.on('connect', () => console.log("Socket connected"));
-
-        socketRef.current.on('video_feed', (data) => {
-          if (data.image) {
-            setImageSrc(`data:image/jpeg;base64,${data.image}`);
-            setFocusStatus(data.focus_status);
+        // Face detection loop
+        detectionIntervalRef.current = setInterval(() => {
+          if (videoRef.current && videoRef.current.readyState >= 2 && detectorRef.current && examStatusRef.current === 'in-progress') {
+            try {
+              const { detections } = detectorRef.current.detectForVideo(videoRef.current, performance.now());
+              
+              if (detections && detections.length > 0) {
+                // Face detected, clear any pending 3-second strike timer
+                if (noFaceTimerRef.current) {
+                  clearTimeout(noFaceTimerRef.current);
+                  noFaceTimerRef.current = null;
+                }
+                // Only update status if it was previously lost
+                setFocusStatus((prev) => prev !== "Candidate is Focusing!" ? "Candidate is Focusing!" : prev);
+              } else {
+                // No face detected
+                setFocusStatus("ALERT: NO FACE DETECTED");
+                if (!noFaceTimerRef.current && examStatusRef.current === 'in-progress') {
+                  noFaceTimerRef.current = setTimeout(() => {
+                    if (examStatusRef.current === 'in-progress') {
+                      const newCount = warningCountRef.current + 1;
+                      warningCountRef.current = newCount;
+                      setWarningCount(newCount);
+                      
+                      if (newCount >= 3) {
+                        handleSubmit();
+                      }
+                    }
+                    noFaceTimerRef.current = null; // Reset to allow subsequent strikes if they remain off-camera
+                  }, 3000);
+                }
+              }
+            } catch (err) {
+              console.error("Face detection frame error:", err);
+            }
           }
-        });
+        }, 500);
 
-        const context = canvasRef.current.getContext('2d');
-        canvasRef.current.width = 640;
-        canvasRef.current.height = 480;
-
-        const sendFrame = () => {
-          if (videoRef.current?.readyState === 4 && socketRef.current?.connected) {
-            context.drawImage(videoRef.current, 0, 0, 640, 480);
-            const frame = canvasRef.current.toDataURL('image/jpeg', 0.7).split(',')[1];
-            socketRef.current.emit('video_frame', { frame });
-          }
-        };
-
-        frameInterval = setInterval(sendFrame, 100);
       } catch (err) {
         console.error("Error in initialization:", err);
         setError(`Camera interface error: ${err.message}`);
@@ -131,9 +155,9 @@ const ExamPortal = () => {
     initializeWebcam();
 
     return () => {
-      clearInterval(frameInterval);
+      if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+      if (noFaceTimerRef.current) clearTimeout(noFaceTimerRef.current);
       streamRef.current?.getTracks().forEach(track => track.stop());
-      socketRef.current?.disconnect();
     };
   }, [examStatus]);
 
@@ -157,26 +181,15 @@ const ExamPortal = () => {
     return () => clearInterval(timer);
   }, [examStatus, handleSubmit]);
 
-  // FIX: Focus loss — use ref for warningCount, single stable timer, no re-registration on every count change
+  // Tab switching / Window blur detection
   useEffect(() => {
     if (examStatus !== 'in-progress') return;
 
-    if (focusStatus === "Candidate is Focusing!") {
-      // FIX: clear any pending focus-loss timer when focus is restored
-      if (focusLossTimerRef.current) {
-        clearTimeout(focusLossTimerRef.current);
-        focusLossTimerRef.current = null;
-      }
-      return;
-    }
-
-    // FIX: only set timer if one isn't already running
-    if (focusLossTimerRef.current) return;
-
-    focusLossTimerRef.current = setTimeout(() => {
-      focusLossTimerRef.current = null;
+    const handleFocusLoss = () => {
       if (examStatusRef.current !== 'in-progress') return;
-
+      
+      setFocusStatus("ALERT: FOCUS LOST");
+      
       const newCount = warningCountRef.current + 1;
       warningCountRef.current = newCount;
       setWarningCount(newCount);
@@ -184,15 +197,31 @@ const ExamPortal = () => {
       if (newCount >= 3) {
         handleSubmit();
       }
-    }, 5000);
+      
+      // Reset focus status after 3 seconds so they can see the warning but it clears
+      if (focusLossTimerRef.current) clearTimeout(focusLossTimerRef.current);
+      focusLossTimerRef.current = setTimeout(() => {
+        if (examStatusRef.current === 'in-progress') {
+          setFocusStatus("Candidate is Focusing!");
+        }
+      }, 3000);
+    };
 
-    return () => {
-      if (focusLossTimerRef.current) {
-        clearTimeout(focusLossTimerRef.current);
-        focusLossTimerRef.current = null;
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleFocusLoss();
       }
     };
-  }, [focusStatus, examStatus, handleSubmit]);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleFocusLoss);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleFocusLoss);
+      if (focusLossTimerRef.current) clearTimeout(focusLossTimerRef.current);
+    };
+  }, [examStatus, handleSubmit]);
 
   const handleFinishCertification = async () => {
     if (scoreRef.current >= 60 && nonCertifiedSkills.length > 0) {
@@ -245,7 +274,7 @@ const ExamPortal = () => {
                   : 'bg-red-50 border-red-200 text-red-600 animate-pulse'
                 }`}>
                   {focusStatus === "Candidate is Focusing!" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                  {focusStatus === "Candidate is Focusing!" ? 'TRACKING LOCKED' : 'ALERT: FOCUS LOST'}
+                  {focusStatus === "Candidate is Focusing!" ? 'TRACKING LOCKED' : focusStatus}
                 </div>
                 <div className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-widest ${warningCount > 0 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-[#FAF6F0] border-[#EAE2D5] text-stone-500'}`}>
                   Strikes: {warningCount}/3
@@ -271,33 +300,27 @@ const ExamPortal = () => {
                 </div>
                 <div className="p-4 flex-1">
                   <div className="aspect-video bg-[#FAF6F0] rounded-xl overflow-hidden relative border border-[#EAE2D5] shadow-inner">
-                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" style={{ position: 'absolute', opacity: 0 }} />
                     {error ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-red-600 bg-red-50 p-4 text-center">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-red-600 bg-red-50 p-4 text-center z-20">
                         <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
                         <span className="text-[10px] uppercase tracking-widest font-bold">{error}</span>
                       </div>
-                    ) : imageSrc ? (
-                      <img src={imageSrc} alt="Processed Video Feed" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 gap-3">
-                        <Loader2 className="w-6 h-6 animate-spin text-[#241E1A]" />
-                        <span className="text-[10px] uppercase tracking-widest font-bold">Initializing Optics...</span>
-                      </div>
+                      <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
                     )}
-                    <div className="absolute inset-0 pointer-events-none border-[3px] border-[#241E1A]/10 rounded-xl" />
-                    <div className="absolute top-2 left-2 pointer-events-none">
+                    <div className="absolute inset-0 pointer-events-none border-[3px] border-[#241E1A]/10 rounded-xl z-10" />
+                    <div className="absolute top-2 left-2 pointer-events-none z-10">
                       <span className="bg-red-500 animate-pulse w-2 h-2 block rounded-full" />
                     </div>
-                    <div className="absolute bottom-2 right-2 pointer-events-none">
+                    <div className="absolute bottom-2 right-2 pointer-events-none z-10">
                       <span className="text-[8px] font-mono font-bold text-stone-500 uppercase tracking-widest bg-white/80 px-1.5 py-0.5 rounded">SYS.REC.ACTIVE</span>
                     </div>
                   </div>
                   <div className="mt-6 space-y-3">
                     <p className="text-[10px] text-stone-500 font-semibold uppercase tracking-wider text-center">Test Subject Guidelines</p>
                     <ul className="text-xs text-stone-600 space-y-2">
-                      <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0" /> Maintain eye contact with the screen.</li>
-                      <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0" /> Avoid moving outside the camera frame.</li>
+                      <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0" /> Stay on this page. Leaving the tab or clicking away will trigger a warning.</li>
+                      <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0" /> Ensure you are clearly visible on the camera.</li>
                       <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-stone-300 mt-1.5 shrink-0" /> 3 strikes of lost focus will auto-terminate the exam.</li>
                     </ul>
                   </div>
@@ -327,11 +350,9 @@ const ExamPortal = () => {
                       if (nonCertifiedSkills.length === 0) { navigate('/skills'); return; }
                       try {
                         setLoadingQuestions(true);
-                        const jd = "Software Engineer role requiring expertise in: " + nonCertifiedSkills.join(', ');
-                        const res = await apiClient.post('/public/questions', {
-                          jd,
-                          resume: resume || "Software Engineer",
-                          certifiedSkills: certifiedSkills || []
+                        const res = await apiClient.post('/public/questions-for-skills', {
+                          skills: nonCertifiedSkills,
+                          resume: resume || "Software Engineer"
                         });
                         const questionData = res.data?.data || res.data;
                         if (questionData && Array.isArray(questionData) && questionData.length > 0) {

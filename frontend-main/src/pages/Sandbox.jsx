@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../lib/apiClient';
-import { Shield, Cpu, RefreshCw, Copy, Check, Terminal, FileText, User, Award, Plus } from 'lucide-react';
+import { Shield, Cpu, RefreshCw, Copy, Check, Terminal, FileText, User, Award, Plus, Zap } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 export default function Sandbox() {
@@ -9,15 +9,19 @@ export default function Sandbox() {
   const [applicantData, setApplicantData] = useState(null);
   const [certifiedSkills, setCertifiedSkills] = useState(null);
   const [newCertifiedSkill, setNewCertifiedSkill] = useState('');
+  const [jobId, setJobId] = useState('');
+  const [questionsData, setQuestionsData] = useState(null);
   
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loadingApplicant, setLoadingApplicant] = useState(false);
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [addingSkill, setAddingSkill] = useState(false);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
 
   const [copiedProfile, setCopiedProfile] = useState(false);
   const [copiedApplicant, setCopiedApplicant] = useState(false);
   const [copiedSkills, setCopiedSkills] = useState(false);
+  const [copiedQuestions, setCopiedQuestions] = useState(false);
 
   const fetchProfile = async () => {
     setLoadingProfile(true);
@@ -81,6 +85,25 @@ export default function Sandbox() {
     }
   };
 
+  const generateQuestions = async (e) => {
+    e.preventDefault();
+    if (!jobId.trim()) return;
+    setLoadingQuestions(true);
+    try {
+      const response = await apiClient.post(`/applicants/jobs/${jobId.trim()}/apply`, {
+        jobId: parseInt(jobId.trim(), 10)
+      });
+      setQuestionsData(response.data?.data || response.data);
+      showToast('Successfully generated questions!', 'success');
+      fetchApplicantProfile();
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      showToast(error.response?.data?.message || 'Failed to generate questions', 'error');
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
     fetchApplicantProfile();
@@ -107,7 +130,7 @@ export default function Sandbox() {
       </div>
 
       {/* Grid for panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-8">
         
         {/* Panel 1: Base User Profile */}
         <div className="bg-white border border-[#EAE2D5] rounded-2xl shadow-xs overflow-hidden flex flex-col">
@@ -288,6 +311,73 @@ export default function Sandbox() {
                 <Award className="w-8 h-8 text-stone-600 mb-2" />
                 <p className="text-xs text-stone-500 font-bold uppercase tracking-wider">No Data Retrieved</p>
                 <p className="text-[10px] text-stone-600 mt-1 max-w-[240px]">This endpoint is restricted to users with APPLICANT credentials.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Panel 4: Test Question Generation */}
+        <div className="bg-white border border-[#EAE2D5] rounded-2xl shadow-xs overflow-hidden flex flex-col">
+          <div className="border-b border-[#EAE2D5] px-6 py-4 bg-[#FCF9F3] flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#241E1A] flex items-center justify-center">
+                <Zap className="w-4 h-4 text-[#FDFBF7]" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-[#241E1A] uppercase tracking-wider">Question Generator</h3>
+                <code className="text-[10px] text-stone-400 font-mono">POST /applicants/jobs/{"{id}"}/apply</code>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleCopy(questionsData, setCopiedQuestions)}
+                className="p-1.5 border border-[#EAE2D5] hover:bg-stone-50 rounded-lg text-stone-600 transition-colors cursor-pointer"
+                title="Copy Response JSON"
+                disabled={!questionsData}
+              >
+                {copiedQuestions ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4 bg-stone-900 border-b border-stone-800">
+            <form onSubmit={generateQuestions} className="flex gap-2">
+              <input
+                type="text"
+                value={jobId}
+                onChange={(e) => setJobId(e.target.value)}
+                placeholder="Job ID to apply/generate..."
+                className="flex-1 bg-stone-950 border border-stone-800 text-stone-100 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-stone-600 font-semibold"
+                disabled={loadingQuestions}
+              />
+              <button
+                type="submit"
+                disabled={loadingQuestions || !jobId.trim()}
+                className="px-3 py-1.5 bg-[#FDFBF7] hover:bg-[#F4ECE1] text-[#241E1A] text-xs font-semibold rounded-lg flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50"
+              >
+                {loadingQuestions ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                Generate
+              </button>
+            </form>
+          </div>
+
+          <div className="p-6 flex-1 flex flex-col bg-stone-950 min-h-[290px]">
+            {loadingQuestions ? (
+              <div className="flex-1 flex flex-col items-center justify-center space-y-3">
+                <RefreshCw className="w-6 h-6 text-stone-500 animate-spin" />
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Generating Questions...</span>
+              </div>
+            ) : questionsData ? (
+              <div className="flex-1 overflow-auto max-h-[440px]">
+                <pre className="text-xs font-mono text-emerald-400 select-text leading-relaxed p-2">
+                  {JSON.stringify(questionsData, null, 2)}
+                </pre>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 border border-dashed border-stone-800 rounded-xl">
+                <Zap className="w-8 h-8 text-stone-600 mb-2" />
+                <p className="text-xs text-stone-500 font-bold uppercase tracking-wider">No Test Generated</p>
+                <p className="text-[10px] text-stone-600 mt-1 max-w-[240px]">Enter a Job ID to generate customized questions via Gemini.</p>
               </div>
             )}
           </div>

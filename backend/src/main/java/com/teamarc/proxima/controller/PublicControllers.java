@@ -85,4 +85,11 @@ public class PublicControllers {
         return ResponseEntity.ok(interviewQuestionService.extractSkillsFromResume(resume));
     }
 
+    @PostMapping("/questions-for-skills")
+    public ResponseEntity<List<QuestionDTO>> createQuestionsForSkills(@RequestBody java.util.Map<String, Object> request) {
+        List<String> skills = (List<String>) request.get("skills");
+        String resume = (String) request.get("resume");
+        return ResponseEntity.ok(interviewQuestionService.generateQuestionsForSkills(skills, resume));
+    }
+
 }
