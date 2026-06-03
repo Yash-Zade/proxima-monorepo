@@ -38,10 +38,18 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // allowCredentials=true requires explicit origins — wildcard ("*") is rejected by browsers
         configuration.setAllowCredentials(true);
-        configuration.addAllowedOriginPattern("*");
+        configuration.addAllowedOrigin("https://proxima-main.vercel.app");
+        configuration.addAllowedOrigin("http://localhost:5173");
+        configuration.addAllowedOrigin("http://localhost:3000");
+
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
+
+        // Expose Authorization header so the frontend can read JWT tokens
+        configuration.addExposedHeader("Authorization");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

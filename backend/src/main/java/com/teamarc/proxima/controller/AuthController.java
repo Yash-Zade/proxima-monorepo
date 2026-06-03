@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 
- @CrossOrigin(origins = "https://proxima-main.vercel.app", allowCredentials = "true")
+ @CrossOrigin(origins = {"https://proxima-main.vercel.app", "http://localhost:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping(path = "/auth")
 @RequiredArgsConstructor

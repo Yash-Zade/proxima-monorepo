@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "https://proxima-main.vercel.app")
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping(path = "/admin")
 @RequiredArgsConstructor

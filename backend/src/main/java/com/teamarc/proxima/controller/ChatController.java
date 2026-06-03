@@ -8,7 +8,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "https://proxima-main.vercel.app")
+@CrossOrigin(origins = "*")
 @RestController
 @RequiredArgsConstructor
 public class ChatController {
