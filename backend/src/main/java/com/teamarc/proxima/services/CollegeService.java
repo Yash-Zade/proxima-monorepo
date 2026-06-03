@@ -10,6 +10,9 @@ import com.teamarc.proxima.repository.CollegeRepository;
 import com.teamarc.proxima.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,7 @@ public class CollegeService {
     private final EmployerService employerService;
     private final UserRepository userRepository;
 
+    @CacheEvict(value = "colleges", allEntries = true)
     public College createNewCollege(College college) {
         return collegeRepository.save(college);
     }
@@ -66,6 +70,10 @@ public class CollegeService {
                 .toList().stream().map(student -> modelMapper.map(student, StudentDTO.class)).toList();
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "colleges", allEntries = true),
+        @CacheEvict(value = "userProfile", key = "#userId")
+    })
     public StudentDTO onboardNewStudent(Long userId) {
         User user = userService.getUserById(userId);
         College college = getCurrentCollege();
@@ -82,6 +90,7 @@ public class CollegeService {
         return modelMapper.map(studentService.createNewStudent(student), StudentDTO.class);
     }
 
+    @CacheEvict(value = "userProfile", key = "#userId")
     public Void rejectOnboardNewStudent(Long userId) {
         User user = userService.getUserById(userId);
         College college = getCurrentCollege();
@@ -97,6 +106,7 @@ public class CollegeService {
         return modelMapper.map(employer, EmployerDTO.class);
     }
 
+    @Cacheable(value = "colleges")
     public List<CollegeDTO> getAllColleges() {
         return collegeRepository.findAll().stream()
                 .map(college -> {

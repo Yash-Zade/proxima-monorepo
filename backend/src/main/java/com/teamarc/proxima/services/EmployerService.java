@@ -10,6 +10,9 @@ import com.teamarc.proxima.repository.JobApplicationRepository;
 import com.teamarc.proxima.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -53,6 +56,7 @@ public class EmployerService {
     }
 
 
+    @CacheEvict(value = "jobs", allEntries = true)
     public JobDTO createJob(JobDTO job) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Employer employer = employerRepository.findByUser(user).orElseThrow(
@@ -65,6 +69,10 @@ public class EmployerService {
         return modelMapper.map(savedJob, JobDTO.class);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "job", key = "#jobId"),
+        @CacheEvict(value = "jobs", allEntries = true)
+    })
     public JobDTO updateJob(Long jobId, Map<String, Object> updates) {
         checkApplicantExistsById(jobId);
         Job job = jobRepository.findById(jobId)
@@ -84,6 +92,10 @@ public class EmployerService {
         }
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "job", key = "#jobId"),
+        @CacheEvict(value = "jobs", allEntries = true)
+    })
     public JobDTO deleteJob(Long jobId) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
@@ -134,6 +146,7 @@ public class EmployerService {
         return modelMapper.map(jobApplication, JobApplicationDTO.class);
     }
 
+    @CacheEvict(value = "employers", key = "#id")
     public EmployerDTO updateEmployerProfile(Long id, Map<String, Object> object) {
         Employer employer = employerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employer not found with id: " + id));
@@ -150,6 +163,10 @@ public class EmployerService {
                 .map(jobApplication -> modelMapper.map(jobApplication, JobApplicationDTO.class));
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "job", key = "#jobId"),
+        @CacheEvict(value = "jobs", allEntries = true)
+    })
     public JobDTO closeJob(Long jobId) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
@@ -157,6 +174,7 @@ public class EmployerService {
         return modelMapper.map(jobRepository.save(job), JobDTO.class);
     }
 
+    @Cacheable(value = "employers", key = "#id")
     public EmployerDTO getEmployerProfileById(Long id) {
         Employer employer = employerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employer not found with id: " + id));

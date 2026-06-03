@@ -9,6 +9,8 @@ import com.teamarc.proxima.repository.JobApplicationRepository;
 import com.teamarc.proxima.utils.FileService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -102,6 +104,7 @@ public class ApplicantService {
                 });
     }
 
+    @CacheEvict(value = "applicants", key = "#applicantId")
     public ApplicantDTO updateProfile(Long applicantId, Map<String, Object> updates) {
         Applicant applicant = applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Applicant not found with id: " + applicantId));
@@ -126,6 +129,7 @@ public class ApplicantService {
         return jobApplication.getApplicationStatus().name();
     }
 
+    @Cacheable(value = "applicants", key = "#applicantId")
     public ApplicantDTO getApplicantById(Long applicantId) {
         return modelMapper.map(applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Applicant not found with id: " + applicantId)),
@@ -169,6 +173,7 @@ public class ApplicantService {
 //        return modelMapper.map(wallet, WalletDTO.class);
 //    }
 
+    @CacheEvict(value = "applicants", key = "#jobApplicationDTO.applicant.applicantId")
     public JobApplicationDTO acceptJobApplication(Long jobApplicationId, JobApplicationDTO jobApplicationDTO,
             List<String> certifiedSkills) {
         JobApplication jobApplication = jobApplicationRepository.findById(jobApplicationId)

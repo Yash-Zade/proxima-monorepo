@@ -8,6 +8,7 @@ import com.teamarc.proxima.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class AdminService {
     private final CollegeService collegeService;
 
     @Transactional
+    @CacheEvict(value = "userProfile", key = "#userId")
     public EmployerDTO onboardNewEmployer(Long userId, OnBoardNewEmployerDTO onBoardNewEmployerDTO) {
         User user = userService.getUserById(userId);
         if (user.getRoles().contains(Role.EMPLOYER)) {
@@ -66,6 +68,7 @@ public class AdminService {
     // }
 
     @Transactional
+    @CacheEvict(value = "userProfile", key = "#userId")
     public CollegeDTO onboardNewCollege(Long userId, OnBoardNewCollegeDTO onBoardNewCollegeDTO) {
         User user = userService.getUserById(userId);
         if (user.getRoles().contains(Role.COLLEGE)) {

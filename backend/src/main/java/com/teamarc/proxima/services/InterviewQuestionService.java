@@ -9,6 +9,7 @@ import com.teamarc.proxima.entity.Job;
 import com.teamarc.proxima.entity.JobApplication;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -74,6 +75,7 @@ public class InterviewQuestionService {
         }
     }
 
+    @Cacheable(value = "questions", keyGenerator = "customKeyGenerator")
     public List<QuestionDTO> generateQuestions(JobApplication request) {
         String resumeUrl = request.getApplicant().getResume();
         String resumeText = extractTextFromPdfUrl(resumeUrl);
@@ -325,6 +327,7 @@ public class InterviewQuestionService {
         }
     }
 
+    @Cacheable(value = "questions", keyGenerator = "customKeyGenerator")
     public List<QuestionDTO> generateQuestions(String jd, String resume, List<String> certifiedSkills) {
         JobApplication jobApplication = new JobApplication();
         jobApplication.setJob(new Job());
@@ -335,6 +338,7 @@ public class InterviewQuestionService {
         return generateQuestions(jobApplication);
     }
 
+    @Cacheable(value = "skills", keyGenerator = "customKeyGenerator")
     public List<String> extractSkillsFromResume(String resumeUrl) {
         String prompt = "You are an AI assistant specializing in parsing resumes and extracting professional skills. " +
                 "Given the attached resume text, extract a complete list of professional skills. " +
@@ -397,6 +401,7 @@ public class InterviewQuestionService {
         }
     }
 
+    @Cacheable(value = "questions_skills", keyGenerator = "customKeyGenerator")
     public List<QuestionDTO> generateQuestionsForSkills(List<String> skillsToCertify, String resume) {
         String resumeText = extractTextFromPdfUrl(resume);
         if (resumeText == null || resumeText.trim().isEmpty()) {
