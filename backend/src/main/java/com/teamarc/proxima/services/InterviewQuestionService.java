@@ -9,6 +9,7 @@ import com.teamarc.proxima.entity.Job;
 import com.teamarc.proxima.entity.JobApplication;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -24,8 +25,15 @@ public class InterviewQuestionService {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final String geminiApiUrl;
+    private final String geminiApiKey;
 
-    public InterviewQuestionService(RestClient.Builder restClientBuilder) {
+    public InterviewQuestionService(
+            RestClient.Builder restClientBuilder,
+            @Value("${gemini.api.url}") String geminiApiUrl,
+            @Value("${gemini.api.key}") String geminiApiKey) {
+        this.geminiApiUrl = geminiApiUrl;
+        this.geminiApiKey = geminiApiKey;
         this.restClient = restClientBuilder.baseUrl(geminiApiUrl).build();
         this.objectMapper = new ObjectMapper();
     }
@@ -212,10 +220,7 @@ public class InterviewQuestionService {
                             Map.of("parts", List.of(Map.of("text", prompt)))));
 
             // 🔹 Make API call
-            String apiKey = System.getenv("GEMINI_API_KEY");
-            if (apiKey == null || apiKey.trim().isEmpty()) {
-                apiKey = geminiApiKey;
-            }
+            String apiKey = this.geminiApiKey;
 
             String response = restClient.post()
                     .uri("?key=" + apiKey)
@@ -359,10 +364,7 @@ public class InterviewQuestionService {
                     "contents", List.of(
                             Map.of("parts", parts)));
 
-            String apiKey = System.getenv("GEMINI_API_KEY");
-            if (apiKey == null || apiKey.trim().isEmpty()) {
-                apiKey = geminiApiKey;
-            }
+            String apiKey = this.geminiApiKey;
 
             String response = restClient.post()
                     .uri("?key=" + apiKey)
@@ -466,10 +468,7 @@ public class InterviewQuestionService {
                     "contents", List.of(
                             Map.of("parts", List.of(Map.of("text", prompt)))));
 
-            String apiKey = System.getenv("GEMINI_API_KEY");
-            if (apiKey == null || apiKey.trim().isEmpty()) {
-                apiKey = geminiApiKey;
-            }
+            String apiKey = this.geminiApiKey;
 
             String response = restClient.post()
                     .uri("?key=" + apiKey)

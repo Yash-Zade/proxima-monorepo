@@ -12,7 +12,6 @@ public class KafkaConfig {
     public NewTopic directChatTopic() {
         return TopicBuilder.name("direct-chat-topic")
                 .partitions(3)
-                .replicas(1)
                 .build();
     }
 
@@ -20,7 +19,6 @@ public class KafkaConfig {
     public NewTopic forumChatTopic() {
         return TopicBuilder.name("forum-chat-topic")
                 .partitions(3)
-                .replicas(1)
                 .build();
     }
 }
