@@ -60,4 +60,15 @@ public class UserController {
     // public ResponseEntity<WalletDTO> getUserWallet() {
     //     return ResponseEntity.ok(userService.getUserWallet());
     // }
+
+    @GetMapping(path = "/active-chats/{userId}")
+    public ResponseEntity<java.util.List<UserDTO>> getActiveChats(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getActiveChatUsers(userId));
+    }
+
+    @GetMapping(path = "/search")
+    public ResponseEntity<java.util.List<UserDTO>> searchUsers(@RequestParam String query) {
+        return ResponseEntity.ok(userService.searchUsers(query));
+    }
 }
+

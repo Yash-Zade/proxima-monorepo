@@ -26,6 +26,7 @@ public class UserService implements UserDetailsService {
         private final ApplicantRepository applicantRepository;
         private final OnBoardNewStudentRepository onBoardNewStudentRepository;
 //        private final WalletRepository walletRepository;
+        private final ChatMessagesRepo chatMessagesRepo;
 
         @Override
         public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -111,4 +112,26 @@ public class UserService implements UserDetailsService {
 //                                });
 //                return modelMapper.map(wallet, WalletDTO.class);
 //        }
+
+        public java.util.List<UserDTO> getActiveChatUsers(Long userId) {
+                java.util.List<Long> partnerIds = chatMessagesRepo.findDistinctChatPartners(userId);
+                if (partnerIds.isEmpty()) {
+                        return java.util.Collections.emptyList();
+                }
+                return userRepository.findAllById(partnerIds).stream()
+                                .map(user -> modelMapper.map(user, UserDTO.class))
+                                .collect(java.util.stream.Collectors.toList());
+        }
+
+        public java.util.List<UserDTO> searchUsers(String query) {
+                if (query == null || query.trim().isEmpty()) {
+                        return java.util.Collections.emptyList();
+                }
+                String cleanQuery = query.trim().toLowerCase();
+                return userRepository.findAll().stream()
+                                .filter(user -> (user.getName() != null && user.getName().toLowerCase().contains(cleanQuery))
+                                                || (user.getEmail() != null && user.getEmail().toLowerCase().contains(cleanQuery)))
+                                .map(user -> modelMapper.map(user, UserDTO.class))
+                                .collect(java.util.stream.Collectors.toList());
+        }
 }
