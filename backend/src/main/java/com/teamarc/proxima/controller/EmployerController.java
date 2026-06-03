@@ -17,7 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://proxima-main.vercel.app")
 @RestController
 @RequestMapping(path = "/employers")
 @RequiredArgsConstructor

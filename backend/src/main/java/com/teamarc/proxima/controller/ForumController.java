@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://proxima-main.vercel.app")
 @RestController
 @RequestMapping("/api/forum")
 @RequiredArgsConstructor

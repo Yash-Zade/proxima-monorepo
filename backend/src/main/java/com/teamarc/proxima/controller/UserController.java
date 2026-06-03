@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://proxima-main.vercel.app")
 @RestController
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor

@@ -8,48 +8,73 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @SpringBootApplication
 public class ProximaApplication {
 
+    /**
+     * Strips surrounding double-quotes from an environment variable value,
+     * then replaces literal \n sequences with actual newlines.
+     */
+    private static String preprocessEnvValue(String value) {
+        if (value == null) return null;
+        // Strip surrounding double-quotes added by some env managers (e.g. Koyeb, .env files)
+        if (value.startsWith("\"") && value.endsWith("\"") && value.length() > 1) {
+            value = value.substring(1, value.length() - 1);
+        }
+        // Replace literal \n with real newlines (for PEM certificates)
+        value = value.replace("\\n", "\n");
+        return value.trim();
+    }
+
     public static void main(String[] args) {
-        // Preprocess and dynamically configure Kafka SSL truststore
-        String truststoreCert = System.getenv("KAFKA_SSL_TRUSTSTORE_CERTIFICATES");
-        if (truststoreCert != null && !truststoreCert.trim().isEmpty()) {
+        // ── SSL Truststore (CA Certificate) ─────────────────────────────────────
+        String truststoreCert = preprocessEnvValue(System.getenv("KAFKA_SSL_TRUSTSTORE_CERTIFICATES"));
+        if (truststoreCert != null && !truststoreCert.isEmpty()) {
             System.setProperty("spring.kafka.properties.ssl.truststore.type", "PEM");
-            if (truststoreCert.startsWith("\"") && truststoreCert.endsWith("\"") && truststoreCert.length() > 1) {
-                truststoreCert = truststoreCert.substring(1, truststoreCert.length() - 1);
-            }
-            truststoreCert = truststoreCert.replace("\\n", "\n");
             System.setProperty("spring.kafka.properties.ssl.truststore.certificates", truststoreCert);
         }
 
-        // Preprocess and dynamically configure Kafka SSL keystore (only if client key is present)
-        String keystoreKey = System.getenv("KAFKA_SSL_KEYSTORE_KEY");
-        if (keystoreKey != null && !keystoreKey.trim().isEmpty()) {
+        // ── SSL Keystore (only present for mTLS, not needed for SASL_SSL) ───────
+        String keystoreKey = preprocessEnvValue(System.getenv("KAFKA_SSL_KEYSTORE_KEY"));
+        if (keystoreKey != null && !keystoreKey.isEmpty()) {
             System.setProperty("spring.kafka.properties.ssl.keystore.type", "PEM");
-            if (keystoreKey.startsWith("\"") && keystoreKey.endsWith("\"") && keystoreKey.length() > 1) {
-                keystoreKey = keystoreKey.substring(1, keystoreKey.length() - 1);
-            }
-            keystoreKey = keystoreKey.replace("\\n", "\n");
             System.setProperty("spring.kafka.properties.ssl.keystore.key", keystoreKey);
 
-            String keystoreCert = System.getenv("KAFKA_SSL_KEYSTORE_CERTIFICATE_CHAIN");
-            if (keystoreCert != null) {
-                if (keystoreCert.startsWith("\"") && keystoreCert.endsWith("\"") && keystoreCert.length() > 1) {
-                    keystoreCert = keystoreCert.substring(1, keystoreCert.length() - 1);
-                }
-                keystoreCert = keystoreCert.replace("\\n", "\n");
+            String keystoreCert = preprocessEnvValue(System.getenv("KAFKA_SSL_KEYSTORE_CERTIFICATE_CHAIN"));
+            if (keystoreCert != null && !keystoreCert.isEmpty()) {
                 System.setProperty("spring.kafka.properties.ssl.keystore.certificate.chain", keystoreCert);
             }
         }
-        
-        // Only set ssl.key.password if it is set in the environment and is not empty
-        String keyPassword = System.getenv("KAFKA_SSL_KEY_PASSWORD");
-        if (keyPassword != null) {
-            if (keyPassword.startsWith("\"") && keyPassword.endsWith("\"") && keyPassword.length() > 1) {
-                keyPassword = keyPassword.substring(1, keyPassword.length() - 1);
-            }
-            if (!keyPassword.trim().isEmpty()) {
-                System.setProperty("spring.kafka.properties.ssl.key.password", keyPassword);
-            }
+
+        // ── SSL Key Password (optional, strip quotes only) ───────────────────────
+        String keyPassword = preprocessEnvValue(System.getenv("KAFKA_SSL_KEY_PASSWORD"));
+        if (keyPassword != null && !keyPassword.isEmpty()) {
+            System.setProperty("spring.kafka.properties.ssl.key.password", keyPassword);
         }
+
+        // ── SASL JAAS Config ─────────────────────────────────────────────────────
+        // Koyeb/Docker env vars can wrap the value in outer quotes and escape inner ones.
+        // e.g. "org.apache.kafka...required username=\"avnadmin\" password=\"xxx\";"
+        // We strip the outer quotes and un-escape the inner ones.
+        String jaasConfig = System.getenv("KAFKA_SASL_JAAS_CONFIG");
+        if (jaasConfig != null && !jaasConfig.trim().isEmpty()) {
+            // Strip surrounding double-quotes
+            if (jaasConfig.startsWith("\"") && jaasConfig.endsWith("\"") && jaasConfig.length() > 1) {
+                jaasConfig = jaasConfig.substring(1, jaasConfig.length() - 1);
+            }
+            // Un-escape inner double-quotes: \" → "
+            jaasConfig = jaasConfig.replace("\\\"", "\"");
+            System.setProperty("spring.kafka.properties.sasl.jaas.config", jaasConfig);
+        }
+
+        // ── Security Protocol & SASL Mechanism (strip any accidental quotes) ─────
+        String securityProtocol = preprocessEnvValue(System.getenv("KAFKA_SECURITY_PROTOCOL"));
+        if (securityProtocol != null && !securityProtocol.isEmpty()) {
+            System.setProperty("spring.kafka.properties.security.protocol", securityProtocol);
+        }
+
+        String saslMechanism = preprocessEnvValue(System.getenv("KAFKA_SASL_MECHANISM"));
+        if (saslMechanism != null && !saslMechanism.isEmpty()) {
+            System.setProperty("spring.kafka.properties.sasl.mechanism", saslMechanism);
+        }
+
         SpringApplication.run(ProximaApplication.class, args);
     }
 
