@@ -62,86 +62,97 @@ export default function JobDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen max-w-4xl mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-4">
-        <div className="w-8 h-8 rounded-full border-2 border-stone-300 border-t-[#241E1A] animate-spin"></div>
-        <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">Loading Job Specifications...</span>
+      <div className="min-h-screen flex flex-col justify-center items-center px-4 py-16 bg-[#FDFBF7] relative overflow-hidden">
+        {/* Decorative grids */}
+        <div className="absolute inset-0 bg-[radial-gradient(#E5DAC9_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
+
+        <div className="text-center space-y-4 py-12 flex flex-col items-center justify-center relative z-10">
+          <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center shadow-md">
+          </div>
+          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Specifications...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen max-w-4xl mx-auto px-4 py-16">
-        <Link to="/jobs" className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:text-[#241E1A] transition-colors mb-6">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Listings
-        </Link>
-        <div className="bg-[#FAF6F0] border border-red-200 p-8 rounded-xl text-center space-y-2">
-          <p className="text-sm font-semibold text-red-600">{error || 'Job not found'}</p>
+      <div className="min-h-screen bg-[#FDFBF7] py-16 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-4 relative z-10">
+          <Link to="/jobs" className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#241E1A] hover:text-stone-500 transition-colors mb-8">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Registry
+          </Link>
+          <div className="bg-[#FAF6F0] border border-[#EAE2D5] p-10 rounded-2xl text-center space-y-3">
+            <p className="text-sm font-semibold text-red-600">{error || 'Job not found'}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FDFBF7] py-16 relative">
+      {/* Aesthetic grid overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-8">
-          <Link to="/jobs" className="hover:text-[#241E1A] transition-colors">Listings</Link>
-          <ChevronRight className="w-3 h-3" />
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-8 border-b border-[#EAE2D5] pb-3">
+          <Link to="/jobs" className="hover:text-[#241E1A] transition-colors">Registry</Link>
+          <ChevronRight className="w-3 h-3 text-stone-400" />
           <span className="text-[#241E1A] truncate max-w-[200px]">{job.title}</span>
         </div>
 
-        {/* Job Header Card */}
-        <div className="bg-white border border-[#EAE2D5] rounded-3xl p-8 sm:p-10 shadow-sm mb-8 relative overflow-hidden">
-          {/* Decorative background accent */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(#E5DAC9_1.5px,transparent_1.5px)] [background-size:16px_16px] opacity-30 -mr-16 -mt-16 pointer-events-none rounded-full" />
-          
+        {/* Job Header Area */}
+        <div className="bg-[#FCF9F3] border border-[#EAE2D5] rounded-3xl p-8 sm:p-10 shadow-xs mb-8 relative overflow-hidden hover:shadow-sm transition-all duration-300">
           <div className="relative z-10 space-y-6">
-            <div className="space-y-3">
+            <div className="space-y-4">
               {job.company && (
-                <div className="inline-flex items-center gap-1.5 bg-[#F4ECE1] text-[#241E1A] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#EAE2D5] bg-white text-[#241E1A] text-[9px] font-bold uppercase tracking-widest shadow-3xs">
                   <Building2 className="w-3.5 h-3.5" />
                   {job.company}
                 </div>
               )}
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#241E1A] tracking-tight">{job.title}</h1>
+              <h1 className="text-3xl sm:text-4xl font-serif text-[#241E1A] uppercase tracking-tight font-medium">
+                {job.title}
+              </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs font-semibold text-stone-500 uppercase tracking-wider">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] text-stone-500 uppercase tracking-widest font-bold">
               {job.location && (
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-stone-400" />
                   {job.location}
                 </span>
               )}
               {job.jobStatus && (
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-stone-400" />
-                  Status: <span className={job.jobStatus === 'OPEN' ? 'text-green-600' : 'text-red-600'}>{job.jobStatus}</span>
+                  Status: <span className={job.jobStatus === 'OPEN' ? 'text-emerald-800' : 'text-red-700'}>{job.jobStatus}</span>
                 </span>
               )}
               {job.postedDate && (
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-stone-400" />
-                  Posted {job.postedDate}
+                  {job.postedDate}
                 </span>
               )}
             </div>
 
-            <div className="pt-4 flex items-center gap-3">
+            <div className="pt-4 flex flex-wrap items-center gap-4">
               <button 
                 onClick={handleApply}
                 disabled={applying || job.jobStatus !== 'OPEN'}
-                className={`px-6 py-3 bg-[#241E1A] text-[#FDFBF7] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center gap-2 ${
-                  (applying || job.jobStatus !== 'OPEN') ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#382F29]'
+                className={`px-6 py-3 bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] text-xs font-semibold uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm flex items-center gap-2 cursor-pointer ${
+                  (applying || job.jobStatus !== 'OPEN') ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
                 {applying ? 'Submitting...' : 'Apply for this Position'}
                 {!applying && <CheckCircle2 className="w-4 h-4" />}
               </button>
-              <button className="p-3 border border-[#EAE2D5] text-stone-600 hover:text-[#241E1A] hover:bg-[#F4ECE1] rounded-xl transition-colors">
+              <button className="p-3 bg-white border border-[#EAE2D5] text-[#241E1A] hover:bg-[#F4ECE1] rounded-xl transition-colors shadow-3xs cursor-pointer">
                 <Share2 className="w-4 h-4" />
               </button>
             </div>
@@ -153,12 +164,12 @@ export default function JobDetail() {
           
           {/* Main Description */}
           <div className="lg:col-span-2 space-y-8">
-            <section className="bg-white border border-[#EAE2D5] rounded-3xl p-8 shadow-sm">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-[#241E1A] mb-4 flex items-center gap-2">
+            <section className="bg-white border border-[#EAE2D5] rounded-3xl p-8 shadow-3xs">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-[#241E1A] mb-4 flex items-center gap-2 border-b border-[#EAE2D5] pb-2">
                 <Briefcase className="w-4 h-4 text-stone-400" />
                 Position Overview
               </h2>
-              <div className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">
+              <div className="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap font-normal">
                 {job.description || 'No detailed description provided by the employer.'}
               </div>
             </section>
@@ -168,14 +179,14 @@ export default function JobDetail() {
           <div className="lg:col-span-1 space-y-6">
             
             {/* Skills Card */}
-            <section className="bg-[#FAF6F0] border border-[#EAE2D5] rounded-3xl p-6 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-[#241E1A] mb-4">Required Capabilities</h3>
+            <section className="bg-[#FCF9F3] border border-[#EAE2D5] rounded-3xl p-6 shadow-3xs">
+              <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-4 border-b border-[#EAE2D5] pb-2">Required Capabilities</h3>
               {job.skillsRequired && job.skillsRequired.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {job.skillsRequired.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="bg-white border border-[#EAE2D5] text-stone-600 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg"
+                      className="bg-white border border-[#EAE2D5] text-[#241E1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow-3xs"
                     >
                       {skill}
                     </span>

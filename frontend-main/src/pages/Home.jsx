@@ -5,22 +5,22 @@ import { ArrowUpRight, Search, Globe, Shield, Sparkles, Building, Briefcase, Zap
 export default function Home() {
   const highlights = [
     {
-      icon: Globe,
-      title: 'Architectural Synergy',
-      subtitle: 'Global Operations',
-      description: 'Establish high-fidelity remote pipelines. Connect with engineering groups building next-generation protocols and infrastructure.'
+      icon: Sparkles,
+      title: 'GenAI Assessments',
+      subtitle: 'Tailored Testing',
+      description: 'Generate dynamic assessments automatically to evaluate technical skills based on candidate skill gaps.'
     },
     {
       icon: Shield,
-      title: 'Micro-Verification',
-      subtitle: 'Vetted Portfolios',
-      description: 'Secure, cryptographically authenticated talent records that align technical metrics directly with decisions in modern companies.'
+      title: 'AI Proctoring',
+      subtitle: 'Behavioral Monitoring',
+      description: 'Secure examination platform with gaze tracking and behavioral analytics to ensure 95% proctoring integrity.'
     },
     {
-      icon: Sparkles,
-      title: 'Direct Dispatch',
-      subtitle: 'Zero Latency',
-      description: 'Bypass conventional tracking boards. Open direct channels to technical executives through active dashboard environments.'
+      icon: Layers,
+      title: 'Ecosystem Sync',
+      subtitle: 'Unified Pipelines',
+      description: 'Seamless integration linking employers, college placement cells, and candidates in a single dashboard.'
     }
   ];
 
@@ -36,21 +36,15 @@ export default function Home() {
             
             {/* Left Column: Heading & Controls */}
             <div className="lg:col-span-7 space-y-8 text-left">
-              {/* Vetted Tag */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#EAE2D5] bg-[#FCF9F3] shadow-xs">
-                <Zap className="w-3.5 h-3.5 text-[#241E1A]" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#241E1A]">Verified Technical Placements</span>
-              </div>
-
               {/* Editorial Headline */}
               <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-[#241E1A] leading-[1.08]">
-                Minimal System for <br />
-                <span className="text-gradient">Elite Tech Synergy.</span>
+                AI-Driven <br />
+                <span className="text-gradient">Recruitment Ecosystem.</span>
               </h1>
 
               {/* Soft Subtext */}
               <p className="text-sm sm:text-base text-stone-500 font-normal leading-relaxed max-w-xl">
-                Proxima is an architectural matchmaking interface. We pair remote software engineers and systems architects directly with vetted, high-paying startup pipelines. No fluff, just pure performance vectors.
+                Proxima streamlines hiring and placement workflows using Generative AI. We automate resume parsing, skill-gap analysis, and dynamically generate assessments with real-time proctoring for colleges, employers, and candidates.
               </p>
 
               {/* Dynamic Search Box */}
@@ -59,7 +53,7 @@ export default function Home() {
                   <Search className="w-4 h-4 text-stone-400 ml-3" />
                   <input
                     type="text"
-                    placeholder="Search: Distributed Systems, Next.js..."
+                    placeholder="Search: Spring Boot, React, PostgreSQL..."
                     className="w-full bg-transparent border-0 outline-none text-xs pl-2 text-[#241E1A] placeholder:text-stone-300"
                   />
                   <Link
@@ -70,17 +64,6 @@ export default function Home() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
-              </div>
-
-              {/* Social Proof Tags */}
-              <div className="pt-4 flex flex-wrap items-center gap-x-8 gap-y-4 text-stone-400">
-                <span className="text-[9px] font-bold tracking-widest uppercase text-stone-400">CORE PIPELINES:</span>
-                {['Linear', 'Vercel', 'Stripe', 'Supabase'].map((brand, idx) => (
-                  <div key={idx} className="flex items-center gap-1 text-[#241E1A] font-semibold text-xs tracking-tight">
-                    <Building className="w-3.5 h-3.5 text-stone-400" />
-                    {brand}
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -93,13 +76,13 @@ export default function Home() {
                 {/* Floating Card 1 */}
                 <div className="absolute top-4 left-4 bg-white border border-[#EAE2D5] p-5 rounded-2xl shadow-lg w-64 transform -rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300">
                   <div className="flex justify-between items-start mb-3">
-                    <span className="bg-[#F4ECE1] text-[#241E1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">Next.js Lead</span>
-                    <span className="text-emerald-700 text-[10px] font-bold tracking-wider">$190k</span>
+                    <span className="bg-[#F4ECE1] text-[#241E1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">AI Assessment</span>
+                    <span className="text-emerald-700 text-[10px] font-bold tracking-wider">GenAI</span>
                   </div>
-                  <h3 className="text-xs font-bold text-[#241E1A]">Vercel Ecosystem</h3>
-                  <p className="text-[10px] text-stone-400 mt-1">Remote / Global. Technical architecture design & React performance optimization.</p>
+                  <h3 className="text-xs font-bold text-[#241E1A]">Resume & JD Matcher</h3>
+                  <p className="text-[10px] text-stone-400 mt-1">Automatically identifies technical skill-gaps to generate custom evaluations.</p>
                   <div className="border-t border-[#EAE2D5]/70 mt-3 pt-3 flex justify-between items-center text-[9px] text-[#241E1A] font-semibold uppercase tracking-wider">
-                    <span>Vetted Score: 99.4%</span>
+                    <span>95% Match Accuracy</span>
                     <ArrowUpRight className="w-3.5 h-3.5 text-stone-500" />
                   </div>
                 </div>
@@ -108,12 +91,12 @@ export default function Home() {
                 <div className="absolute bottom-6 right-4 bg-[#FCF9F3] border border-[#EAE2D5] p-5 rounded-2xl shadow-xl w-60 transform rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300 z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-stone-500">Real-time matching</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-stone-500">Live Proctoring</span>
                   </div>
-                  <h3 className="text-xs font-bold text-[#241E1A]">Kalyani Satpute</h3>
-                  <p className="text-[10px] text-stone-400 mt-1">Systems Developer & Architect. Passed technical React performance benchmark.</p>
+                  <h3 className="text-xs font-bold text-[#241E1A]">Satoshi Nakamoto</h3>
+                  <p className="text-[10px] text-stone-400 mt-1">Full-stack Candidate. Assessed with gaze tracking and behavioral analytics.</p>
                   <div className="mt-3 flex gap-1 flex-wrap">
-                    {['React', 'Go', 'Rust'].map((t, i) => (
+                    {['Spring Boot', 'React', 'RabbitMQ'].map((t, i) => (
                       <span key={i} className="text-[9px] bg-white border border-[#EAE2D5] px-1.5 py-0.5 rounded text-stone-600 font-semibold">{t}</span>
                     ))}
                   </div>
@@ -130,10 +113,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-[#EAE2D5]">
             {[
-              { val: '48 Hrs', label: 'Average Pipeline Placement' },
-              { val: '$145K', label: 'Median Vetted Remote Base' },
-              { val: '99.4%', label: 'Alignment Success Index' },
-              { val: '14,000+', label: 'Verified Engineers' }
+              { val: '95%', label: 'Anomaly Detection Accuracy' },
+              { val: '10x', label: 'Faster Resume Screening' },
+              { val: 'GenAI', label: 'Custom Assessments' },
+              { val: 'Unified', label: 'Placement Ecosystem' }
             ].map((stat, idx) => (
               <div key={idx} className="pt-4 md:pt-0 md:px-4 flex flex-col justify-center">
                 <span className="text-xl sm:text-2xl font-extrabold text-[#241E1A] tracking-tight">{stat.val}</span>
@@ -151,10 +134,10 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center max-w-xl mx-auto mb-16">
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#241E1A]">
-              Matchmaking Engineered For Architecture
+              Recruitment Engineered with Generative AI
             </h2>
             <p className="text-xs sm:text-sm text-stone-500 mt-3 leading-relaxed">
-              We removed the clutter. No endless feed social media, no spam recruiter channels. Just high-caliber matchmaking vectors built for technical architects.
+              We removed the manual effort from hiring. Automate your screening, assess technical competency accurately, and manage pipelines from a single dashboard.
             </p>
           </div>
 
@@ -188,35 +171,35 @@ export default function Home() {
                 <div className="bg-white border border-[#EAE2D5] p-5 rounded-2xl flex flex-col justify-between h-40">
                   <Layers className="w-6 h-6 text-[#241E1A]" />
                   <div>
-                    <h4 className="text-xs font-bold text-[#241E1A]">Modular Outlines</h4>
-                    <p className="text-[10px] text-stone-400 mt-1">Establish custom workspace structures and credentials.</p>
+                    <h4 className="text-xs font-bold text-[#241E1A]">Dynamic Testing</h4>
+                    <p className="text-[10px] text-stone-400 mt-1">Generate personalized online examinations instantly.</p>
                   </div>
                 </div>
                 <div className="bg-[#FAF6F0] border border-[#EAE2D5] p-5 rounded-2xl flex flex-col justify-between h-40">
                   <Users className="w-6 h-6 text-[#241E1A]" />
                   <div>
-                    <h4 className="text-xs font-bold text-[#241E1A]">Elite Portfolios</h4>
-                    <p className="text-[10px] text-stone-400 mt-1">Direct verification badges passed and active matching pipelines.</p>
+                    <h4 className="text-xs font-bold text-[#241E1A]">College Placement</h4>
+                    <p className="text-[10px] text-stone-400 mt-1">Coordinate student onboarding and employer shortlists.</p>
                   </div>
                 </div>
               </div>
               <div className="bg-white border border-[#EAE2D5] p-6 rounded-2xl flex items-center gap-4">
                 <Cpu className="w-8 h-8 text-[#241E1A] flex-shrink-0" />
                 <div>
-                  <h4 className="text-xs font-bold text-[#241E1A]">Latency-Free Dispatch</h4>
-                  <p className="text-[10px] text-stone-400 mt-1">Socket channels mapping real-time credentials directly to dashboard monitors.</p>
+                  <h4 className="text-xs font-bold text-[#241E1A]">Real-Time Monitoring</h4>
+                  <p className="text-[10px] text-stone-400 mt-1">Secure assessments with advanced gaze tracking and analytics.</p>
                 </div>
               </div>
             </div>
 
             {/* Narrative Column */}
             <div className="lg:col-span-6 space-y-6 text-left">
-              <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Architectural Registry</span>
+              <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Unified Registry</span>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-[#241E1A] leading-tight">
-                Vetted benchmark profiles designed for elite placements.
+                Empower colleges, candidates, and employers.
               </h3>
               <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-                Platform placement targets average less than 48 hours because engineers are authenticated prior to listing. Establish credentials, clear the assessments benchmarks, and launch direct matching channels seamlessly.
+                Whether you are onboarded as a candidate taking skill-gap assessments, a college placement coordinator tracking student progress, or an employer conducting bulk hiring, Proxima streamlines all touchpoints seamlessly.
               </p>
               <div className="pt-2">
                 <Link
@@ -238,11 +221,11 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-8">
           <Star className="w-8 h-8 text-amber-100 mx-auto opacity-80" />
           <h3 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-[1.2] max-w-3xl mx-auto">
-            "Proxima bypassed the conventional recruiting layers entirely. I had direct matching channels open with founders within 24 hours of technical verification."
+            "Proxima bypassed the manual screening phase entirely. We automatically evaluated 500+ candidates using AI-generated assessments and secure proctoring."
           </h3>
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#FAF6F0] block">Devon Miller</span>
-            <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-wider mt-1 block">Staff UI Architect &bull; Silicon Valley</span>
+            <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-wider mt-1 block">VP of Talent Acquisition &bull; Enterprise Corp</span>
           </div>
         </div>
       </section>

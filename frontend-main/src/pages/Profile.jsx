@@ -332,29 +332,32 @@ export default function Profile() {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] py-8">
+    <div className="min-h-screen bg-[#FDFBF7] py-16 relative">
+      {/* Aesthetic grid overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
+
       <RoleApplicationModal 
         isOpen={isRoleModalOpen} 
         onClose={() => setIsRoleModalOpen(false)} 
         userId={user?.id}
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Main Profile Card inspired by Image */}
-        <div className="bg-white border border-[#EAE2D5] rounded-[32px] overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-white border border-[#EAE2D5] rounded-[32px] overflow-hidden shadow-xs hover:shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Banner */}
-          <div className="h-40 bg-[#241E1A] relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#241E1A] via-transparent to-stone-600/30" />
+          <div className="h-40 bg-[#FCF9F3] relative overflow-hidden border-b border-[#EAE2D5]">
+            <div className="absolute inset-0 bg-[radial-gradient(#E8DFD0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-35 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#FCF9F3]/40 via-transparent to-stone-400/10" />
           </div>
 
           <div className="px-8 pb-8 relative">
             {/* Overlapping Avatar */}
             <div className="absolute -top-16 left-8">
               <div className="w-32 h-32 rounded-full bg-white p-1.5 shadow-sm border border-[#EAE2D5]">
-                <div className="w-full h-full rounded-full bg-[#241E1A] text-[#FDFBF7] flex items-center justify-center text-4xl font-bold shadow-inner">
+                <div className="w-full h-full rounded-full bg-[#241E1A] text-[#FDFBF7] flex items-center justify-center text-4xl font-bold shadow-inner font-serif">
                   {initials}
                 </div>
               </div>
@@ -364,39 +367,39 @@ export default function Profile() {
             <div className="flex justify-end pt-5 gap-3">
                <button 
                  onClick={() => setIsRoleModalOpen(true)}
-                 className="bg-[#241E1A] text-[#FDFBF7] hover:bg-[#382F29] text-xs font-bold px-5 py-2.5 rounded-full transition-colors shadow-sm"
+                 className="bg-[#241E1A] text-[#FAF6F0] hover:bg-[#382F29] text-[10px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-3xs cursor-pointer"
                >
                  Add Role
                </button>
                <button 
                  onClick={handleSaveProfile}
                  disabled={isSaving}
-                 className="bg-white border border-[#EAE2D5] hover:bg-[#FAF6F0] text-[#241E1A] text-xs font-bold px-5 py-2.5 rounded-full transition-colors shadow-sm disabled:opacity-50"
+                 className="bg-white border border-[#EAE2D5] hover:bg-[#FAF6F0] text-[#241E1A] text-[10px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-3xs disabled:opacity-50 cursor-pointer"
                >
                  {isSaving ? 'Saving...' : 'Save Profile'}
                </button>
             </div>
 
             {/* Profile Info & Skills Layout */}
-            <div className="mt-2 flex flex-col md:flex-row gap-8 justify-between items-start">
+            <div className="mt-4 flex flex-col md:flex-row gap-8 justify-between items-start">
               
               {/* Left Side: Name, Role, Location */}
-              <div className="flex-1">
-                <h1 className="text-[28px] font-extrabold text-[#241E1A] tracking-tight">{name}</h1>
+              <div className="flex-1 space-y-2">
+                <h1 className="text-3xl font-serif text-[#241E1A] uppercase tracking-tight font-medium">{name}</h1>
                 {roles.length > 0 && (
-                  <p className="text-[15px] font-medium text-stone-500 mt-1">
+                  <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                     {roles.map(r => r.charAt(0) + r.slice(1).toLowerCase()).join(', ')}
                   </p>
                 )}
                 <div className="flex flex-col gap-2 mt-2">
-                  <p className="text-[13px] font-medium text-stone-400">
+                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
                     {preferredLocations.length > 0 ? preferredLocations.join(', ') : 'Location not set'}
                   </p>
                   {/* Selected Locations Badges directly under the name */}
                   {preferredLocations.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {preferredLocations.map((loc, i) => (
-                        <div key={i} className="inline-flex items-center gap-1 bg-[#F4ECE1] text-[#241E1A] px-2 py-0.5 rounded-md border border-[#EAE2D5]">
+                        <div key={i} className="inline-flex items-center gap-1.5 bg-[#FCF9F3] text-[#241E1A] px-2 py-0.5 rounded border border-[#EAE2D5] shadow-3xs">
                           <span className="text-[10px] font-bold">{loc}</span>
                           <button onClick={() => setPreferredLocations(preferredLocations.filter((_, idx) => idx !== i))} className="hover:text-red-600 transition-colors">
                             <X className="w-2.5 h-2.5" />
@@ -410,25 +413,22 @@ export default function Profile() {
 
               {/* Right Side: Current Role & Skills */}
               <div className="flex flex-col gap-5 md:items-end min-w-[200px]">
-                
-                
-
                 <div className="flex flex-col gap-2 md:items-end w-full">
-                  <div className="flex items-center gap-1.5 text-stone-500 justify-end">
-                    <span className="text-[13px] font-semibold">Skills</span>
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1.5 text-stone-400 justify-end border-b border-[#EAE2D5] pb-1 w-full md:w-auto">
+                    <span className="text-xs font-bold uppercase tracking-widest">Certified Skills</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#241E1A]" />
                   </div>
                   
                   {certifiedSkills.length > 0 ? (
-                    <div className="flex flex-wrap md:justify-end gap-1.5">
+                    <div className="flex flex-wrap md:justify-end gap-1.5 mt-1">
                       {certifiedSkills.map((skill, i) => (
-                        <span key={i} className="bg-[#FAF6F0] text-[#241E1A] border border-[#EAE2D5] text-[11px] font-bold px-3 py-1.5 rounded-full">
+                        <span key={i} className="bg-[#FCF9F3] text-[#241E1A] border border-[#EAE2D5] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded shadow-3xs">
                           {skill}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-stone-400">No certified skills yet.</p>
+                    <p className="text-[11px] text-stone-400 italic">No certified skills yet.</p>
                   )}
                 </div>
               </div>
@@ -436,12 +436,12 @@ export default function Profile() {
 
             {/* Bottom Section: 3 Cards mimicking the image */}
             {isApplicant && (
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
                 
                 {/* Card 1: Ready for work */}
-                <div className="bg-[#FCF9F3] rounded-[20px] p-5 flex flex-col relative border border-[#F4ECE1]">
+                <div className="bg-[#FCF9F3] rounded-[24px] p-6 flex flex-col relative border border-[#EAE2D5] hover:shadow-sm hover:scale-[1.02] transition-all duration-300">
                   <div className="mb-4">
-                    <h3 className="text-[13px] font-bold text-[#241E1A] mb-1">Ready for work</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-[#241E1A] mb-1">Ready for work</h3>
                     <p className="text-[11px] text-stone-500 leading-tight">Show recruiters where you want to work.</p>
                   </div>
                   
@@ -449,13 +449,13 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-                      className="w-full bg-white border border-[#EAE2D5] hover:border-[#241E1A] rounded-xl py-2 px-3 text-xs outline-none font-semibold text-[#241E1A] flex items-center justify-between transition-colors shadow-sm"
+                      className="w-full bg-white border border-[#EAE2D5] hover:border-[#241E1A] rounded-xl py-2 px-3.5 text-xs outline-none font-semibold text-[#241E1A] flex items-center justify-between transition-colors shadow-3xs cursor-pointer"
                     >
                       <span className="text-stone-400 truncate">Add locations...</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-stone-400 shrink-0 transition-transform ${isLocationDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isLocationDropdownOpen && (
-                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-[#EAE2D5] rounded-xl shadow-lg overflow-hidden py-1 max-h-40 overflow-y-auto">
+                      <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-[#EAE2D5] rounded-xl shadow-lg overflow-hidden py-1 max-h-40 overflow-y-auto z-30">
                         {availableLocations.filter(loc => !preferredLocations.includes(loc)).length > 0 ? (
                           availableLocations.filter(loc => !preferredLocations.includes(loc)).map((loc) => (
                             <button
@@ -465,7 +465,7 @@ export default function Profile() {
                                 setPreferredLocations([...preferredLocations, loc]);
                                 setIsLocationDropdownOpen(false);
                               }}
-                              className="w-full text-left px-4 py-2 text-xs font-semibold text-[#241E1A] hover:bg-[#F4ECE1] transition-colors"
+                              className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#241E1A] hover:bg-[#F4ECE1] transition-colors"
                             >
                               {loc}
                             </button>
@@ -479,24 +479,24 @@ export default function Profile() {
                 </div>
 
                 {/* Card 2: Update */}
-                <Link to="/skills" className="bg-[#FCF9F3] rounded-[20px] p-5 flex items-center justify-between group hover:bg-[#F4ECE1] transition-colors border border-[#F4ECE1]">
+                <Link to="/skills" className="bg-[#FCF9F3] rounded-[24px] p-6 flex items-center justify-between group hover:bg-[#FAF6F0] hover:scale-[1.02] transition-all duration-300 border border-[#EAE2D5] hover:shadow-sm">
                   <div className="pr-2">
-                    <h3 className="text-[13px] font-bold text-[#241E1A] mb-1">Update</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-[#241E1A] mb-1">Update</h3>
                     <p className="text-[11px] text-stone-500 leading-tight">Keep your profile updated so that recruiters know you better.</p>
                   </div>
-                  <div className="shrink-0 w-7 h-7 rounded-full border border-[#241E1A] flex items-center justify-center bg-white group-hover:bg-[#241E1A] transition-colors">
-                    <ArrowRight className="w-3.5 h-3.5 text-[#241E1A] group-hover:text-white transition-colors" />
+                  <div className="shrink-0 w-8 h-8 rounded-full border border-stone-400 group-hover:border-[#241E1A] group-hover:bg-[#241E1A] group-hover:text-[#FAF6F0] flex items-center justify-center bg-white transition-all">
+                    <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-[#FAF6F0] transition-colors" />
                   </div>
                 </Link>
 
                 {/* Card 3: Active Jobs */}
-                <Link to="/jobs" className="bg-[#FCF9F3] rounded-[20px] p-5 flex items-center justify-between group hover:bg-[#F4ECE1] transition-colors border border-[#F4ECE1]">
+                <Link to="/jobs" className="bg-[#FCF9F3] rounded-[24px] p-6 flex items-center justify-between group hover:bg-[#FAF6F0] hover:scale-[1.02] transition-all duration-300 border border-[#EAE2D5] hover:shadow-sm">
                   <div className="pr-2">
-                    <h3 className="text-[13px] font-bold text-[#241E1A] mb-1">Active Jobs</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-[#241E1A] mb-1">Active Jobs</h3>
                     <p className="text-[11px] text-stone-500 leading-tight">Track your {applications.length} current job submissions.</p>
                   </div>
-                  <div className="shrink-0 w-7 h-7 rounded-full border border-[#241E1A] flex items-center justify-center bg-white group-hover:bg-[#241E1A] transition-colors">
-                    <ArrowRight className="w-3.5 h-3.5 text-[#241E1A] group-hover:text-white transition-colors" />
+                  <div className="shrink-0 w-8 h-8 rounded-full border border-stone-400 group-hover:border-[#241E1A] group-hover:bg-[#241E1A] group-hover:text-[#FAF6F0] flex items-center justify-center bg-white transition-all">
+                    <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-[#FAF6F0] transition-colors" />
                   </div>
                 </Link>
 
@@ -507,20 +507,20 @@ export default function Profile() {
 
         {/* Detailed Application Tracking (Below Profile Card) */}
         {isApplicant && applications.length > 0 && (
-          <div className="mt-8 bg-white border border-[#EAE2D5] rounded-[32px] p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="mt-12 bg-white border border-[#EAE2D5] rounded-[32px] p-8 shadow-xs animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+            <div className="flex items-center gap-2 mb-6 border-b border-[#EAE2D5] pb-3">
               <Briefcase className="w-5 h-5 text-[#241E1A]" />
-              <h2 className="text-sm font-bold text-[#241E1A]">Application Tracking Details</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-[#241E1A]">Application Tracking Details</h2>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {applications.map((app) => (
                 <div 
                   key={app.applicationId} 
-                  className="border border-[#EAE2D5] hover:border-[#241E1A] rounded-2xl p-5 bg-[#FDFBF7] transition-all duration-300 flex justify-between items-start sm:items-center gap-4"
+                  className="border-b border-[#EAE2D5] pb-6 pt-2 hover:px-4 hover:bg-[#FCF9F3] hover:rounded-2xl transition-all duration-300 flex justify-between items-center gap-4 mb-4 last:border-b-0 last:pb-0 last:mb-0"
                 >
                   <div className="flex-1">
-                    <h3 className="text-xs font-bold text-[#241E1A]">Application #{app.applicationId}</h3>
-                    <p className="text-[10px] font-medium text-stone-500 mt-1">Job Ref: #{app.jobId}</p>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-[#241E1A]">Application #{app.applicationId}</h3>
+                    <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mt-1">Job Ref: #{app.jobId}</p>
                     <div className="mt-2 inline-flex items-center gap-1.5">
                       <div className={`w-1.5 h-1.5 rounded-full ${app.applicationStatus === 'WITHDRAWN' ? 'bg-red-500' : 'bg-emerald-500'}`} />
                       <span className={`text-[10px] font-bold ${app.applicationStatus === 'WITHDRAWN' ? 'text-red-600' : 'text-emerald-600'}`}>
@@ -532,7 +532,7 @@ export default function Profile() {
                   {app.applicationStatus !== 'WITHDRAWN' && (
                     <button 
                       onClick={() => handleWithdraw(app.applicationId)}
-                      className="text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-4 py-2 rounded-full transition-colors shrink-0"
+                      className="text-[10px] font-bold uppercase tracking-wider text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-4 py-2 rounded-xl border border-red-200 transition-colors shrink-0 cursor-pointer shadow-3xs"
                     >
                       Withdraw
                     </button>
