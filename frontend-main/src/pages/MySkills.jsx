@@ -4,6 +4,7 @@ import { CheckCircle2, Shield, ShieldAlert, FileText, UploadCloud, X, Plus, Save
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../lib/apiClient';
+import { MySkillsSkeleton } from '../components/Skeleton';
 
 export default function MySkills() {
   const { user, loading } = useContext(AuthContext);
@@ -143,18 +144,7 @@ export default function MySkills() {
   };
 
   if (loading || isFetchingData) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center relative overflow-hidden">
-        {/* Decorative grids */}
-        <div className="absolute inset-0 bg-[radial-gradient(#E5DAC9_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
-        
-        <div className="text-center space-y-4 relative z-10">
-          <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center shadow-md">
-          </div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Skills Hub...</p>
-        </div>
-      </div>
-    );
+    return <MySkillsSkeleton />;
   }
 
   return (

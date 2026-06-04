@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../lib/apiClient';
 import { Building2, MapPin, Mail, Globe, Users, ChevronRight, X, Briefcase, ExternalLink } from 'lucide-react';
+import { MassHiringSkeleton } from '../components/Skeleton';
 
 export default function MassHiring() {
   const { user, loading } = useContext(AuthContext);
@@ -35,14 +36,7 @@ export default function MassHiring() {
   }, [user, showToast]);
 
   if (loading || isFetching) {
-    return (
-      <div className="min-h-[60vh] bg-[#FDFBF7] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center"></div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Directory...</p>
-        </div>
-      </div>
-    );
+    return <MassHiringSkeleton />;
   }
 
   // Restrict to EMPLOYER

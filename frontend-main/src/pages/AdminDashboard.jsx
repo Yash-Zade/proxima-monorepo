@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../lib/apiClient';
 import { Navigate } from 'react-router-dom';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 /* ─────────────────────── helpers ─────────────────────── */
 const EMPTY_PAGE = { content: [], totalPages: 1 };
@@ -254,14 +255,7 @@ export default function AdminDashboard() {
 
   /* ── guards ── */
   if (loading || initialLoading) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-9 h-9 rounded-xl bg-[#241E1A] animate-spin mx-auto" />
-          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Initialising Admin Node…</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton type="admin" />;
   }
 
   if (!user || !isAdmin) return <Navigate to="/" replace />;

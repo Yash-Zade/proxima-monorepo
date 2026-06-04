@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, MapPin, Calendar, SlidersHorizontal, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../lib/apiClient';
+import { JobListingsSkeleton } from '../components/Skeleton';
 
 export default function JobListings() {
   const [jobs, setJobs] = useState([]);
@@ -119,11 +120,7 @@ export default function JobListings() {
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-4">
-              <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center shadow-md">
-              </div>
-              <span className="text-xs font-semibold uppercase tracking-widest animate-pulse text-stone-500">Loading Registry...</span>
-            </div>
+            <JobListingsSkeleton />
           ) : error ? (
             <div className="bg-[#FAF6F0] border border-red-200 p-8 rounded-xl text-center space-y-2">
               <p className="text-sm font-semibold text-red-600">{error}</p>

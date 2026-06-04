@@ -4,6 +4,7 @@ import { MapPin, Calendar, Briefcase, Building2, ArrowLeft, CheckCircle2, Chevro
 import apiClient from '../lib/apiClient';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { JobDetailSkeleton } from '../components/Skeleton';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -61,18 +62,7 @@ export default function JobDetail() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center items-center px-4 py-16 bg-[#FDFBF7] relative overflow-hidden">
-        {/* Decorative grids */}
-        <div className="absolute inset-0 bg-[radial-gradient(#E5DAC9_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
-
-        <div className="text-center space-y-4 py-12 flex flex-col items-center justify-center relative z-10">
-          <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center shadow-md">
-          </div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Specifications...</p>
-        </div>
-      </div>
-    );
+    return <JobDetailSkeleton />;
   }
 
   if (error || !job) {

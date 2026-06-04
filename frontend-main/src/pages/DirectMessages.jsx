@@ -7,6 +7,7 @@ import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import apiClient from '../lib/apiClient';
 import { AuthContext } from '../context/AuthContext';
+import { ChatSkeleton, MessageSkeleton } from '../components/Skeleton';
 
 export default function DirectMessages() {
   const { user } = useContext(AuthContext);
@@ -18,6 +19,7 @@ export default function DirectMessages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [connected, setConnected] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
@@ -181,6 +183,7 @@ export default function DirectMessages() {
     if (!currentUser || !selectedContact) return;
 
     const fetchHistory = async () => {
+      setLoadingHistory(true);
       try {
         const res = await apiClient.get(`/api/chat/history/${currentUser.id}/${selectedContact.id}`);
         const history = res.data?.data || res.data || [];
@@ -200,6 +203,8 @@ export default function DirectMessages() {
         setMessages(mappedHistory);
       } catch (err) {
         console.error("[Dev Alert] Failed to load chat history", err);
+      } finally {
+        setLoadingHistory(false);
       }
     };
 
@@ -399,10 +404,7 @@ export default function DirectMessages() {
           {/* Threads list */}
           <div className="flex-1 overflow-y-auto p-2 space-y-4">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-32 gap-2">
-                <Loader2 className="w-5 h-5 text-stone-400 animate-spin" />
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest animate-pulse">Establishing handshake...</p>
-              </div>
+              <ChatSkeleton />
             ) : !searchQuery.trim() ? (
               // ─── ACTIVE CHATS ONLY ───
               contacts.length === 0 ? (
@@ -625,7 +627,9 @@ export default function DirectMessages() {
                   </div>
                 </div>
 
-                {messages.length > 0 ? (
+                {loadingHistory ? (
+                  <MessageSkeleton />
+                ) : messages.length > 0 ? (
                   messages.map((message) => {
                     const isMe = message.sender === currentUser?.id;
                     const messageDate = new Date(message.rawTimestamp || Date.now());

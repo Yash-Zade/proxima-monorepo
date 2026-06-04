@@ -8,6 +8,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../lib/apiClient';
+import { DashboardSkeleton } from '../components/Skeleton';
 import { Navigate } from 'react-router-dom';
 
 /* ─── helpers ─── */
@@ -724,14 +725,7 @@ export default function EmployerDashboard() {
 
   /* ── guards ── */
   if (loading || (isEmployer && !profile && fetching)) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-9 h-9 rounded-xl bg-[#241E1A] animate-spin mx-auto" />
-          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Loading Employer Node…</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton type="employer" />;
   }
 
   if (!user || !isEmployer) return <Navigate to="/" replace />;
@@ -806,8 +800,20 @@ export default function EmployerDashboard() {
         </div>
 
         {fetching ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-xl bg-[#241E1A] animate-spin" />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border border-[#EAE2D5] rounded-xl p-5 bg-white space-y-4">
+                <div className="space-y-2">
+                  <div className="h-4 bg-[#EAE2D5]/40 animate-pulse rounded-lg w-2/3" />
+                  <div className="h-3 bg-[#EAE2D5]/40 animate-pulse rounded-lg w-1/3" />
+                </div>
+                <div className="h-12 bg-[#EAE2D5]/40 animate-pulse rounded-lg w-full" />
+                <div className="flex gap-2">
+                  <div className="h-6 bg-[#EAE2D5]/40 animate-pulse rounded-lg w-20" />
+                  <div className="h-6 bg-[#EAE2D5]/40 animate-pulse rounded-lg w-20" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : jobs.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-[#EAE2D5] rounded-2xl py-20 text-stone-400">

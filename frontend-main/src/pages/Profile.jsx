@@ -4,6 +4,7 @@ import { User, CheckCircle2, Shield, Mail, FileText, Plus, Save, Briefcase, Tras
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../lib/apiClient';
+import { ProfileSkeleton } from '../components/Skeleton';
 
 function RoleApplicationModal({ isOpen, onClose, userId }) {
   const { showToast } = useToast();
@@ -309,15 +310,7 @@ export default function Profile() {
   };
 
   if (loading || isFetchingData) {
-    return (
-      <div className="min-h-[50vh] bg-[#FDFBF7] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-8 h-8 rounded-lg bg-[#241E1A] animate-spin mx-auto flex items-center justify-center">
-          </div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest animate-pulse">Loading Profile Node...</p>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const name = user?.name || 'Anonymous User';
