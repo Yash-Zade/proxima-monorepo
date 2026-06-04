@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { 
   Send, Phone, Video, Search, Info, Paperclip, MessageSquare, 
-  ShieldAlert, X, Smile, FileText, Image, Loader2, CheckCheck, Mail 
+  ShieldAlert, X, Smile, FileText, Image, Loader2, CheckCheck, Mail, ArrowLeft
 } from 'lucide-react';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
@@ -32,6 +32,7 @@ export default function DirectMessages() {
 
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const emojis = ['👍', '❤️', '😂', '🎉', '🔥', '🚀', '💬', '🙏', '🤔', '👀'];
 
@@ -93,11 +94,19 @@ export default function DirectMessages() {
 
   // Scroll to bottom helper
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 50);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   // 1. Fetch authenticated user active contacts list (only active chats)
@@ -367,7 +376,7 @@ export default function DirectMessages() {
 
       <div className="bg-[#FAF6F0] border border-[#EAE2D5] rounded-2xl overflow-hidden h-full flex shadow-sm">
         {/* Left column - Inbox Sidebar */}
-        <div className="w-full md:w-80 lg:w-96 border-r border-[#EAE2D5] flex flex-col h-full bg-[#FAF6F0]">
+        <div className={`w-full md:w-80 lg:w-96 border-r border-[#EAE2D5] flex flex-col h-full bg-[#FAF6F0] ${selectedContact ? 'hidden md:flex' : 'flex'}`}>
           
           {/* Sidebar Header */}
           <div className="p-4 border-b border-[#EAE2D5] bg-[#FCF9F3]">
@@ -581,6 +590,13 @@ export default function DirectMessages() {
               {/* Header */}
               <div className="p-4 border-b border-[#EAE2D5] flex justify-between items-center bg-[#FCF9F3]">
                 <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedContact(null)}
+                    className="md:hidden p-2 -ml-2 text-stone-500 hover:text-[#241E1A] hover:bg-[#F4ECE1]/50 rounded-lg transition-colors cursor-pointer mr-1"
+                    aria-label="Back to contacts"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs border ${getAvatarStyles(selectedContact.role).bg} ${getAvatarStyles(selectedContact.role).text} ${getAvatarStyles(selectedContact.role).border}`}>
                     {getInitials(selectedContact.name)}
                   </div>
@@ -618,7 +634,7 @@ export default function DirectMessages() {
               </div>
 
               {/* Messages view */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4">
                 {/* Security Warning banner at the very top of message stream */}
                 <div className="flex items-center justify-center text-center pb-2">
                   <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FAF6F0] border border-[#EAE2D5] text-[10px] font-semibold text-stone-500 max-w-sm shadow-2xs">
