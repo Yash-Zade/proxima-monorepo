@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
+import jakarta.persistence.Column;
 
 import java.util.List;
 import java.util.Objects;
@@ -22,7 +23,10 @@ public class Job {
     private Long jobId;
 
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
     private String location;
 
     @ElementCollection

@@ -1,9 +1,6 @@
 package com.teamarc.proxima.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,6 +13,7 @@ public class OnBoardNewCollege {
     private Long id;
     private Long userId;
     private String name;
+    @Column(columnDefinition = "TEXT")
     private String address;
     private String email;
     private String website;

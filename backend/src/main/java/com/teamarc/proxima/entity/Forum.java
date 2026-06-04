@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import lombok.*;
 
 @Entity
@@ -18,6 +19,8 @@ public class Forum {
     private Long id;
 
     private String name;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
     private Integer members;
 }

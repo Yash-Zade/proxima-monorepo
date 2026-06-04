@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.Column;
+
 
 import java.util.UUID;
 
@@ -22,6 +24,9 @@ public class ChatMessages {
     private UUID id;
     private Long senderId;
     private Long receiverId;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
+    
     private long timestamp;
 }
