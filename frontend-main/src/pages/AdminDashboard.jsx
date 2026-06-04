@@ -300,7 +300,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col mx-6 lg:mx-10 mb-8 border border-[#EAE2D5] rounded-2xl overflow-hidden">
 
         {/* tab bar */}
-        <div className="flex shrink-0 border-b border-[#EAE2D5] bg-[#FAF6F0]">
+        <div className="flex overflow-x-auto shrink-0 border-b border-[#EAE2D5] bg-[#FAF6F0] scrollbar-none">
           {[
             { key: 'EMPLOYERS', label: 'Employers', icon: Building,       count: employerData.content.length },
             { key: 'COLLEGES',  label: 'Colleges',  icon: GraduationCap,  count: collegeData.content.length  },
@@ -310,7 +310,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative flex items-center gap-2 px-7 py-4 text-xs font-bold uppercase tracking-wider transition-colors
+                className={`relative flex items-center gap-2 px-7 py-4 text-xs font-bold uppercase tracking-wider transition-colors shrink-0 whitespace-nowrap
                   ${active
                     ? 'text-[#241E1A] bg-white border-r border-[#EAE2D5]'
                     : 'text-stone-500 hover:text-[#241E1A] hover:bg-[#F4ECE1]'

@@ -469,7 +469,7 @@ export default function CollegeDashboard() {
       {/* ── TAB NAVIGATION BAR ── */}
       <div className="flex-1 flex flex-col mx-6 lg:mx-10 mb-8 border border-[#EAE2D5] rounded-2xl overflow-hidden bg-white shadow-sm">
         {/* Tab Links */}
-        <div className="flex shrink-0 border-b border-[#EAE2D5] bg-[#FAF6F0]">
+        <div className="flex overflow-x-auto shrink-0 border-b border-[#EAE2D5] bg-[#FAF6F0] scrollbar-none">
           {[
             { key: 'STUDENTS', label: 'Student Directory', icon: Users, count: totalStudentsCount },
             { key: 'ONBOARD', label: 'Onboard Requests', icon: Plus, count: onboardRequests.length },
@@ -480,7 +480,7 @@ export default function CollegeDashboard() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-wider transition-colors border-r border-[#EAE2D5]
+                className={`relative flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-wider transition-colors border-r border-[#EAE2D5] shrink-0 whitespace-nowrap
                   ${isActive
                     ? 'text-[#241E1A] bg-white'
                     : 'text-stone-500 hover:text-[#241E1A] hover:bg-[#F4ECE1]'
@@ -587,8 +587,8 @@ export default function CollegeDashboard() {
                           {onboardRequests.map(req => {
                             const candidate = allUsers.find(u => u.id === req.userId) || { id: req.userId, name: `Applicant #${req.userId}`, email: 'No email record' };
                             return (
-                              <div key={req.id} className="p-4 flex items-center justify-between gap-4 hover:bg-[#FDFBF7] transition-colors">
-                                <div className="min-w-0">
+                              <div key={req.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FDFBF7] transition-colors">
+                                <div className="min-w-0 w-full sm:w-auto">
                                   <h4 className="text-xs font-bold text-[#241E1A] truncate">{candidate.name}</h4>
                                   <p className="text-[10px] text-stone-500 mt-0.5">{candidate.email}</p>
                                   <span className="inline-flex items-center text-[8px] font-bold bg-[#F4ECE1] text-[#241E1A] px-2 py-0.5 rounded border border-[#EAE2D5] uppercase tracking-wider mt-1.5">
@@ -599,7 +599,7 @@ export default function CollegeDashboard() {
                                 <button
                                   onClick={() => handleOnboardStudent(candidate)}
                                   disabled={acting}
-                                  className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#FDFBF7] bg-[#241E1A] hover:bg-[#382F29] rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40"
+                                  className="flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#FDFBF7] bg-[#241E1A] hover:bg-[#382F29] rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 w-full sm:w-auto"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Approve & Onboard
                                 </button>
@@ -644,12 +644,12 @@ export default function CollegeDashboard() {
                       <div className="border border-[#EAE2D5] rounded-xl overflow-hidden bg-white">
                         <div className="divide-y divide-[#EAE2D5] max-h-96 overflow-y-auto">
                           {eligibleStudents.map(candidate => (
-                            <div key={candidate.id} className="p-4 flex items-center justify-between gap-4 hover:bg-[#FDFBF7] transition-colors">
-                              <div className="min-w-0">
+                            <div key={candidate.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FDFBF7] transition-colors">
+                              <div className="min-w-0 w-full sm:w-auto">
                                 <h4 className="text-xs font-bold text-[#241E1A] truncate">{candidate.name}</h4>
                                 <p className="text-[10px] text-stone-500 mt-0.5">{candidate.email}</p>
                                 {candidate.roles && (
-                                  <div className="flex gap-1 mt-1">
+                                  <div className="flex flex-wrap gap-1 mt-1">
                                     {candidate.roles.map((role, i) => (
                                       <span key={i} className="text-[8px] font-bold bg-[#FAF6F0] text-stone-500 border border-[#EAE2D5] px-1.5 py-0.2 rounded uppercase">
                                         {role}
@@ -662,7 +662,7 @@ export default function CollegeDashboard() {
                               <button
                                 onClick={() => handleOnboardStudent(candidate)}
                                 disabled={acting}
-                                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#241E1A] border border-[#EAE2D5] bg-white hover:bg-[#F4ECE1] rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40"
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#241E1A] border border-[#EAE2D5] bg-white hover:bg-[#F4ECE1] rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 w-full sm:w-auto"
                               >
                                 <Plus className="w-3.5 h-3.5" /> Onboard Student
                               </button>
@@ -747,8 +747,8 @@ export default function CollegeDashboard() {
                       </div>
                     ) : (
                       eligibleEmployers.map(empUser => (
-                        <div key={empUser.id} className="border border-[#EAE2D5] rounded-xl p-4 bg-white flex justify-between items-center gap-4 hover:border-[#241E1A] transition-colors">
-                          <div className="min-w-0">
+                        <div key={empUser.id} className="border border-[#EAE2D5] rounded-xl p-4 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#241E1A] transition-colors">
+                          <div className="min-w-0 w-full sm:w-auto">
                             <h4 className="text-xs font-bold text-[#241E1A] truncate">{empUser.name}</h4>
                             <p className="text-[9px] text-stone-500 truncate mt-0.5">{empUser.email}</p>
                           </div>
@@ -756,7 +756,7 @@ export default function CollegeDashboard() {
                           <button
                             onClick={() => handleAllowEmployer(empUser)}
                             disabled={acting}
-                            className="flex items-center gap-1.5 px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-[#FDFBF7] bg-[#241E1A] hover:bg-[#382F29] rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 shadow-sm"
+                            className="flex items-center justify-center gap-1.5 px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-[#FDFBF7] bg-[#241E1A] hover:bg-[#382F29] rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 shadow-sm w-full sm:w-auto"
                           >
                             <Shield className="w-3 h-3" /> Authorize Recruiter
                           </button>
