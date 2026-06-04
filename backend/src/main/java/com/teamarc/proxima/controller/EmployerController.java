@@ -1,9 +1,6 @@
 package com.teamarc.proxima.controller;
 
-import com.teamarc.proxima.dto.ApplicantDTO;
-import com.teamarc.proxima.dto.EmployerDTO;
-import com.teamarc.proxima.dto.JobApplicationDTO;
-import com.teamarc.proxima.dto.JobDTO;
+import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.entity.enums.ApplicationStatus;
 import com.teamarc.proxima.services.EmployerService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +13,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 @CrossOrigin(origins = "https://proxima-main.vercel.app")
 @RestController
@@ -134,6 +132,18 @@ public class EmployerController {
     @GetMapping("/applications/{applicationId}/applicant")
     public ResponseEntity<JobApplicationDTO> getAllApplicantOfJobApplication(@PathVariable Long applicationId) {
         return ResponseEntity.ok(employerService.getAllApplicantOfJobApplication(applicationId));
+    }
+
+    @PostMapping("/college/{collegeId}/mass-hiring")
+    public ResponseEntity<MassHiringRequestDTO> requestCollegeForMassHiring(
+            @PathVariable Long collegeId,
+            @RequestBody MassHiringRequestDTO massHiringRequestDTO) {
+        return ResponseEntity.ok(employerService.requestCollegeForMassHiring(collegeId, massHiringRequestDTO));
+    }
+
+    @GetMapping("/mass-hiring")
+    public ResponseEntity<List<MassHiringRequestDTO>> getMyMassHiringRequests() {
+        return ResponseEntity.ok(employerService.getMyMassHiringRequests());
     }
 
 }

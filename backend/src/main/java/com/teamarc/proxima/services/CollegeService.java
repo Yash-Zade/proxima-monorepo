@@ -2,11 +2,14 @@ package com.teamarc.proxima.services;
 
 import com.teamarc.proxima.dto.CollegeDTO;
 import com.teamarc.proxima.dto.EmployerDTO;
+import com.teamarc.proxima.dto.MassHiringRequestDTO;
 import com.teamarc.proxima.dto.StudentDTO;
 import com.teamarc.proxima.entity.*;
+import com.teamarc.proxima.entity.enums.MassHiringStatus;
 import com.teamarc.proxima.entity.enums.Role;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
 import com.teamarc.proxima.repository.CollegeRepository;
+import com.teamarc.proxima.repository.MassHiringRequestRepository;
 import com.teamarc.proxima.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -28,6 +31,7 @@ public class CollegeService {
     private final ApplicantService applicantService;
     private final EmployerService employerService;
     private final UserRepository userRepository;
+    private final MassHiringRequestRepository massHiringRequestRepository;
 
     @CacheEvict(value = "colleges", allEntries = true)
     public College createNewCollege(College college) {
@@ -106,7 +110,6 @@ public class CollegeService {
         return modelMapper.map(employer, EmployerDTO.class);
     }
 
-    @Cacheable(value = "colleges")
     public List<CollegeDTO> getAllColleges() {
         return collegeRepository.findAll().stream()
                 .map(college -> {
@@ -118,5 +121,48 @@ public class CollegeService {
                     dto.setWebsite(college.getWebsite());
                     return dto;
                 }).toList();
+    }
+
+
+    public List<MassHiringRequestDTO> getMassHiringRequests() {
+        College college = getCurrentCollege();
+        List<MassHiringRequest> requests = massHiringRequestRepository.findByCollegeId(college.getId());
+        return requests
+                .stream()
+                .map(this::toMassHiringDTO)
+                .toList();
+    }
+
+    public MassHiringRequestDTO approveMassHiringRequest(Long requestId) {
+        College college = getCurrentCollege();
+        MassHiringRequest request = massHiringRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mass hiring request not found with id: " + requestId));
+        if (!request.getCollege().getId().equals(college.getId())) {
+            throw new ResourceNotFoundException("Mass hiring request does not belong to this college");
+        }
+        request.setStatus(MassHiringStatus.APPROVED);
+        return toMassHiringDTO(massHiringRequestRepository.save(request));
+    }
+
+    public MassHiringRequestDTO rejectMassHiringRequest(Long requestId) {
+        College college = getCurrentCollege();
+        MassHiringRequest request = massHiringRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mass hiring request not found with id: " + requestId));
+        if (!request.getCollege().getId().equals(college.getId())) {
+            throw new ResourceNotFoundException("Mass hiring request does not belong to this college");
+        }
+        request.setStatus(MassHiringStatus.REJECTED);
+        return toMassHiringDTO(massHiringRequestRepository.save(request));
+    }
+
+    private MassHiringRequestDTO toMassHiringDTO(MassHiringRequest req) {
+        MassHiringRequestDTO dto = new MassHiringRequestDTO();
+        dto.setId(req.getId());
+        dto.setDescription(req.getDescription());
+        dto.setRequiredStudents(req.getRequiredStudents());
+        dto.setStatus(req.getStatus() != null ? req.getStatus().name() : null);
+        dto.setCollege(req.getCollege() != null ? req.getCollege().getId() : null);
+        dto.setEmployer(req.getEmployer() != null ? req.getEmployer().getEmployerId() : null);
+        return dto;
     }
 }

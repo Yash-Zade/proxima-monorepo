@@ -4,10 +4,9 @@ import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.entity.*;
 import com.teamarc.proxima.entity.enums.ApplicationStatus;
 import com.teamarc.proxima.entity.enums.JobStatus;
+import com.teamarc.proxima.entity.enums.MassHiringStatus;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
-import com.teamarc.proxima.repository.EmployerRepository;
-import com.teamarc.proxima.repository.JobApplicationRepository;
-import com.teamarc.proxima.repository.JobRepository;
+import com.teamarc.proxima.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
@@ -17,10 +16,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.ReflectionUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,6 +34,8 @@ public class EmployerService {
     private final JobApplicationRepository jobApplicationRepository;
     private final JobRepository jobRepository;
     private final ApplicantService applicantService;
+    private final CollegeRepository collegeRepository;
+    private final MassHiringRequestRepository massHiringRequestRepository;
 
     public Employer createNewEmployer(Employer employer) {
         return employerRepository.save(employer);
@@ -213,5 +216,38 @@ public class EmployerService {
     public Employer getEmployerByUser(User user) {
         return employerRepository.findByUser(user)
                 .orElseThrow(() -> new ResourceNotFoundException("Employer not found with user id: " + user.getId()));
+    }
+
+    public MassHiringRequestDTO requestCollegeForMassHiring(Long collegeId, MassHiringRequestDTO massHiringRequestDTO) {
+        College college = collegeRepository.findById(collegeId)
+                .orElseThrow(() -> new ResourceNotFoundException("College not found with id: " + collegeId));
+        Employer employer = getCurrentEmployer();
+        MassHiringRequest massHiringRequest = MassHiringRequest.builder()
+                .description(massHiringRequestDTO.getDescription())
+                .requiredStudents(massHiringRequestDTO.getRequiredStudents())
+                .status(MassHiringStatus.PENDING)
+                .college(college)
+                .employer(employer)
+                .build();
+        return toMassHiringDTO(massHiringRequestRepository.save(massHiringRequest));
+    }
+
+    public List<MassHiringRequestDTO> getMyMassHiringRequests() {
+        Employer employer = getCurrentEmployer();
+        return massHiringRequestRepository.findByEmployer_EmployerId(employer.getEmployerId())
+                .stream()
+                .map(this::toMassHiringDTO)
+                .toList();
+    }
+
+    private MassHiringRequestDTO toMassHiringDTO(MassHiringRequest req) {
+        MassHiringRequestDTO dto = new MassHiringRequestDTO();
+        dto.setId(req.getId());
+        dto.setDescription(req.getDescription());
+        dto.setRequiredStudents(req.getRequiredStudents());
+        dto.setStatus(req.getStatus() != null ? req.getStatus().name() : null);
+        dto.setCollege(req.getCollege() != null ? req.getCollege().getId() : null);
+        dto.setEmployer(req.getEmployer() != null ? req.getEmployer().getEmployerId() : null);
+        return dto;
     }
 }

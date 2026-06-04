@@ -1,9 +1,6 @@
 package com.teamarc.proxima.controller;
 
-import com.teamarc.proxima.dto.CollegeDTO;
-import com.teamarc.proxima.dto.EmployerDTO;
-import com.teamarc.proxima.dto.OnBoardNewStudentDTO;
-import com.teamarc.proxima.dto.StudentDTO;
+import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.repository.CollegeRepository;
 import com.teamarc.proxima.services.CollegeService;
 import com.teamarc.proxima.services.StudentService;
@@ -56,5 +53,20 @@ public class CollegeController {
     @PostMapping("allow/employer/{userId}")
     public ResponseEntity<EmployerDTO> allowEmployer(@PathVariable Long userId) {
         return ResponseEntity.ok(collegeService.allowEmployer(userId));
+    }
+
+    @GetMapping("/mass-hiring/requests")
+    public ResponseEntity<List<MassHiringRequestDTO>> getAllMassHiringRequests() {
+        return ResponseEntity.ok(collegeService.getMassHiringRequests());
+    }
+
+    @PostMapping("/mass-hiring/requests/{requestId}/approve")
+    public ResponseEntity<MassHiringRequestDTO> approveMassHiringRequest(@PathVariable Long requestId) {
+        return ResponseEntity.ok(collegeService.approveMassHiringRequest(requestId));
+    }
+
+    @PostMapping("/mass-hiring/requests/{requestId}/reject")
+    public ResponseEntity<MassHiringRequestDTO> rejectMassHiringRequest(@PathVariable Long requestId) {
+        return ResponseEntity.ok(collegeService.rejectMassHiringRequest(requestId));
     }
 }

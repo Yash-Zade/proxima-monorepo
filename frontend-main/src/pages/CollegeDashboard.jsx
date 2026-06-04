@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
 import {
   GraduationCap, Building2, Users, Plus, Search, Globe, Mail, MapPin,
-  Award, Tag, FileText, ExternalLink, CheckCircle2, Shield, RefreshCw, Briefcase, Eye, X
+  Award, Tag, FileText, ExternalLink, CheckCircle2, Shield, RefreshCw, Briefcase, Eye, X, ClipboardList, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -201,11 +201,12 @@ export default function CollegeDashboard() {
   const { user, loading } = useContext(AuthContext);
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS, ONBOARD, EMPLOYERS
+  const [activeTab, setActiveTab] = useState('STUDENTS'); // STUDENTS, ONBOARD, EMPLOYERS, MASS_HIRING
   const [profile, setProfile] = useState(null);
   const [students, setStudents] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [onboardRequests, setOnboardRequests] = useState([]);
+  const [massHiringRequests, setMassHiringRequests] = useState([]);
 
   // States for search and filtering
   const [studentSearch, setStudentSearch] = useState('');
@@ -213,6 +214,7 @@ export default function CollegeDashboard() {
 
   const [onboardSearch, setOnboardSearch] = useState('');
   const [employerSearch, setEmployerSearch] = useState('');
+  const [massHiringStatusFilter, setMassHiringStatusFilter] = useState('ALL');
 
   const [fetching, setFetching] = useState(true);
   const [acting, setActing] = useState(false);
@@ -266,10 +268,20 @@ export default function CollegeDashboard() {
         console.error('[Dev Alert] College Dashboard - requestsRes failed:', err);
       }
 
+      let massHiringList = [];
+      try {
+        const massHiringRes = await apiClient.get('/college/mass-hiring/requests');
+        console.log('[Dev Alert] College Dashboard - massHiringRes success:', massHiringRes);
+        massHiringList = massHiringRes.data?.data ?? massHiringRes.data ?? [];
+      } catch (err) {
+        console.error('[Dev Alert] College Dashboard - massHiringRes failed:', err);
+      }
+
       setProfile(profileData);
       setStudents(studentsList);
       setAllUsers(usersList);
       setOnboardRequests(requestsList);
+      setMassHiringRequests(Array.isArray(massHiringList) ? massHiringList : []);
       
       console.log('[Dev Alert] College Dashboard - All individual loads complete. Requests list set to:', requestsList);
 
@@ -313,6 +325,36 @@ export default function CollegeDashboard() {
     } catch (err) {
       console.error('[College] Allow Employer Error:', err);
       showToast('Failed to authorize employer.', 'error');
+    } finally {
+      setActing(false);
+    }
+  };
+
+  /* ── Action: Approve Mass Hiring Request ── */
+  const handleApproveMassHiring = async (requestId) => {
+    setActing(true);
+    try {
+      await apiClient.post(`/college/mass-hiring/requests/${requestId}/approve`);
+      showToast('Mass hiring request approved successfully!', 'success');
+      await loadDashboardData(true);
+    } catch (err) {
+      console.error('[College] Approve Mass Hiring Error:', err);
+      showToast('Failed to approve mass hiring request.', 'error');
+    } finally {
+      setActing(false);
+    }
+  };
+
+  /* ── Action: Reject Mass Hiring Request ── */
+  const handleRejectMassHiring = async (requestId) => {
+    setActing(true);
+    try {
+      await apiClient.post(`/college/mass-hiring/requests/${requestId}/reject`);
+      showToast('Mass hiring request rejected.', 'success');
+      await loadDashboardData(true);
+    } catch (err) {
+      console.error('[College] Reject Mass Hiring Error:', err);
+      showToast('Failed to reject mass hiring request.', 'error');
     } finally {
       setActing(false);
     }
@@ -473,7 +515,8 @@ export default function CollegeDashboard() {
           {[
             { key: 'STUDENTS', label: 'Student Directory', icon: Users, count: totalStudentsCount },
             { key: 'ONBOARD', label: 'Onboard Requests', icon: Plus, count: onboardRequests.length },
-            { key: 'EMPLOYERS', label: 'Approved Recruiters', icon: Building2, count: allowedEmployersCount }
+            { key: 'EMPLOYERS', label: 'Approved Recruiters', icon: Building2, count: allowedEmployersCount },
+            { key: 'MASS_HIRING', label: 'Mass Hiring', icon: ClipboardList, count: massHiringRequests.filter(r => r.status === 'PENDING').length }
           ].map(tab => {
             const isActive = activeTab === tab.key;
             return (
@@ -768,6 +811,129 @@ export default function CollegeDashboard() {
               </div>
             </div>
           )}
+
+          {/* ──────────────── TAB 4: MASS HIRING REQUESTS ──────────────── */}
+          {activeTab === 'MASS_HIRING' && (() => {
+            const filteredMassHiring = massHiringRequests.filter(r => {
+              if (massHiringStatusFilter === 'ALL') return true;
+              return r.status === massHiringStatusFilter;
+            });
+            const pendingCount = massHiringRequests.filter(r => r.status === 'PENDING').length;
+
+            return (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Filter Bar */}
+                <div className="border-b border-[#EAE2D5] px-6 py-4 bg-[#FAF6F0] flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                  <div>
+                    <h3 className="text-xs font-bold text-[#241E1A] uppercase tracking-widest flex items-center gap-2">
+                      <ClipboardList className="w-4 h-4 text-stone-500" />
+                      Mass Hiring Requests
+                      {pendingCount > 0 && (
+                        <span className="text-[9px] font-black bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                          {pendingCount} Pending
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[10px] text-stone-400 mt-0.5">Review and action employer mass-hire requests directed to your college</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider shrink-0">Filter:</span>
+                    <select
+                      value={massHiringStatusFilter}
+                      onChange={(e) => setMassHiringStatusFilter(e.target.value)}
+                      className="bg-white border border-[#EAE2D5] focus:border-[#241E1A] text-xs font-bold uppercase tracking-wider px-3 py-2 rounded-xl outline-none"
+                    >
+                      <option value="ALL">All Requests</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="COMPLETED">Completed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6">
+                  {filteredMassHiring.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center py-20 text-stone-400">
+                      <ClipboardList className="w-10 h-10 mb-3 opacity-30" />
+                      <p className="text-xs font-bold uppercase tracking-widest">No mass hiring requests found</p>
+                      <p className="text-[10px] text-stone-400 mt-1">Employer mass hiring requests directed to your college will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="max-w-3xl mx-auto space-y-3">
+                      {filteredMassHiring.map(req => {
+                        const isPending = req.status === 'PENDING';
+                        const isApproved = req.status === 'APPROVED';
+                        const isRejected = req.status === 'REJECTED';
+
+                        let statusBadge;
+                        if (isPending) {
+                          statusBadge = <span className="inline-flex items-center text-[8px] font-black border px-2 py-0.5 rounded uppercase tracking-wider bg-amber-50 text-amber-700 border-amber-200">Pending</span>;
+                        } else if (isApproved) {
+                          statusBadge = <span className="inline-flex items-center gap-1 text-[8px] font-black border px-2 py-0.5 rounded uppercase tracking-wider bg-emerald-50 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-3 h-3" />Approved</span>;
+                        } else if (isRejected) {
+                          statusBadge = <span className="inline-flex items-center text-[8px] font-black border px-2 py-0.5 rounded uppercase tracking-wider bg-red-50 text-red-700 border-red-200">Rejected</span>;
+                        } else {
+                          statusBadge = <span className="inline-flex items-center text-[8px] font-black border px-2 py-0.5 rounded uppercase tracking-wider bg-stone-50 text-stone-500 border-stone-200">{req.status}</span>;
+                        }
+
+                        return (
+                          <div key={req.id} className={`border rounded-xl p-5 bg-white flex flex-col gap-4 transition-all hover:shadow-sm ${
+                            isPending ? 'border-amber-200' : isApproved ? 'border-emerald-200' : isRejected ? 'border-red-200' : 'border-[#EAE2D5]'
+                          }`}>
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Building2 className="w-4 h-4 text-stone-400 shrink-0" />
+                                  <h4 className="text-sm font-extrabold text-[#241E1A] truncate">Request #{req.id}</h4>
+                                  {statusBadge}
+                                </div>
+                                <p className="text-[11px] text-stone-600 leading-relaxed">{req.description || 'No description provided.'}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Students Needed</p>
+                                <p className="text-2xl font-black text-[#241E1A] tabular-nums">{req.requiredStudents ?? '—'}</p>
+                              </div>
+                            </div>
+
+                            {/* Employer info */}
+                            {req.employer && (
+                              <div className="bg-[#FAF6F0] rounded-lg px-4 py-2.5 border border-[#EAE2D5] flex items-center gap-2">
+                                <Shield className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Employer ID:</span>
+                                <span className="text-[10px] font-bold text-[#241E1A]">{req.employer}</span>
+                              </div>
+                            )}
+
+                            {/* Action buttons — only for PENDING */}
+                            {isPending && (
+                              <div className="flex gap-2 pt-1 border-t border-[#EAE2D5]">
+                                <button
+                                  onClick={() => handleApproveMassHiring(req.id)}
+                                  disabled={acting}
+                                  className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors cursor-pointer disabled:opacity-40 shadow-sm"
+                                >
+                                  <ThumbsUp className="w-3.5 h-3.5" /> Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectMassHiring(req.id)}
+                                  disabled={acting}
+                                  className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors cursor-pointer disabled:opacity-40 shadow-sm"
+                                >
+                                  <ThumbsDown className="w-3.5 h-3.5" /> Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
