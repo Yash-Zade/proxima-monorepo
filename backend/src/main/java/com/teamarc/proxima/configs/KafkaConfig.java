@@ -11,14 +11,14 @@ public class KafkaConfig {
     @Bean
     public NewTopic directChatTopic() {
         return TopicBuilder.name("direct-chat-topic")
-                .partitions(3)
+                .partitions(2)
                 .build();
     }
 
     @Bean
     public NewTopic forumChatTopic() {
         return TopicBuilder.name("forum-chat-topic")
-                .partitions(3)
+                .partitions(2)
                 .build();
     }
 }
