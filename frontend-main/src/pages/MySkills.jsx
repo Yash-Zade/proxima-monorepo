@@ -311,72 +311,9 @@ export default function MySkills() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Right Side: Skill editors & verified sections */}
-          <div className="lg:col-span-7 space-y-8">
-            {/* Skills manager */}
-            <div className="bg-white border border-[#EAE2D5] p-8 rounded-[32px] shadow-xs">
-              <h2 className="text-xs font-bold text-[#241E1A] uppercase tracking-widest mb-6 pb-3 border-b border-[#EAE2D5]">
-                Technical Skills Manager
-              </h2>
-              <div className="space-y-6">
-                <div className="flex gap-4 items-center">
-                  <input
-                    type="text"
-                    value={newSkill}
-                    onChange={e => setNewSkill(e.target.value)}
-                    placeholder="Enter a capability name (e.g. Docker, TypeScript)..."
-                    className="flex-1 bg-transparent border-b border-stone-400 focus-within:border-[#241E1A] transition-colors py-2 px-1 text-xs outline-none text-[#241E1A] placeholder:text-stone-300"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newSkill.trim()) {
-                        e.preventDefault();
-                        setSkills([...skills, newSkill.trim()]);
-                        setNewSkill('');
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      if (newSkill.trim()) {
-                        setSkills([...skills, newSkill.trim()]);
-                        setNewSkill('');
-                      }
-                    }}
-                    className="p-2.5 bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] rounded-xl transition-all shadow-3xs cursor-pointer flex items-center justify-center"
-                    aria-label="Add Skill"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Your Capabilities List</label>
-                  {skills.length > 0 ? (
-                    <div className="flex flex-wrap gap-2.5 p-4 bg-[#FCF9F3] border border-[#EAE2D5] rounded-2xl">
-                      {skills.map((skill, i) => (
-                        <span key={i} className="inline-flex items-center gap-1 bg-white text-[#241E1A] border border-[#EAE2D5] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-3xs">
-                          {skill}
-                          <button
-                            onClick={() => setSkills(skills.filter((_, idx) => idx !== i))}
-                            className="hover:text-red-500 text-stone-400 transition-colors ml-1.5"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 bg-[#FAF6F0] rounded-2xl border border-dashed border-[#EAE2D5] text-stone-400 text-xs">
-                      No technical skills added yet. Add them above or extract from resume!
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
             {/* Verification section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
               {/* Verified Skills */}
               <div className="bg-white border border-[#EAE2D5] p-6 rounded-2xl shadow-xs relative overflow-hidden flex flex-col justify-between min-h-[220px]">
                 <div>
@@ -442,6 +379,69 @@ export default function MySkills() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Skill editors & verified sections */}
+          <div className="lg:col-span-7 space-y-8">
+            {/* Skills manager */}
+            <div className="bg-white border border-[#EAE2D5] p-8 rounded-[32px] shadow-xs">
+              <h2 className="text-xs font-bold text-[#241E1A] uppercase tracking-widest mb-6 pb-3 border-b border-[#EAE2D5]">
+                Technical Skills Manager
+              </h2>
+              <div className="space-y-6">
+                <div className="flex gap-4 items-center">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={e => setNewSkill(e.target.value)}
+                    placeholder="Enter a capability name (e.g. Docker, TypeScript)..."
+                    className="flex-1 bg-transparent border-b border-stone-400 focus-within:border-[#241E1A] transition-colors py-2 px-1 text-xs outline-none text-[#241E1A] placeholder:text-stone-300"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newSkill.trim()) {
+                        e.preventDefault();
+                        setSkills([...skills, newSkill.trim()]);
+                        setNewSkill('');
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (newSkill.trim()) {
+                        setSkills([...skills, newSkill.trim()]);
+                        setNewSkill('');
+                      }
+                    }}
+                    className="p-2.5 bg-[#241E1A] hover:bg-[#382F29] text-[#FDFBF7] rounded-xl transition-all shadow-3xs cursor-pointer flex items-center justify-center"
+                    aria-label="Add Skill"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Your Capabilities List</label>
+                  {skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2.5 p-4 bg-[#FCF9F3] border border-[#EAE2D5] rounded-2xl">
+                      {skills.map((skill, i) => (
+                        <span key={i} className="inline-flex items-center gap-1 bg-white text-[#241E1A] border border-[#EAE2D5] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-3xs">
+                          {skill}
+                          <button
+                            onClick={() => setSkills(skills.filter((_, idx) => idx !== i))}
+                            className="hover:text-red-500 text-stone-400 transition-colors ml-1.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-[#FAF6F0] rounded-2xl border border-dashed border-[#EAE2D5] text-stone-400 text-xs">
+                      No technical skills added yet. Add them above or extract from resume!
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

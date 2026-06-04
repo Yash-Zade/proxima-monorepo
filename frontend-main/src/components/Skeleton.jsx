@@ -241,16 +241,35 @@ export function MySkillsSkeleton() {
 
         {/* Workspace Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Left Side: Resume */}
+          {/* Left Side: Resume and Verification */}
           <div className="lg:col-span-5 space-y-8">
             <div className="bg-white border border-[#EAE2D5] p-8 rounded-[32px] space-y-6">
               <Skeleton className="w-48 h-5" />
               <Skeleton className="w-full h-12" />
               <Skeleton className="w-full h-24 rounded-2xl" />
             </div>
+            
+            {/* Verification skeletons stacked vertically */}
+            <div className="bg-white border border-[#EAE2D5] p-6 rounded-2xl min-h-[220px] space-y-4">
+              <Skeleton className="w-32 h-5" />
+              <Skeleton className="w-full h-10" />
+              <div className="flex gap-2">
+                <Skeleton className="w-16 h-6" />
+                <Skeleton className="w-16 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-white border border-[#EAE2D5] p-6 rounded-2xl min-h-[220px] space-y-4">
+              <Skeleton className="w-32 h-5" />
+              <Skeleton className="w-full h-10" />
+              <div className="flex gap-2">
+                <Skeleton className="w-16 h-6" />
+                <Skeleton className="w-16 h-6" />
+              </div>
+            </div>
           </div>
 
-          {/* Right Side: Skills */}
+          {/* Right Side: Skills Manager */}
           <div className="lg:col-span-7 space-y-8">
             <div className="bg-white border border-[#EAE2D5] p-8 rounded-[32px] space-y-6">
               <Skeleton className="w-48 h-5" />
