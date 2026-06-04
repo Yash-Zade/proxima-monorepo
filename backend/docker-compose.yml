@@ -1,6 +1,6 @@
 services:
   backend:
-    image: arpits15/proxima-backend:latest
+    image: yashzade/proxima-backend:latest
     build:
       context: .
       dockerfile: Dockerfile

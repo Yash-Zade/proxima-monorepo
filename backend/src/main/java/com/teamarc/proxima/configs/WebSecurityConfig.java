@@ -13,11 +13,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
+
 public class WebSecurityConfig {
 
     private static final String[] PUBLIC_ROUTES = {"/auth/**", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/public/**", "/ws/**", "/uploads/**"};
@@ -30,7 +33,7 @@ public class WebSecurityConfig {
                         .requestMatchers(PUBLIC_ROUTES).permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .cors(withDefaults());
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return httpSecurity.build();
     }
@@ -38,21 +41,18 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // allowCredentials=true requires explicit origins — wildcard ("*") is rejected by browsers
         configuration.setAllowCredentials(true);
-        configuration.addAllowedOrigin("https://proxima-main.vercel.app");
-        configuration.addAllowedOrigin("http://localhost:5173");
-        configuration.addAllowedOrigin("http://localhost:3000");
-
+        configuration.setAllowedOrigins(List.of(
+                "https://proxima-main.vercel.app",
+                "http://localhost:5173",
+                "http://localhost:3000"
+        ));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
 
-        // Expose Authorization header so the frontend can read JWT tokens
-        configuration.addExposedHeader("Authorization");
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }

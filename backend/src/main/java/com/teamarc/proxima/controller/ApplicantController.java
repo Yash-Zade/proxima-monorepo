@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "https://proxima-main.vercel.app")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/applicants")
