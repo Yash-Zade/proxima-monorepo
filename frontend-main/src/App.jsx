@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -19,6 +19,9 @@ import Protected from './components/Protected';
 import MassHiring from './pages/MassHiring';
 
 export default function App() {
+  const location = useLocation();
+  const showFooter = location.pathname !== '/messages' && location.pathname !== '/exam';
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FDFBF7]">
       {/* Dynamic responsive Navigation Bar */}
@@ -144,7 +147,7 @@ export default function App() {
       </main>
 
       {/* Corporate Minimal Footer */}
-      <Footer />
+      {showFooter && <Footer />}
     </div>
   );
 }

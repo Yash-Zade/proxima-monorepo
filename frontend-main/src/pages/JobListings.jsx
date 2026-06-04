@@ -45,6 +45,11 @@ export default function JobListings() {
     );
   };
 
+  const uniqueLocations = useMemo(() => {
+    const locs = jobs.map(j => j.location).filter(Boolean);
+    return Array.from(new Set(locs));
+  }, [jobs]);
+
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       // Search keyword matches title, company, description, or skills
@@ -109,6 +114,26 @@ export default function JobListings() {
                 />
               </div>
             </div>
+
+            {/* Location Checkboxes */}
+            {uniqueLocations.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-[#EAE2D5]">
+                <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Locations</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {uniqueLocations.map(loc => (
+                    <label key={loc} className="flex items-center gap-2 text-xs text-stone-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={selectedLocations.includes(loc)}
+                        onChange={() => handleLocationChange(loc)}
+                        className="rounded border-[#EAE2D5] text-[#241E1A] focus:ring-[#241E1A] cursor-pointer"
+                      />
+                      <span>{loc}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
