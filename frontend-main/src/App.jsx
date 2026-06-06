@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import MySkills from './pages/MySkills';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
 import AdminDashboard from './pages/AdminDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
 import CollegeDashboard from './pages/CollegeDashboard';
@@ -41,6 +42,10 @@ export default function App() {
                 <SignIn />
               </Protected>
             }
+          />
+          <Route
+            path="/oauth2/redirect"
+            element={<OAuth2RedirectHandler />}
           />
           <Route
             path="/signup"

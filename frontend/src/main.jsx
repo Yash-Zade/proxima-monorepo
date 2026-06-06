@@ -23,6 +23,7 @@ import RoleSelector from "./components/Auth/RoleSelector.jsx";
 import ExamPortal from "./components/ExamPortal/Portal.jsx";
 import Protected from "./components/Auth/Protected.jsx";
 import { AuthProvider } from "./components/Auth/context/AuthContext.jsx";
+import OAuth2RedirectHandler from "./components/Auth/OAuth2RedirectHandler.jsx";
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: "/login",
         element: <Protected authentication={false}><Login /></Protected>,
+      },
+      {
+        path: "/oauth2/redirect",
+        element: <OAuth2RedirectHandler />,
       },
       {
         path: "/signup",
